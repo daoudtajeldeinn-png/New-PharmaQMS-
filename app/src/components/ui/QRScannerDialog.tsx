@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
 import {
     Dialog,
     DialogContent,
@@ -15,43 +14,7 @@ interface QRScannerDialogProps {
     onScan: (decodedText: string) => void;
 }
 
-export function QRScannerDialog({ open, onOpenChange, onScan }: QRScannerDialogProps) {
-    const scannerRef = React.useRef<Html5QrcodeScanner | null>(null);
-
-    React.useEffect(() => {
-        if (open) {
-            // Small delay to ensure the DOM element is rendered
-            const timeoutId = setTimeout(() => {
-                const scanner = new Html5QrcodeScanner(
-                    'qr-reader',
-                    { fps: 10, qrbox: { width: 250, height: 250 } },
-          /* verbose= */ false
-                );
-
-                scanner.render(
-                    (decodedText) => {
-                        scanner.clear();
-                        onScan(decodedText);
-                        onOpenChange(false);
-                    },
-                    () => {
-                        // Silence common scanning errors
-                        // console.warn(error);
-                    }
-                );
-
-                scannerRef.current = scanner;
-            }, 300);
-
-            return () => {
-                clearTimeout(timeoutId);
-                if (scannerRef.current) {
-                    scannerRef.current.clear().catch(err => console.error("Failed to clear scanner", err));
-                }
-            };
-        }
-    }, [open, onScan, onOpenChange]);
-
+export function QRScannerDialog({ open, onOpenChange }: QRScannerDialogProps) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-md bg-slate-900 border-white/10 text-white">
@@ -62,10 +25,9 @@ export function QRScannerDialog({ open, onOpenChange, onScan }: QRScannerDialogP
                     </DialogTitle>
                 </DialogHeader>
                 <div className="flex flex-col items-center justify-center p-4">
-                    <div
-                        id="qr-reader"
-                        className="w-full overflow-hidden rounded-2xl border-2 border-dashed border-white/20 bg-slate-950/50 min-h-[300px]"
-                    />
+                    <div className="w-full overflow-hidden rounded-2xl border-2 border-dashed border-white/20 bg-slate-950/50 min-h-[300px] flex items-center justify-center">
+                        <p className="text-slate-400 text-sm">QR Scanner not available in web version</p>
+                    </div>
                     <p className="mt-4 text-xs text-slate-400 text-center">
                         Position the QR code or Barcode within the frame to automatically scan and retrieve record details.
                     </p>
