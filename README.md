@@ -11,6 +11,7 @@ A comprehensive, bilingual (Arabic/English) pharmaceutical quality management sy
 ---
 
 ## ✨ Features
+[![committers.top badge](https://user-badge.committers.top/daoudtajeldeinn-png.svg)](https://committers.top/daoudtajeldeinn-png)
 
 ### 🌐 Internationalization (i18n)
 - **Bilingual Support**: Arabic (default) & English
