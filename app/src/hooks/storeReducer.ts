@@ -576,9 +576,6 @@ export function appReducerWithPersistence(state: AppState, action: Action): AppS
             // For now, skip DB put to avoid type error; use UPDATE_TEST_METHOD in component
             break;
           }
-        case 'UPDATE_TEST_METHOD':
-            db.testMethods.put(action.payload);
-            break;
         case 'FETCH_BATCH_TESTS_FOR_COA':
             // No direct DB change, handled in component
             break;
