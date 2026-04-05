@@ -10,12 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { DataTableActions } from '@/components/ui/data-table-actions';
 import {
   Select,
   SelectContent,
@@ -229,34 +224,19 @@ export function ProductTable({
                       <Badge variant="secondary">{product.pharmacopeiaStandard}</Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => onView(product)}>
-                            <Eye className="mr-2 h-4 w-4" />
-                            View Specifications
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onEdit(product)}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Update Records
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onTest(product)}>
-                            <FlaskConical className="mr-2 h-4 w-4" />
-                            Perform QC Test
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => onDelete(product)}
-                            className="text-red-600"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Remove Entry
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <DataTableActions<PharmaceuticalProduct>
+                        item={product}
+                        onEdit={onEdit}
+                        onDelete={(id) => onDelete(product)}
+                        onView={onView}
+                        extraActions={[
+                          {
+                            label: 'Perform QC Test',
+                            icon: <FlaskConical className="mr-2 h-4 w-4" />,
+                            onClick: onTest
+                          }
+                        ]}
+                      />
                     </TableCell>
                   </TableRow>
                 );

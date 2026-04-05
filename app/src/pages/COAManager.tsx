@@ -86,7 +86,9 @@ export function COAManagerPage() {
             dosageForm: formData.dosageForm || '',
             batchNumber: formData.batchNumber || '',
             batchSize: formData.batchSize || '',
-            mfgDate: formData.mfgDate || '',
+            mfgDate: formData.mfgDate || formData.manufacturingDate || '',
+            receivingDate: formData.receivingDate || '',
+            analysisDate: formData.analysisDate || '',
             expiryDate: formData.expiryDate || '',
             issueDate: formData.issueDate || new Date().toISOString().split('T')[0],
             manufacturer: formData.manufacturer || 'Pharma Corp',
@@ -158,9 +160,15 @@ export function COAManagerPage() {
     const handleLoadMonograph = (monographId: string) => {
         const monograph = g1Monographs[monographId];
         if (monograph) {
+            // Filter tests if a specific department COA is selected
+            let targetTests = [...monograph.tests];
+            if (formData.type === 'Microbiology') {
+                targetTests = targetTests.filter(t => t.category === 'Microbiological');
+            }
+
             // Sort tests by custom category order: Descriptive -> Physical -> Chemical -> Microbiological
-            const categoryOrder = { 'Descriptive': 1, 'Physical': 2, 'Chemical': 3, 'Microbiological': 4 };
-            const sortedTests = [...monograph.tests].sort((a, b) =>
+            const categoryOrder: Record<string, number> = { 'Descriptive': 1, 'Physical': 2, 'Chemical': 3, 'Microbiological': 4 };
+            const sortedTests = targetTests.sort((a, b) =>
                 (categoryOrder[a.category] || 99) - (categoryOrder[b.category] || 99)
             );
 
@@ -401,8 +409,10 @@ export function COAManagerPage() {
                         <div className="text-center border-b-4 border-double border-black pb-4 mb-6">
                             <h1 className="text-4xl font-bold tracking-tighter">{selectedCOA.manufacturer.toUpperCase()}</h1>
                             <p className="text-sm italic mb-2">{selectedCOA.address}</p>
-                            <p className="text-md font-bold uppercase tracking-widest mt-2">Quality Control Department</p>
-                            <h2 className="text-3xl font-bold underline decoration-2 underline-offset-8 mt-6">CERTIFICATE OF ANALYSIS</h2>
+                            <p className="text-md font-bold uppercase tracking-widest mt-2">{selectedCOA.type === 'Microbiology' ? 'Microbiology Department' : 'Quality Control Department'}</p>
+                            <h2 className="text-3xl font-bold underline decoration-2 underline-offset-8 mt-6">
+                                {selectedCOA.type === 'Microbiology' ? 'MICROBIAL CERTIFICATE OF ANALYSIS' : 'CERTIFICATE OF ANALYSIS'}
+                            </h2>
                         </div>
 
                         <div className="grid grid-cols-2 gap-x-8 gap-y-2 mb-8 p-4 border-2 border-black rounded-lg text-sm bg-slate-50/50">

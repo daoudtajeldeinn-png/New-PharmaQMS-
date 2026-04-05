@@ -14,13 +14,21 @@ import {
 import { useSecurity } from '@/components/security/SecurityProvider';
 import { toast } from 'sonner';
 
+export interface ExtraAction<T> {
+  label: string;
+  icon: React.ReactNode;
+  onClick: (item: T) => void;
+  className?: string;
+}
+
 interface DataTableActionsProps<T> {
   item: T;
-  onEdit: (item: T) => void;
-  onDelete: (id: string) => void;
+  onEdit?: (item: T) => void;
+  onDelete?: (id: string) => void;
   dispatch?: any;
   onView?: (item: T) => void;
   deleteConfirmMsg?: string;
+  extraActions?: ExtraAction<T>[];
 }
 
 export function DataTableActions<T extends { id: string }>({
@@ -30,11 +38,12 @@ export function DataTableActions<T extends { id: string }>({
   dispatch,
   onView,
   deleteConfirmMsg = 'Are you sure you want to delete this record?',
+  extraActions = [],
 }: DataTableActionsProps<T>) {
   const { user } = useSecurity();
 
   const handleDelete = () => {
-    if (window.confirm(deleteConfirmMsg)) {
+    if (onDelete && window.confirm(deleteConfirmMsg)) {
       onDelete(item.id);
       toast.success('Record deleted successfully.');
     }
@@ -55,14 +64,26 @@ export function DataTableActions<T extends { id: string }>({
             View
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem 
-          onClick={() => onEdit(item)}
-          className="text-blue-600 focus:text-blue-600"
-        >
-          <Edit className="mr-2 h-4 w-4" />
-          Edit
-        </DropdownMenuItem>
-        {(user?.role === 'admin' || user?.role === 'qc_manager') && (
+        {onEdit && (
+          <DropdownMenuItem 
+            onClick={() => onEdit(item)}
+            className="text-blue-600 focus:text-blue-600"
+          >
+            <Edit className="mr-2 h-4 w-4" />
+            Edit
+          </DropdownMenuItem>
+        )}
+        {extraActions.map((action, index) => (
+          <DropdownMenuItem
+            key={index}
+            onClick={() => action.onClick(item)}
+            className={action.className}
+          >
+            {action.icon}
+            {action.label}
+          </DropdownMenuItem>
+        ))}
+        {onDelete && (user?.role === 'admin' || user?.role === 'qc_manager') && (
           <DropdownMenuItem 
             onClick={handleDelete}
             className="text-red-600 focus:text-red-600"

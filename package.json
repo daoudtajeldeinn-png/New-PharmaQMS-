@@ -5,7 +5,7 @@
   "description": "Enterprise Pharmaceutical Quality Management System",
   "author": "Dr. Daoud Tajeldeinn",
   "type": "module",
-  "main": "main.cjs",
+  "main": "app/main.cjs",
   "scripts": {
     "dev": "cross-env NODE_ENV=development concurrently \"cd app && npm run dev\" \"wait-on tcp:localhost:5173 && electron .\" --kill-others --success first",
     "electron:dev": "cross-env NODE_ENV=development concurrently \"cd app && npm run dev\" \"wait-on tcp:localhost:5173 && electron .\" --kill-others --success first",
@@ -24,7 +24,7 @@
     },
     "win": {
       "target": "nsis",
-      "icon": "app/public/favicon.ico"
+      "icon": "app/public/icons/icon-512x512.png"
     },
     "nsis": {
       "oneClick": true,
