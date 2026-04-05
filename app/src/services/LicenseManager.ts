@@ -6,7 +6,6 @@
 
 // Simple obfuscation salt - This remains consistent between generator and client
 const SECRET_SALT = 'PHARMA_QC_2024_SECURE';
-const BETA_BYPASS_KEY = 'PQMS-BETA-2026';
 
 export interface LicenseStatus {
     isValid: boolean;
@@ -40,21 +39,25 @@ export const validateLicenseKey = (key: string | null): LicenseStatus => {
         return { isValid: false, expiryDate: null, daysRemaining: 0, message: 'No license key found.' };
     }
 
-    // Beta Bypass Check
-    if (key === BETA_BYPASS_KEY) {
-        return { 
-            isValid: true, 
-            expiryDate: new Date('2026-12-31'), 
-            daysRemaining: 365, 
-            message: 'Beta Access Granted.' 
-        };
-    }
-
     try {
         const currentMachineId = getMachineId();
 
-        // Reverse obfuscation: Base64 -> Reverse -> Base64
-        const reversed = atob(key);
+        // 1. Clean the key (remove dashes and spaces)
+        const cleanKey = key.replace(/[-\s]/g, '').toLowerCase();
+
+        // 2. Convert HEX back to the intermediate obfuscated string
+        // Note: We use a helper to decode hex to string safely
+        const hexToString = (hex: string) => {
+            let str = '';
+            for (let i = 0; i < hex.length; i += 2) {
+                str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+            }
+            return str;
+        };
+
+        const reversed = hexToString(cleanKey);
+
+        // 3. Continue original de-obfuscation: Reverse -> Base64 -> Raw
         const b64 = reversed.split('').reverse().join('');
         const raw = atob(b64);
 

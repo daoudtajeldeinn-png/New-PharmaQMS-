@@ -19,17 +19,22 @@ const generateLicenseKey = (dateStr, machineId) => {
     // New format: MACHINE_ID:TIMESTAMP:SALT
     const raw = `${machineId}:${timestamp}:${SECRET_SALT}`;
 
-    // Custom obfuscation: Base64 -> Reverse -> Base64
+    // Custom obfuscation: Base64 -> Reverse
     const b64 = Buffer.from(raw).toString('base64');
     const reversed = b64.split('').reverse().join('');
-    const finalKey = Buffer.from(reversed).toString('base64');
+
+    // Final key is now HEX for case-insensitivity
+    const finalKeyHex = Buffer.from(reversed).toString('hex').toUpperCase();
+
+    // Format with dashes for better readability (e.g. XXXX-XXXX-XXXX-XXXX)
+    const formattedKey = finalKeyHex.match(/.{1,4}/g).join('-');
 
     console.log("\n========================================================");
     console.log("   PHARMA-QMS ENTERPRISE - MASTER KEY GENERATOR");
     console.log("========================================================");
     console.log(`MACHINE ID   : ${machineId}`);
     console.log(`EXPIRY DATE  : ${expiryDate.toDateString()}`);
-    console.log(`LICENSE KEY  : ${finalKey}`);
+    console.log(`LICENSE KEY  : ${formattedKey}`);
     console.log("========================================================\n");
     console.log("Instruction: Copy this key and provide it to the client.");
 };

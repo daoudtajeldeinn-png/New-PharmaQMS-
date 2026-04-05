@@ -61,6 +61,22 @@
     }
   ],
   "categories": ["business", "productivity", "healthcare"],
+  "screenshots": [
+    {
+      "src": "/screenshots/dashboard.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "لوحة التحكم"
+    },
+    {
+      "src": "/screenshots/mobile.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "واجهة الموبايل"
+    }
+  ],
   "shortcuts": [
     {
       "name": "الداش بورد",

@@ -8,6 +8,8 @@ echo    PHARMA-QMS ENTERPRISE - LICENSE GENERATOR
 echo ========================================================
 echo.
 set /p expiry="Enter Expiry Date (YYYY-MM-DD): "
+set /p machineid="Enter Client Machine ID: "
 echo.
-node MasterKeyGen.js %expiry%
+node MasterKeyGen.js %expiry% %machineid%
+echo.
 pause

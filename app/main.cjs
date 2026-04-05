@@ -5,18 +5,29 @@ require('dotenv').config();
 
 function getMachineId() {
   try {
-    // Try to get UUID first
-    let output = execSync('wmic csproduct get uuid').toString();
-    let id = output.split('\\n')[1]?.trim();
-
-    // If UUID is invalid/generic, try BIOS Serial Number
-    if (!id || id === 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF') {
-      output = execSync('wmic bios get serialnumber').toString();
-      id = output.split('\\n')[1]?.trim();
+    const { execSync } = require('child_process');
+    // Method 1: Modern PowerShell (Recommended)
+    let output = execSync('powershell -ExecutionPolicy Bypass -Command "Get-CimInstance Win32_ComputerSystemProduct | Select-Object -ExpandProperty UUID"').toString().trim();
+    if (output && output !== '00000000-0000-0000-0000-000000000000' && output !== 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF') {
+      return output;
     }
 
-    return id || 'UNKNOWN-DEVICE';
+    // Method 2: Registry MachineGuid (Alternative)
+    output = execSync('reg query "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Cryptography" /v MachineGuid').toString();
+    const match = output.match(/MachineGuid\s+REG_SZ\s+([A-Fa-f0-9-]+)/);
+    if (match && match[1]) {
+      return match[1].trim();
+    }
+
+    // Method 3: BIOS Serial Number
+    output = execSync('powershell -ExecutionPolicy Bypass -Command "(Get-CimInstance -ClassName Win32_BIOS).SerialNumber"').toString().trim();
+    if (output && output !== 'None') {
+      return output;
+    }
+
+    return 'UNKNOWN-DEVICE';
   } catch (e) {
+    console.error("Machine ID retrieval error:", e);
     return 'UNKNOWN-DEVICE';
   }
 }

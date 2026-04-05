@@ -550,14 +550,18 @@ export function LoginPage({ forcedLicenseLock = false }: { forcedLicenseLock?: b
                     placeholder="XXXX-XXXX-XXXX-XXXX"
                     className="bg-slate-950 border-white/10 h-14 text-sm font-mono uppercase text-white placeholder:text-slate-800 rounded-2xl focus:border-amber-500/50"
                     value={activationKey}
-                    onChange={(e) => setActivationKey(e.target.value)}
+                    onChange={(e) => {
+                      // Automatically format: uppercase and strip non-hex/non-dash characters for a clean input
+                      const val = e.target.value.toUpperCase().replace(/[^0-9A-F-]/g, '');
+                      setActivationKey(val);
+                    }}
                   />
                 </div>
                 <Button
                   className="w-full bg-amber-600 hover:bg-amber-500 h-14 font-black text-xs uppercase tracking-widest rounded-2xl transition-all shadow-lg shadow-amber-900/20"
                   onClick={() => handleActivate()}
                 >
-                  Authorize System Access
+                  Confirm Activation
                 </Button>
 
                 <div className="mt-8 pt-8 border-t border-white/5">
