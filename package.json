@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development concurrently \"cd app && npm run dev\" \"wait-on tcp:localhost:5173 && electron .\" --kill-others --success first",
     "electron:dev": "cross-env NODE_ENV=development concurrently \"cd app && npm run dev\" \"wait-on tcp:localhost:5173 && electron .\" --kill-others --success first",
+    "build": "npm run build:app",
     "build:app": "cd app && npm run build",
     "electron:build": "npm run build:app && electron-builder",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
