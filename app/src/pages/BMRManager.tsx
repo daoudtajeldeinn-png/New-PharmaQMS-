@@ -12,7 +12,7 @@ import { type BatchRecord } from '@/data/bmrData';
 import { useStore } from '@/hooks/useStore';
 import { toast } from 'sonner';
 
-import type { BatchRecord, B
+import type { BatchRecord, BMRStepExecution, BatchIngredient } from '@/data/bmrData';
 
 export function BMRManagerPage() {
     const { state, dispatch } = useStore();
