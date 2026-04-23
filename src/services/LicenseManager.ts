@@ -1,10 +1,9 @@
 /**
  * License Manager Utility
  * Handles encryption and decryption of application license keys with obfuscation.
- * This version is hardware-locked to the customer's machine.
+ * Supports legacy and new V2 professional formats.
  */
 
-// Simple obfuscation salt - This remains consistent between generator and client
 const SECRET_SALT = 'PHARMA_QC_2024_SECURE';
 
 export interface LicenseStatus {
@@ -12,29 +11,23 @@ export interface LicenseStatus {
     expiryDate: Date | null;
     daysRemaining: number;
     message: string;
+    customer?: string;
 }
 
 /**
  * Retrieves the unique Hardware ID from the Electron process
  */
 export const getMachineId = (): string => {
-    // In Electron, we passed the ID via additionalArguments
     const args = (window as any).process?.argv || [];
     const machineIdArg = args.find((arg: string) => arg.startsWith('--machine-id='));
     if (machineIdArg) {
         return machineIdArg.split('=')[1];
     }
-
-    // Fallback for development/testing if not in Electron
-    // In the SaaS version, we might want a different fingerprinting method later,
-    // but for now we keep compatibility with the Electron machine ID.
     return 'DEV-ENVIRONMENT-ID';
 };
 
 /**
- * Decrypts a license string and validates it against the hardware ID
- * @param key The license key string
- * @returns LicenseStatus object
+ * Decrypts a license string and validates it
  */
 export const validateLicenseKey = (key: string | null): LicenseStatus => {
     if (!key) {
@@ -43,67 +36,79 @@ export const validateLicenseKey = (key: string | null): LicenseStatus => {
 
     try {
         const currentMachineId = getMachineId();
-
-        // 1. Clean the key (remove ALL whitespace, newlines, and dashes)
         const cleanKey = key.trim().replace(/\s/g, '');
-        
-        // 2. Decode from the final Base64 format
+
+        // Check if it's the new V2 Format
+        if (cleanKey.startsWith('PQMS-V2-')) {
+            const actualKey = cleanKey.replace('PQMS-V2-', '');
+            const reversedB64 = atob(actualKey);
+            const b64 = reversedB64.split('').reverse().join('');
+            const raw = atob(b64);
+
+            // V2 Format: V2:MACHINE_ID:CUSTOMER:TIMESTAMP:SALT
+            const [version, machineId, customer, timestampStr, salt] = raw.split(':');
+
+            if (version !== 'V2' || salt !== SECRET_SALT) {
+                throw new Error('Invalid key signature');
+            }
+
+            const isWebVersion = currentMachineId === 'DEV-ENVIRONMENT-ID';
+            if (!isWebVersion && machineId !== currentMachineId) {
+                return { isValid: false, expiryDate: null, daysRemaining: 0, message: 'License locked to another device.' };
+            }
+
+            const expiryDate = new Date(parseInt(timestampStr));
+            const now = new Date();
+            const daysRemaining = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+            if (daysRemaining <= 0) {
+                return { isValid: false, expiryDate, daysRemaining: 0, message: 'Enterprise license has expired.' };
+            }
+
+            return {
+                isValid: true,
+                expiryDate,
+                daysRemaining,
+                customer,
+                message: `Enterprise Licensed to ${customer}`
+            };
+        }
+
+        // Fallback to Legacy Format (Double Base64 + Reverse)
         const reversedB64 = atob(cleanKey);
-
-        // 2. Reverse the string back
         const b64 = reversedB64.split('').reverse().join('');
-
-        // 3. Decode the original Base64 to get the raw string
         const raw = atob(b64);
 
-        // Raw format: MACHINE_ID:TIMESTAMP:SALT
+        // Legacy format: MACHINE_ID:TIMESTAMP:SALT
         const [machineId, timestampStr, salt] = raw.split(':');
 
         if (salt !== SECRET_SALT) {
             throw new Error('Invalid salt');
         }
 
-        // Validation logic:
-        // 1. If we are in the web browser (DEV-ENVIRONMENT-ID), we accept the key if the salt is valid.
-        // 2. If we are in Electron, the machine ID must match.
         const isWebVersion = currentMachineId === 'DEV-ENVIRONMENT-ID';
-        
         if (!isWebVersion && machineId !== currentMachineId) {
-            return { isValid: false, expiryDate: null, daysRemaining: 0, message: 'License is locked to another device.' };
+            return { isValid: false, expiryDate: null, daysRemaining: 0, message: 'License locked to another device.' };
         }
 
-        const expiryTimestamp = parseInt(timestampStr);
-        const expiryDate = new Date(expiryTimestamp);
-        const now = new Date();
+        const expiryDate = new Date(parseInt(timestampStr));
+        const daysRemaining = Math.ceil((expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
 
-        const diffMs = expiryDate.getTime() - now.getTime();
-        const daysRemaining = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-
-        if (diffMs <= 0) {
-            return { isValid: false, expiryDate, daysRemaining: 0, message: 'License has expired.' };
+        if (daysRemaining <= 0) {
+            return { isValid: false, expiryDate, daysRemaining: 0, message: 'License expired.' };
         }
 
         return {
             isValid: true,
             expiryDate,
             daysRemaining,
-            message: `License valid for ${daysRemaining} days.`
+            message: `Legacy License: ${daysRemaining} days remaining.`
         };
+
     } catch (e) {
-        return { isValid: false, expiryDate: null, daysRemaining: 0, message: 'Invalid license integrity.' };
+        return { isValid: false, expiryDate: null, daysRemaining: 0, message: 'Invalid certification integrity.' };
     }
 };
 
-/**
- * Saves a license key to local storage
- */
-export const setLicenseKey = (key: string) => {
-    localStorage.setItem('pqms_enterprise_license', key);
-};
-
-/**
- * Retrieves the current license key from local storage
- */
-export const getStoredLicenseKey = (): string | null => {
-    return localStorage.getItem('pqms_enterprise_license');
-};
+export const setLicenseKey = (key: string) => localStorage.setItem('pqms_enterprise_license', key);
+export const getStoredLicenseKey = (): string | null => localStorage.getItem('pqms_enterprise_license');

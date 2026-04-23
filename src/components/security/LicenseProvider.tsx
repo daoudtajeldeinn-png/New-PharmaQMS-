@@ -41,7 +41,7 @@ export function LicenseProvider({ children }: { children: ReactNode }) {
                 <div className={cn("backdrop-blur-sm shadow-sm flex items-center gap-1 border border-slate-200 px-2 py-1 rounded bg-white/80 dark:bg-slate-900/80")}>
                     <ShieldCheck className="h-3 w-3 text-emerald-500" />
                     <span className="text-[10px] font-bold uppercase tracking-tighter text-slate-900">
-                        {isDev ? "Dev Mode: Unlocked" : (status.isValid ? "Ent. Licensed" : "License Expired")}
+                        {isDev ? "Dev Mode: Unlocked" : (status.isValid ? `Licensed: ${status.customer || 'Enterprise'}` : "License Expired")}
                     </span>
                 </div>
             </div>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PharmaQMS | Master License Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #020617; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .btn-primary { background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px -10px #4f46e5; }
+        @keyframes pulse-slow { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.6; } }
+        .animate-pulse-slow { animation: pulse-slow 4s infinite; }
+    </style>
+</head>
+<body class="min-h-screen text-slate-200 flex items-center justify-center p-6 overflow-hidden">
+    
+    <!-- Background Decorations -->
+    <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-600/10 blur-[120px] rounded-full animate-pulse-slow"></div>
+    <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-600/10 blur-[120px] rounded-full animate-pulse-slow" style="animation-delay: 2s;"></div>
+
+    <div class="w-full max-w-2xl relative z-10">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center gap-3">
+                <div class="p-3 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-600/20">
+                    <i data-lucide="shield-check" class="w-6 h-6 text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-black tracking-tighter uppercase text-white">PharmaQMS <span class="text-indigo-500">Master</span></h1>
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em]">Enterprise License Authority</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest">System Secure</p>
+                <p class="text-[8px] text-slate-600 font-bold">DEVELOPER EDITION v2.0</p>
+            </div>
+        </div>
+
+        <!-- Main Card -->
+        <div class="glass rounded-[40px] p-8 lg:p-12 shadow-2xl">
+            <div class="space-y-8">
+                <!-- Customer Name -->
+                <div class="space-y-3">
+                    <label class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Customer / Organization Name</label>
+                    <div class="relative group">
+                        <input type="text" id="customerName" placeholder="e.g. Al-Amal Pharmaceuticals" 
+                               class="w-full bg-white/5 border border-white/10 h-14 pl-12 pr-4 rounded-2xl focus:outline-none focus:border-indigo-500/50 transition-all text-white font-semibold">
+                        <i data-lucide="building" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-600 group-focus-within:text-indigo-500"></i>
+                    </div>
+                </div>
+
+                <!-- Machine ID -->
+                <div class="space-y-3">
+                    <label class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Hardware Fingerprint (Machine ID)</label>
+                    <div class="relative group">
+                        <input type="text" id="machineId" placeholder="Paste ID from the app here..." 
+                               class="w-full bg-white/5 border border-white/10 h-14 pl-12 pr-4 rounded-2xl focus:outline-none focus:border-indigo-500/50 transition-all text-white font-mono text-sm uppercase tracking-wider">
+                        <i data-lucide="fingerprint" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-600 group-focus-within:text-indigo-500"></i>
+                    </div>
+                </div>
+
+                <!-- Expiry Date -->
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="space-y-3">
+                        <label class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Validity Period</label>
+                        <select id="duration" class="w-full bg-white/5 border border-white/10 h-14 px-4 rounded-2xl focus:outline-none focus:border-indigo-500/50 transition-all text-white font-semibold appearance-none">
+                            <option value="30" class="bg-slate-900">30 Days (Trial)</option>
+                            <option value="90" class="bg-slate-900">90 Days (Quarterly)</option>
+                            <option value="365" selected class="bg-slate-900">1 Year (Annual)</option>
+                            <option value="1095" class="bg-slate-900">3 Years (Enterprise)</option>
+                            <option value="3650" class="bg-slate-900">10 Years (Perpetual)</option>
+                        </select>
+                    </div>
+                    <div class="space-y-3">
+                        <label class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">License Tier</label>
+                        <div class="flex items-center h-14 px-6 bg-white/5 border border-white/10 rounded-2xl text-amber-500 font-black text-[10px] uppercase tracking-widest">
+                            <i data-lucide="crown" class="w-4 h-4 mr-2"></i>
+                            Enterprise Platinum
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Generate Button -->
+                <button onclick="generateKey()" class="btn-primary w-full h-16 rounded-2xl text-white font-black uppercase tracking-[0.2em] text-xs flex items-center justify-center gap-3 shadow-xl">
+                    <i data-lucide="key" class="w-5 h-5"></i>
+                    Generate Enterprise Activation Key
+                </button>
+
+                <!-- Result Area -->
+                <div id="resultArea" class="hidden space-y-4 pt-6 border-t border-white/5 animate-in fade-in slide-in-from-top-4 duration-500">
+                    <label class="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500 ml-1">Generated Key (Copy to Customer)</label>
+                    <div class="relative group">
+                        <textarea id="generatedKey" readonly rows="3" 
+                                  class="w-full bg-emerald-500/5 border border-emerald-500/20 p-4 rounded-2xl text-emerald-400 font-mono text-xs break-all focus:outline-none"></textarea>
+                        <button onclick="copyKey()" class="absolute right-4 bottom-4 p-2 bg-emerald-500/20 hover:bg-emerald-500/40 rounded-xl transition-all text-emerald-400">
+                            <i data-lucide="copy" class="w-4 h-4" id="copyIcon"></i>
+                        </button>
+                    </div>
+                    <p class="text-[9px] text-slate-500 italic text-center">This key is hardware-locked and valid for the selected duration from today.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-8 text-center">
+            <p class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-600">Generated by Dr. Daoud Tajeldeinn Ahmed</p>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        const SECRET_SALT = 'PHARMA_QC_2024_SECURE';
+
+        function generateKey() {
+            const customer = document.getElementById('customerName').value.trim() || 'Valued Client';
+            const mid = document.getElementById('machineId').value.trim();
+            const days = parseInt(document.getElementById('duration').value);
+
+            if (!mid) {
+                alert('Please enter a Machine ID!');
+                return;
+            }
+
+            const expiryDate = new Date();
+            expiryDate.setDate(expiryDate.getDate() + days);
+            const timestamp = expiryDate.getTime().toString();
+
+            // V2 Format: V2:MACHINE_ID:CUSTOMER:TIMESTAMP:SALT
+            const raw = `V2:${mid}:${customer}:${timestamp}:${SECRET_SALT}`;
+            
+            // Encryption: Base64 -> Reverse -> Base64
+            const b64 = btoa(raw);
+            const reversed = b64.split('').reverse().join('');
+            const finalKey = "PQMS-V2-" + btoa(reversed);
+
+            document.getElementById('generatedKey').value = finalKey;
+            document.getElementById('resultArea').classList.remove('hidden');
+        }
+
+        function copyKey() {
+            const keyText = document.getElementById('generatedKey');
+            keyText.select();
+            document.execCommand('copy');
+            
+            const icon = document.getElementById('copyIcon');
+            icon.setAttribute('data-lucide', 'check');
+            lucide.createIcons();
+            
+            setTimeout(() => {
+                icon.setAttribute('data-lucide', 'copy');
+                lucide.createIcons();
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
