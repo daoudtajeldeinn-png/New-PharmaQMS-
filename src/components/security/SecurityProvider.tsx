@@ -364,7 +364,7 @@ export function LoginPage({ forcedLicenseLock = false }: { forcedLicenseLock?: b
       setActivationKey('');
       setShowActivation(false);
     } else {
-      toast.error('Invalid Certification Key.');
+      toast.error(status.message || 'Invalid Certification Key.');
     }
   };
 
