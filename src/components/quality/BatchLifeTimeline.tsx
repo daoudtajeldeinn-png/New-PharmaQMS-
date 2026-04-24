@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { formatDateSafe } from '@/lib/dateUtils';
 
 interface TimelineEvent {
     id: string;
@@ -37,7 +38,7 @@ export function BatchLifeTimeline({ batchNumber }: BatchLifeTimelineProps) {
                 id: 'receipt',
                 title: 'Material Receipt',
                 description: `Received ${material.name} from ${material.supplier}`,
-                date: material.receivedDate,
+                date: formatDateSafe(material.receivedDate),
                 type: 'Receipt',
                 status: 'Complete'
             });
@@ -50,7 +51,7 @@ export function BatchLifeTimeline({ batchNumber }: BatchLifeTimelineProps) {
                 id: `ipqc-${index}`,
                 title: `IPQC Check: ${check.stage}`,
                 description: `Conducted by ${check.checkedBy}. Result: ${check.result}`,
-                date: new Date(check.checkedAt).toISOString().split('T')[0],
+                date: formatDateSafe(check.checkedAt),
                 type: 'IPQC',
                 status: check.result === 'Pass' ? 'Complete' : 'Warning'
             });
@@ -59,12 +60,11 @@ export function BatchLifeTimeline({ batchNumber }: BatchLifeTimelineProps) {
         // 3. Find QC Test Results
         const tests = state.testResults.filter(t => t.batchNumber === batchNumber);
         tests.forEach((test, index) => {
-            const completionDate = test.completionDate ? (test.completionDate instanceof Date ? test.completionDate.toISOString().split('T')[0] : String(test.completionDate)) : 'Pending';
             timeline.push({
                 id: `test-${index}`,
                 title: `QC Analysis: ${test.testMethodId}`,
                 description: `Analyst: ${test.analystId}. Result: ${test.overallResult}`,
-                date: completionDate,
+                date: formatDateSafe(test.completionDate),
                 type: 'Testing',
                 status: test.status === 'Completed' ? 'Complete' : 'Pending'
             });
@@ -77,7 +77,7 @@ export function BatchLifeTimeline({ batchNumber }: BatchLifeTimelineProps) {
                 id: 'release',
                 title: 'Batch Release',
                 description: `Approved by ${coa.approvedBy}. Status: ${coa.status}`,
-                date: coa.issueDate,
+                date: formatDateSafe(coa.issueDate),
                 type: 'Release',
                 status: coa.status === 'Released' ? 'Complete' : 'Pending'
             });
