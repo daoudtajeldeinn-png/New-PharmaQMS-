@@ -30,6 +30,7 @@ export function BMRManagerPage() {
         documentTitle: selectedBMR ? `BMR-${selectedBMR.batchNumber}` : 'BMR',
     });
     const [editingBMR, setEditingBMR] = useState<BatchRecord | null>(null);
+    const [showEditDialog, setShowEditDialog] = useState(false);
 
     const handleIssueBatch = () => {
         if (!newBatch.mfrId || !newBatch.batchNumber) {
