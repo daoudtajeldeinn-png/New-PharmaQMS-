@@ -1,0 +1,5 @@
+dist-electron
+node_modules
+.git
+SCI-clone
+*.vsidx
