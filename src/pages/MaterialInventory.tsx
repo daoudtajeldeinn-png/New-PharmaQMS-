@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Package, Plus, FileText, Search, Trash2, PlusCircle, ArrowDownToLine, Beaker } from 'lucide-react';
+import { Package, Plus, FileText, Search, Trash2, PlusCircle, ArrowDownToLine, Beaker, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -255,6 +255,76 @@ const [materialForm, setMaterialForm] = useState({
       .filter(m => m.materialId === selectedMaterial.id)
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }, [state.materialMovements, selectedMaterial]);
+
+  // ── Issue COA for Raw Material ──────────────────────────────────────────
+  const handleIssueCOA = (material: RawMaterial) => {
+    if (material.status !== 'Approved') {
+      toast.error('Only APPROVED materials can receive a Certificate of Analysis.');
+      return;
+    }
+
+    // Check if a COA already exists for this batch
+    const alreadyIssued = state.coaRecords.some(
+      r => r.batchNumber === material.batchNumber && r.type === 'Raw Material'
+    );
+    if (alreadyIssued) {
+      toast.warning(`A COA for batch ${material.batchNumber} already exists in COA Foundry.`);
+      return;
+    }
+
+    const coaNumber = `COA-RM-${material.batchNumber}-${Date.now().toString().slice(-5)}`;
+    const today = new Date().toISOString().split('T')[0];
+
+    const testResults = (material.tests || []).map(t => ({
+      test: t.name,
+      specification: t.spec || '',
+      result: t.result || '',
+      status: (t.status === 'Pass' ? 'Pass' : t.status === 'Fail' ? 'Fail' : 'Pending') as 'Pass' | 'Fail' | 'Pending' | 'N/A',
+    }));
+
+    const newCOA = {
+      id: `coa-rm-${material.id}-${Date.now()}`,
+      type: 'Raw Material' as const,
+      coaNumber,
+      analysisNo: `AN-${material.batchNumber}`,
+      productName: material.name,
+      strength: '',
+      dosageForm: material.type,
+      batchNumber: material.batchNumber,
+      batchSize: `${material.quantity} ${material.unit}`,
+      manufacturingDate: material.manufacturingDate || material.receivedDate || '',
+      receivingDate: material.receivedDate || '',
+      analysisDate: material.analysisDate || today,
+      issueDate: today,
+      expiryDate: material.expiryDate || '',
+      manufacturer: material.supplier,
+      address: 'Industrial Zone, Phase 2, Pharmaceutical District',
+      testResults,
+      marketComplaintStatus: 'Verified and Compliant',
+      analyzedBy: 'Chief Analyst',
+      checkedBy: 'QC Supervisor',
+      approvedBy: 'QA Manager',
+      status: 'Released' as const,
+    };
+
+    dispatch({ type: 'ADD_COA_RECORD', payload: newCOA });
+    dispatch({
+      type: 'ADD_ACTIVITY',
+      payload: {
+        id: Math.random().toString(36).substr(2, 9),
+        type: 'Document_Approved',
+        description: `COA issued for Raw Material: ${material.name} (Batch: ${material.batchNumber})`,
+        user: 'QA Department',
+        timestamp: new Date(),
+        relatedId: newCOA.id,
+      },
+    });
+
+    toast.success(
+      `✅ COA ${coaNumber} issued and sent to COA Foundry (Raw Materials tab)!`,
+      { duration: 5000 }
+    );
+  };
 
   const formatDate = (date: Date | string | undefined) => {
     if (!date) return '';
@@ -634,7 +704,18 @@ const [materialForm, setMaterialForm] = useState({
                     {selectedMaterial.batchNumber} | {MATERIAL_TYPES.find(t => t.key === selectedMaterial.type)?.label}
                   </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
+                  {selectedMaterial.status === 'Approved' && (
+                    <Button
+                      size="sm"
+                      id="btn-issue-coa"
+                      onClick={() => handleIssueCOA(selectedMaterial)}
+                      className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-md shadow-green-200 font-bold gap-1 px-4"
+                    >
+                      <Award className="h-4 w-4" />
+                      Issue Certificate of Analysis
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     size="sm"
