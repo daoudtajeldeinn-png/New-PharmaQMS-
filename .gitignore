@@ -38,3 +38,6 @@ yarn-error.log*
 SCI-clone
 .vercel
 .env*.local
+dist-electron
+node_modules
+dist
