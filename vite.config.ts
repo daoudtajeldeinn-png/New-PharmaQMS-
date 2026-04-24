@@ -3,16 +3,13 @@ import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 import { VitePWA } from 'vite-plugin-pwa'
 
-// https://vite.dev/config/
 export default defineConfig({
-  base: './',
+  base: '/SCI-/',   // ← your exact repo name
+
   build: {
-    // Increase warning limit and add manual chunking for large node_modules
-    chunkSizeWarningLimit: 1000, // kB
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
-        // Create a separate chunk per top-level npm package to avoid circular
-        // vendor groupings and make caching more granular.
         manualChunks(id) {
           const m = id.match(/node_modules\/(?:@[^\/]+\/[^\/]+|[^\/]+)/)
           if (m) {
@@ -22,7 +19,9 @@ export default defineConfig({
           }
         }
       }
-    }  },
+    }
+  },
+
   plugins: [
     react(),
     VitePWA({
@@ -36,51 +35,19 @@ export default defineConfig({
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait-primary',
-        scope: '/',
-        start_url: '/',
+        scope: '/SCI-/',        // ← updated
+        start_url: '/SCI-/',   // ← updated
         lang: 'ar',
         dir: 'rtl',
         icons: [
-          {
-            src: '/icons/icon-72x72.png',
-            sizes: '72x72',
-            type: 'image/png'
-          },
-          {
-            src: '/icons/icon-96x96.png',
-            sizes: '96x96',
-            type: 'image/png'
-          },
-          {
-            src: '/icons/icon-128x128.png',
-            sizes: '128x128',
-            type: 'image/png'
-          },
-          {
-            src: '/icons/icon-144x144.png',
-            sizes: '144x144',
-            type: 'image/png'
-          },
-          {
-            src: '/icons/icon-152x152.png',
-            sizes: '152x152',
-            type: 'image/png'
-          },
-          {
-            src: '/icons/icon-192x192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: '/icons/icon-384x384.png',
-            sizes: '384x384',
-            type: 'image/png'
-          },
-          {
-            src: '/icons/icon-512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
-          }
+          { src: 'icons/icon-72x72.png',   sizes: '72x72',   type: 'image/png' },
+          { src: 'icons/icon-96x96.png',   sizes: '96x96',   type: 'image/png' },
+          { src: 'icons/icon-128x128.png', sizes: '128x128', type: 'image/png' },
+          { src: 'icons/icon-144x144.png', sizes: '144x144', type: 'image/png' },
+          { src: 'icons/icon-152x152.png', sizes: '152x152', type: 'image/png' },
+          { src: 'icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'icons/icon-384x384.png', sizes: '384x384', type: 'image/png' },
+          { src: 'icons/icon-512x512.png', sizes: '512x512', type: 'image/png' }
         ]
       },
       workbox: {
@@ -92,13 +59,8 @@ export default defineConfig({
             handler: 'CacheFirst',
             options: {
               cacheName: 'google-fonts-cache',
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // 365 days
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
+              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] }
             }
           },
           {
@@ -106,33 +68,24 @@ export default defineConfig({
             handler: 'CacheFirst',
             options: {
               cacheName: 'gstatic-fonts-cache',
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // 365 days
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
+              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] }
             }
           }
         ]
       },
-      devOptions: {
-        enabled: false
-      }
+      devOptions: { enabled: false }
     })
   ],
+
   resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
+    alias: { "@": path.resolve(__dirname, "./src") },
   },
+
   server: {
     host: '0.0.0.0',
     port: 5173,
-    hmr: {
-      port: 5173
-    },
+    hmr: { port: 5173 },
     open: true,
   },
-});
+})
