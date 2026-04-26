@@ -126,7 +126,8 @@ export function IPQCPage() {
 
   const reportRef = useRef<HTMLDivElement>(null);
   const handlePrint = useReactToPrint({
-    contentRef: reportRef,
+    content: () => reportRef.current,
+    documentTitle: selectedBatchForReport ? `IPQC-${selectedBatchForReport}` : 'IPQC-Report',
   });
 
   const handleSave = () => {

@@ -53,7 +53,7 @@ export function COAManagerPage() {
     const printRef = useRef<HTMLDivElement>(null);
 
     const handlePrint = useReactToPrint({
-        contentRef: printRef,
+        content: () => printRef.current,
         documentTitle: selectedCOA ? `COA-${selectedCOA.coaNumber}` : 'COA',
     });
 

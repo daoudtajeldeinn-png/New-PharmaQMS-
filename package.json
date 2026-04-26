@@ -1,7 +1,7 @@
 {
   "name": "pharmaqms-enterprise",
   "private": true,
-  "version": "4.0.5",
+  "version": "4.1.1",
   "description": "Enterprise Pharmaceutical Quality Management System",
   "author": "Dr. Daoud Tajeldeinn",
   "main": "main.cjs",
@@ -11,7 +11,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
-    "electron:build": "npm run build && electron-builder"
+    "electron:build": "npm run build && electron-builder",
+    "deploy": "npm run build && gh-pages -d dist"
   },
   "build": {
     "appId": "com.pharmaqms.enterprise",
@@ -32,7 +33,9 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "public/icons/icon-512x512.png"
@@ -41,7 +44,15 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "shortcutName": "PharmaQMS Enterprise"
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "daoudtajeldeinn-png",
+        "repo": "New-PharmaQMS-",
+        "private": false
+      }
+    ]
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
@@ -71,6 +82,7 @@
     "@radix-ui/react-toggle": "^1.0.3",
     "@radix-ui/react-toggle-group": "^1.0.4",
     "@radix-ui/react-tooltip": "^1.0.7",
+    "@supabase/supabase-js": "^2.104.1",
     "canvg": "^3.0.11",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
@@ -110,6 +122,8 @@
     "concurrently": "^8.2.2",
     "electron": "^28.2.2",
     "electron-builder": "^24.9.1",
+    "electron-updater": "^6.8.3",
+    "gh-pages": "^6.3.0",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.3.3",

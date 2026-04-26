@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { Shield, Lock, Eye, EyeOff, Key, Fingerprint, KeyRound, ShieldAlert, Copy, Check } from 'lucide-react';
 import { useLicense } from './LicenseProvider';
 import { getMachineId } from '@/services/LicenseManager';
@@ -165,14 +166,67 @@ export function SecurityProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    try {
+      // 1. Format username to email if necessary for Supabase
+      const emailToUse = username.includes('@') ? username : `${username}@pharma.corp`;
+      
+      // 2. Attempt Supabase Cloud Authentication
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: emailToUse,
+        password: password,
+      });
 
-    // Authenticate against the dynamic user list
+      if (!authError && authData.user) {
+        // Fetch Cloud Profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', authData.user.id)
+          .single();
+
+        const role = profile?.role || 'viewer';
+        const department = profile?.department || 'General';
+        const name = profile?.full_name || username;
+
+        const sessionExpiry = new Date();
+        sessionExpiry.setHours(sessionExpiry.getHours() + 8);
+
+        const cloudUser: User = {
+          id: authData.user.id,
+          username: username,
+          name: name,
+          role: role as any,
+          department: department,
+          permissions: ROLE_PERMISSIONS[role] || ['products.read'],
+          lastLogin: new Date(),
+          sessionExpiry,
+        };
+
+        setUser(cloudUser);
+        localStorage.setItem('currentUser', JSON.stringify(cloudUser));
+        localStorage.setItem('sessionExpiry', sessionExpiry.toISOString());
+
+        // Log cloud activity
+        await supabase.from('audit_logs').insert({
+          user_id: authData.user.id,
+          action: 'LOGIN',
+          module: 'System',
+          details: { message: 'Cloud authentication successful' }
+        });
+
+        return true;
+      }
+
+      console.warn("Supabase auth failed, attempting local fallback migration...");
+    } catch (e) {
+      console.error("Cloud auth exception:", e);
+    }
+
+    // 3. Fallback to local authentication during migration
+    await new Promise((resolve) => setTimeout(resolve, 500));
     const foundUser = allUsers.find((u) => u.username === username);
 
     if (foundUser && (password === foundUser.password || password === 'password')) {
-      // Set session expiry to 8 hours
       const sessionExpiry = new Date();
       sessionExpiry.setHours(sessionExpiry.getHours() + 8);
 
@@ -186,13 +240,13 @@ export function SecurityProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('currentUser', JSON.stringify(userWithSession));
       localStorage.setItem('sessionExpiry', sessionExpiry.toISOString());
 
-      // Log login activity
+      // Attempt to log activity locally
       const activityLog = JSON.parse(localStorage.getItem('activityLog') || '[]');
       activityLog.unshift({
         timestamp: new Date().toISOString(),
         action: 'LOGIN',
         user: foundUser.username,
-        details: 'User logged in successfully',
+        details: 'User logged in via local fallback',
       });
       localStorage.setItem('activityLog', JSON.stringify(activityLog.slice(0, 100)));
 
@@ -202,9 +256,20 @@ export function SecurityProvider({ children }: { children: ReactNode }) {
     return false;
   };
 
-  const logout = () => {
+  const logout = async () => {
     if (user) {
-      // Log logout activity
+      try {
+        await supabase.auth.signOut();
+        await supabase.from('audit_logs').insert({
+          user_id: user.id.includes('-') ? user.id : null, // Only real UUIDs
+          action: 'LOGOUT',
+          module: 'System',
+          details: { message: 'User logged out' }
+        });
+      } catch (e) {
+        console.error("Cloud logout error:", e);
+      }
+
       const activityLog = JSON.parse(localStorage.getItem('activityLog') || '[]');
       activityLog.unshift({
         timestamp: new Date().toISOString(),

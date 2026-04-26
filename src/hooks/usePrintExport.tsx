@@ -18,7 +18,7 @@ export function usePrintExport() {
     const printRef = useRef<HTMLDivElement>(null);
 
     const handlePrint = useReactToPrint({
-        contentRef: printRef,
+        content: () => printRef.current,
         documentTitle: 'Document',
     });
 
@@ -83,7 +83,7 @@ export function usePrintExport() {
         const { documentTitle = 'Document' } = options;
 
         const printInstance = useReactToPrint({
-            contentRef: printRef,
+            content: () => printRef.current,
             documentTitle,
         });
 
