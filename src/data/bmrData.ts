@@ -6,6 +6,7 @@ export interface BatchIngredient extends Ingredient {
 }
 
 export interface BMRStepExecution {
+    realizedValue: any;
     stepNumber: number;
     phase?: 'Manufacturing' | 'Packaging';
     description: string;
