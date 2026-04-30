@@ -69,7 +69,7 @@ export function Products() {
 
   const handleTest = (product: PharmaceuticalProduct) => {
     // Navigate to testing page with product pre-selected (HashRouter format)
-    window.location.hash = '#testing/results?productId=' + product.id;
+    window.location.hash = '#/testing/results?productId=' + product.id;
   };
 
   const handleSubmit = (product: Partial<PharmaceuticalProduct>) => {

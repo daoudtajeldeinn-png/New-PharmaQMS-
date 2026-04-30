@@ -45,6 +45,7 @@ const [materialForm, setMaterialForm] = useState({
     productionDate: '',
     manufacturingDate: '',
     analysisDate: '',
+    analysisNo: '',
     issueDate: '',
     expiryDate: '',
     location: '',
@@ -108,6 +109,7 @@ const [materialForm, setMaterialForm] = useState({
       productionDate: '',
       manufacturingDate: '',
       analysisDate: '',
+      analysisNo: '',
       issueDate: '',
       expiryDate: '',
       location: '',
@@ -286,7 +288,7 @@ const [materialForm, setMaterialForm] = useState({
       id: `coa-rm-${material.id}-${Date.now()}`,
       type: 'Raw Material' as const,
       coaNumber,
-      analysisNo: `AN-${material.batchNumber}`,
+      analysisNo: material.analysisNo || `AN-${material.batchNumber}`,
       productName: material.name,
       strength: '',
       dosageForm: material.type,
@@ -648,6 +650,16 @@ const [materialForm, setMaterialForm] = useState({
                 type="date"
                 value={materialForm.analysisDate || ''}
                 onChange={(e) => setMaterialForm(prev => ({ ...prev, analysisDate: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="analysisNo">Analysis Number</Label>
+              <Input
+                id="analysisNo"
+                value={materialForm.analysisNo || ''}
+                onChange={(e) => setMaterialForm(prev => ({ ...prev, analysisNo: e.target.value }))}
+                placeholder="e.g. AN-2026-001"
               />
             </div>
 

@@ -66,6 +66,8 @@ export function COAManagerPage() {
         updates = {
           productName: rawMaterial.name,
           manufacturingDate: rawMaterial.manufacturingDate || rawMaterial.receivedDate || '',
+          analysisDate: rawMaterial.analysisDate || '',
+          analysisNo: rawMaterial.analysisNo || `AN-${rawMaterial.batchNumber}`,
           expiryDate: rawMaterial.expiryDate || '',
           manufacturer: rawMaterial.supplier || '',
           dosageForm: rawMaterial.type || '',

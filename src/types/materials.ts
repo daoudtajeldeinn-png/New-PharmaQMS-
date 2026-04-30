@@ -29,6 +29,7 @@ export interface RawMaterial {
   productionDate?: string
   manufacturingDate?: string
   analysisDate?: string
+  analysisNo?: string
   issueDate?: string
   expiryDate: string
   tests: MaterialTest[]

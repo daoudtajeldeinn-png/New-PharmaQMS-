@@ -64,7 +64,7 @@ export function DataTableActions<T extends { id: string }>({
             View
           </DropdownMenuItem>
         )}
-        {(user?.role === 'admin') && onEdit && (
+        {(user?.role === 'admin' || user?.role === 'manager') && onEdit && (
           <DropdownMenuItem 
             onClick={() => onEdit(item)}
             className="text-blue-600 focus:text-blue-600"
@@ -83,7 +83,7 @@ export function DataTableActions<T extends { id: string }>({
             {action.label}
           </DropdownMenuItem>
         ))}
-        {onDelete && (user?.role === 'admin') && (
+        {onDelete && (user?.role === 'admin' || user?.role === 'manager') && (
           <DropdownMenuItem 
             onClick={handleDelete}
             className="text-red-600 focus:text-red-600"
