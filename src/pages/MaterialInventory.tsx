@@ -719,14 +719,6 @@ const [materialForm, setMaterialForm] = useState({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => generateCOA(selectedMaterial)}
-                  >
-                    <FileText className="h-4 w-4 mr-2" />
-                    Export COA
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
                     onClick={() => generateCOAPDF(selectedMaterial)}
                   >
                     <FileText className="h-4 w-4 mr-2" />

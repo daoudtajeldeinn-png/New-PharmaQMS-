@@ -87,6 +87,7 @@ export function BMRManagerPage() {
 
 interface StepUpdate {
   realizedValue?: string;
+  equipmentId?: string;
   startedAt?: string;
   completedAt?: string;
   operatorSignature?: string;
@@ -534,14 +535,25 @@ const handleUpdateStep = (stepNumber: number, updates: StepUpdate) => {
                                                                     ))}
                                                                 </div>
                                                         </div>
-                                                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                                                            <div className="text-[9px] font-bold text-slate-500 uppercase mb-2">Observation / Value Log</div>
-                                                            <Input
-                                                                className="h-9 bg-white text-xs font-black"
-                                                                placeholder="Enter realized value (e.g. 15.2 kp, 45°C)..."
-                                                                value={step.realizedValue || ''}
-                                                                onChange={(e) => handleUpdateStep(step.stepNumber, { realizedValue: e.target.value })}
-                                                            />
+                                                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3">
+                                                            <div>
+                                                                <div className="text-[9px] font-bold text-slate-500 uppercase mb-2">Machine Detail / Equipment ID</div>
+                                                                <Input
+                                                                    className="h-9 bg-white text-xs font-black border-indigo-100 focus:border-indigo-500"
+                                                                    placeholder={mfrStep?.equipmentId ? `Expected: ${mfrStep.equipmentId}` : "Enter Machine ID (e.g. FBD-01)..."}
+                                                                    value={step.equipmentId || ''}
+                                                                    onChange={(e) => handleUpdateStep(step.stepNumber, { equipmentId: e.target.value })}
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <div className="text-[9px] font-bold text-slate-500 uppercase mb-2">Observation / Value Log</div>
+                                                                <Input
+                                                                    className="h-9 bg-white text-xs font-black"
+                                                                    placeholder="Enter realized value (e.g. 15.2 kp, 45°C)..."
+                                                                    value={step.realizedValue || ''}
+                                                                    onChange={(e) => handleUpdateStep(step.stepNumber, { realizedValue: e.target.value })}
+                                                                />
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -675,14 +687,25 @@ selectedBMR.stepExecutions.filter((s: BMRStepExecution) => s.phase === 'Packagin
                                                                     ))}
                                                                 </div>
                                                             </div>
-                                                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                                                                <div className="text-[9px] font-bold text-slate-500 uppercase mb-2">Realized Packaging Yield / Observation</div>
-                                                                <Input
-                                                                    className="h-9 bg-white text-xs font-black"
-                                                                    placeholder="Enter actual count or observation..."
-                                                                    value={step.realizedValue || ''}
-                                                                    onChange={(e) => handleUpdateStep(step.stepNumber, { realizedValue: e.target.value })}
-                                                                />
+                                                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3">
+                                                                <div>
+                                                                    <div className="text-[9px] font-bold text-slate-500 uppercase mb-2">Machine Detail / Equipment ID</div>
+                                                                    <Input
+                                                                        className="h-9 bg-white text-xs font-black border-purple-100 focus:border-purple-500"
+                                                                        placeholder={mfrStep?.equipmentId ? `Expected: ${mfrStep.equipmentId}` : "Enter Machine ID (e.g. BLISTER-01)..."}
+                                                                        value={step.equipmentId || ''}
+                                                                        onChange={(e) => handleUpdateStep(step.stepNumber, { equipmentId: e.target.value })}
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <div className="text-[9px] font-bold text-slate-500 uppercase mb-2">Realized Packaging Yield / Observation</div>
+                                                                    <Input
+                                                                        className="h-9 bg-white text-xs font-black"
+                                                                        placeholder="Enter actual count or observation..."
+                                                                        value={step.realizedValue || ''}
+                                                                        onChange={(e) => handleUpdateStep(step.stepNumber, { realizedValue: e.target.value })}
+                                                                    />
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>

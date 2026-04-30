@@ -59,12 +59,12 @@ export function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
   ]);
 
   const handleMarkRead = (id: number) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-    toast.success('Notification acknowledged');
+    setNotifications(prev => prev.filter(n => n.id !== id));
+    toast.success('Notification cleared');
   };
 
   const clearAllNotifications = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    setNotifications([]);
     toast.success('All notifications cleared');
   };
 
@@ -141,13 +141,20 @@ export function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
               {notifications.map((notification) => (
                 <DropdownMenuItem
                   key={notification.id}
-                  onDoubleClick={() => handleMarkRead(notification.id)}
                   className={cn(
-                    'flex flex-col items-start gap-1 p-4 border-b border-white/5 cursor-pointer hover:bg-white/5 transition-all',
+                    'flex flex-col items-start gap-1 p-4 border-b border-white/5 cursor-pointer hover:bg-white/5 transition-all relative group',
                     !notification.read && 'bg-indigo-500/5'
                   )}
                 >
-                  <div className="flex w-full items-center justify-between mb-1">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="absolute right-1 top-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity bg-white/10 hover:bg-red-500/20" 
+                    onClick={(e) => { e.stopPropagation(); handleMarkRead(notification.id); }}
+                  >
+                    <X className="h-3 w-3 text-slate-400 hover:text-red-500" />
+                  </Button>
+                  <div className="flex w-full items-center justify-between mb-1 pr-6">
                     <span className="text-sm font-bold">{notification.title}</span>
                     <Badge
                       variant={
@@ -162,7 +169,7 @@ export function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                       {notification.type}
                     </Badge>
                   </div>
-                  <p className="text-xs text-slate-500 leading-relaxed">{notification.message}</p>
+                  <p className="text-xs text-slate-500 leading-relaxed pr-6">{notification.message}</p>
                   <span className="text-[9px] font-bold text-slate-400 uppercase mt-1">{notification.time}</span>
                 </DropdownMenuItem>
               ))}

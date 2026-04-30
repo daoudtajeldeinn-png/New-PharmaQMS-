@@ -20,6 +20,7 @@ export interface BMRStepExecution {
     comments?: string;
     realizedParameters?: Record<string, string>;
     instructionChecklist?: { text: string; completed: boolean }[];
+    equipmentId?: string; // Newly added
 }
 
 export interface MaterialVerification {
