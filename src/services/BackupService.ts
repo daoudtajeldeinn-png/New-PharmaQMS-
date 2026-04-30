@@ -51,6 +51,28 @@ export const restoreSessionData = (jsonData: string) => {
     }
 };
 
+export const importSystemData = async (backupData: Record<string, any[]>) => {
+    try {
+        const tables = db.tables;
+        
+        // Use a transaction for safety
+        await db.transaction('rw', tables, async () => {
+            for (const table of tables) {
+                const data = backupData[table.name];
+                if (data && Array.isArray(data)) {
+                    await table.clear();
+                    await table.bulkAdd(data);
+                }
+            }
+        });
+        
+        return true;
+    } catch (error) {
+        console.error("Import failed:", error);
+        throw error;
+    }
+};
+
 export const backupSessionData = async () => {
   return await backupSystemData();
 };

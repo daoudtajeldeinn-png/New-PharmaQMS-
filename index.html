@@ -85,6 +85,17 @@
     </div>
   </noscript>
   <div id="root"></div>
+  <script>
+    // Expose ipcRenderer to window if running in Electron with nodeIntegration
+    if (typeof require !== 'undefined') {
+      try {
+        const { ipcRenderer } = require('electron');
+        window.ipcRenderer = ipcRenderer;
+      } catch (e) {
+        console.warn('Failed to load ipcRenderer:', e);
+      }
+    }
+  </script>
   <script type="module" src="src/main.tsx"></script>
 </body>
 

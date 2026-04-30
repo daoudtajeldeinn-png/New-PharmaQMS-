@@ -418,8 +418,10 @@ export function COAManagerPage() {
                         <div className="grid grid-cols-2 gap-x-8 gap-y-2 mb-8 p-4 border-2 border-black rounded-lg text-sm bg-slate-50/50">
                             <div className="flex justify-between border-b border-dotted pb-1"><strong>Product Name:</strong> <span className="font-bold">{selectedCOA.productName}</span></div>
                             <div className="flex justify-between border-b border-dotted pb-1"><strong>Batch Number:</strong> <span className="font-mono">{selectedCOA.batchNumber}</span></div>
-                            <div className="flex justify-between border-b border-dotted pb-1"><strong>Analysis No:</strong> <span>{selectedCOA.analysisNo}</span></div>
+                            <div className="flex justify-between border-b border-dotted pb-1"><strong>Analysis No:</strong> <span className="font-bold text-blue-700">{selectedCOA.analysisNo}</span></div>
                             <div className="flex justify-between border-b border-dotted pb-1"><strong>Batch Size:</strong> <span>{selectedCOA.batchSize}</span></div>
+                            <div className="flex justify-between border-b border-dotted pb-1"><strong>Mfg. Date:</strong> <span className="font-bold">{selectedCOA.mfgDate}</span></div>
+                            <div className="flex justify-between border-b border-dotted pb-1"><strong>Exp. Date:</strong> <span className="font-bold">{selectedCOA.expiryDate}</span></div>
                             <div className="flex justify-between border-b border-dotted pb-1"><strong>Strength:</strong> <span>{selectedCOA.strength}</span></div>
                             <div className="flex justify-between border-b border-dotted pb-1"><strong>Dosage Form:</strong> <span>{selectedCOA.dosageForm}</span></div>
                             <div className="flex justify-between border-b border-dotted pb-1"><strong>Issue Date:</strong> <span>{selectedCOA.issueDate}</span></div>

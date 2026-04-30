@@ -41,6 +41,7 @@ import {
   Trash2,
   Download,
   Upload,
+  RefreshCw,
   KeyRound,
   UserPlus,
   Pencil,
@@ -50,7 +51,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useLicense } from '@/components/security/LicenseProvider';
 import { useSecurity, type User as UserType } from '@/components/security/SecurityProvider';
-import { backupSystemData, prepareGoogleDriveBackup } from '@/services/BackupService';
+import { backupSystemData, prepareGoogleDriveBackup, importSystemData, restoreSessionData } from '@/services/BackupService';
+import { db } from '@/db/db';
 import { toast } from 'sonner';
 
 // ==================== Helper: Load/Save Company Settings ====================
@@ -139,6 +141,77 @@ export function SettingsPage() {
     saveCompanySettings(company);
     setInitialCompany({ ...company });
     toast.success('Company settings saved successfully!');
+  };
+
+  const handleImportData = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const content = e.target?.result as string;
+        const backupData = restoreSessionData(content);
+        
+        if (backupData) {
+          await importSystemData(backupData);
+          toast.success('System database restored successfully! The page will now reload.');
+          setTimeout(() => window.location.reload(), 2000);
+        } else {
+          toast.error('Invalid backup file format');
+        }
+      } catch (error) {
+        console.error('Import error:', error);
+        toast.error('Failed to restore database');
+      }
+    };
+    reader.readAsText(file);
+    // Reset input
+    event.target.value = '';
+  };
+
+  const handleWipeDatabase = async () => {
+    if (!confirm('CRITICAL: This will permanently delete ALL system records. Are you absolutely sure?')) {
+      return;
+    }
+
+    try {
+      const tables = db.tables;
+      await db.transaction('rw', tables, async () => {
+        for (const table of tables) {
+          await table.clear();
+        }
+      });
+      toast.success('Database wiped successfully. Reloading...');
+      setTimeout(() => window.location.reload(), 2000);
+    } catch (error) {
+      console.error('Wipe error:', error);
+      toast.error('Failed to wipe database');
+    }
+  };
+
+  const handleCheckUpdate = async () => {
+    // Only available in Electron environment
+    if (!(window as any).ipcRenderer) {
+      toast.info('Update check is only available in the Desktop application.');
+      return;
+    }
+
+    toast.loading('Checking for system updates...', { id: 'update-check' });
+    try {
+      const result = await (window as any).ipcRenderer.invoke('check-for-updates');
+      if (result.success) {
+        if (result.info) {
+          toast.success(`Update found: v${result.info.version}. Downloading in background...`, { id: 'update-check' });
+        } else {
+          toast.success('You are running the latest version of PharmaQMS.', { id: 'update-check' });
+        }
+      } else {
+        toast.error(`Update check failed: ${result.error}`, { id: 'update-check' });
+      }
+    } catch (error) {
+      toast.error('Could not connect to update server.', { id: 'update-check' });
+    }
   };
 
   const openAddUserDialog = () => {
@@ -648,7 +721,7 @@ export function SettingsPage() {
               <div className="space-y-2">
                 <Label>System Backup (Local/Cloud)</Label>
                 <p className="text-sm text-slate-500">Export encapsulated laboratory and QMS data</p>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button variant="outline" className="border-blue-200 text-blue-700" onClick={() => backupSystemData()}>
                     <Download className="mr-2 h-4 w-4" />
                     Generate Archive
@@ -664,22 +737,43 @@ export function SettingsPage() {
                     <Globe className="mr-2 h-4 w-4" />
                     Backup to Google Drive
                   </Button>
+                  <Button variant="secondary" className="bg-slate-200 hover:bg-slate-300 text-slate-700" onClick={handleCheckUpdate}>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Check for Updates
+                  </Button>
                 </div>
               </div>
               <Separator />
               <div className="space-y-2">
                 <Label>Import Protocol</Label>
                 <p className="text-sm text-slate-500">Restore or update database from external file</p>
-                <Button variant="outline" className="border-emerald-200 text-emerald-700">
-                  <Upload className="mr-2 h-4 w-4" />
-                  Upload Data File
-                </Button>
+                <div className="flex flex-col gap-2">
+                  <input
+                    type="file"
+                    id="backup-upload"
+                    className="hidden"
+                    accept=".json"
+                    onChange={handleImportData}
+                  />
+                  <Button 
+                    variant="outline" 
+                    className="border-emerald-200 text-emerald-700"
+                    onClick={() => document.getElementById('backup-upload')?.click()}
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload Data File
+                  </Button>
+                </div>
               </div>
               <Separator />
               <div className="space-y-2">
                 <Label className="text-red-700 font-black">CRITICAL: DANGER ZONE</Label>
                 <p className="text-sm text-slate-500 font-medium">Irreversible wipe of all system records and logs</p>
-                <Button variant="destructive" className="w-full">
+                <Button 
+                  variant="destructive" 
+                  className="w-full"
+                  onClick={handleWipeDatabase}
+                >
                   <Trash2 className="mr-2 h-4 w-4" />
                   Wipe Entire Database
                 </Button>
@@ -700,8 +794,8 @@ export function SettingsPage() {
             </div>
             <div className="text-right">
               <p className="text-sm text-slate-600 font-bold">Release Build</p>
-              <p className="text-lg font-black text-blue-900">v1.2.4-stable</p>
-              <p className="text-xs text-slate-500">© 2024-2025 All Rights Reserved</p>
+              <p className="text-lg font-black text-blue-900">v4.1.1-stable</p>
+              <p className="text-xs text-slate-500">© 2024-2026 All Rights Reserved</p>
             </div>
           </div>
         </CardContent>

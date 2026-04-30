@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, dialog, ipcMain } = require('electron');
+const { app, BrowserWindow, Menu, dialog, ipcMain, session } = require('electron');
 const path = require('path');
 const { execSync } = require('child_process');
 
@@ -14,6 +14,15 @@ try {
   autoUpdater = require('electron-updater').autoUpdater;
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
+
+  // Try to attach electron-log for debug output
+  try {
+    const log = require('electron-log');
+    autoUpdater.logger = log;
+    autoUpdater.logger.transports.file.level = 'info';
+  } catch (_) {
+    // electron-log not installed, skip
+  }
 } catch (e) {
   console.warn('electron-updater not available:', e.message);
 }
@@ -93,7 +102,17 @@ function createWindow() {
   if (isDev) {
     win.loadURL('http://localhost:5173');
   } else {
-    win.loadURL(VERCEL_URL);
+    // ── Clear PWA service worker & HTTP cache so we always load the latest Vercel build
+    const ses = win.webContents.session;
+    Promise.all([
+      ses.clearCache(),
+      ses.clearStorageData({ storages: ['serviceworkers', 'cachestorage'] })
+    ]).then(() => {
+      win.loadURL(VERCEL_URL);
+    }).catch(() => {
+      // If clearing fails, still try to load
+      win.loadURL(VERCEL_URL);
+    });
     win.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
       if (validatedURL === VERCEL_URL) {
         win.loadURL(`data:text/html,
@@ -145,6 +164,23 @@ function createWindow() {
 
       autoUpdater.on('error', (err) => {
         console.error('Auto-updater error:', err.message);
+      });
+
+      autoUpdater.on('update-not-available', () => {
+        // Only show if manually triggered or we want to be verbose
+        // For now, let's just log it or we could add a flag to show dialog
+      });
+
+      ipcMain.handle('check-for-updates', async () => {
+        if (autoUpdater) {
+          try {
+            const result = await autoUpdater.checkForUpdates();
+            return { success: true, info: result?.updateInfo };
+          } catch (error) {
+            return { success: false, error: error.message };
+          }
+        }
+        return { success: false, error: 'Auto-updater not initialized' };
       });
     }
   }
