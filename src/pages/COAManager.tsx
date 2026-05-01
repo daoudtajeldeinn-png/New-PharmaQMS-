@@ -43,12 +43,69 @@ export function COAManagerPage() {
     const [batchForFetch, setBatchForFetch] = useState('');
 
     const handleFetchTests = () => {
-      dispatch({
-        type: 'FETCH_BATCH_TESTS_FOR_COA',
-        payload: { batchNumber: batchForFetch }
-      });
-      toast.success('Tests fetched from batch! Check test results section.');
-      setShowFetchTests(false);
+      const batchNo = formData.batchNumber;
+      if (!batchNo) {
+        toast.error('Please enter a Batch ID first');
+        return;
+      }
+
+      let tests: any[] = [];
+      let updates: Partial<COARecord> = {};
+
+      // 1. Check Raw Materials
+      const rawMaterial = state.rawMaterials?.find(rm => rm.batchNumber === batchNo);
+      if (rawMaterial) {
+        if (rawMaterial.tests && rawMaterial.tests.length > 0) {
+          tests = rawMaterial.tests.map(t => ({
+            test: t.name,
+            specification: t.spec || '',
+            result: t.result || '',
+            status: t.status === 'Pass' ? 'Pass' : t.status === 'Fail' ? 'Fail' : 'Pending'
+          }));
+        }
+        updates = {
+          productName: rawMaterial.name,
+          manufacturingDate: rawMaterial.manufacturingDate || rawMaterial.receivedDate || '',
+          analysisDate: rawMaterial.analysisDate || '',
+          analysisNo: rawMaterial.analysisNo || `AN-${rawMaterial.batchNumber}`,
+          expiryDate: rawMaterial.expiryDate || '',
+          manufacturer: rawMaterial.supplier || '',
+          dosageForm: rawMaterial.type || '',
+          batchSize: `${rawMaterial.quantity} ${rawMaterial.unit}`,
+        };
+      } else {
+        // 2. Check Finished Products / Test Results
+        const batchResults = state.testResults?.filter(tr => tr.batchNumber === batchNo);
+        if (batchResults && batchResults.length > 0) {
+          tests = batchResults.map(tr => ({
+            test: tr.testMethodId || 'Test',
+            specification: 'Refer to Test Result',
+            result: tr.overallResult || 'Pass',
+            status: tr.overallResult === 'Pass' ? 'Pass' : 'Fail'
+          }));
+        }
+        const product = state.products?.find(p => p.batches?.includes(batchNo) || p.id === batchResults?.[0]?.productId);
+        if (product) {
+          updates = {
+            productName: product.name,
+            dosageForm: product.dosageForm || '',
+            expiryDate: product.expiryDate || '',
+          };
+        }
+      }
+
+      if (tests.length === 0 && Object.keys(updates).length === 0) {
+        toast.error('No matching data found for this batch');
+        return;
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        ...updates,
+        testResults: tests.length > 0 ? tests : prev.testResults
+      }));
+      
+      toast.success('Batch data and tests successfully fetched!');
     };
     const printRef = useRef<HTMLDivElement>(null);
 
@@ -337,17 +394,10 @@ export function COAManagerPage() {
                             <div className="space-y-1 col-span-2">
                               <Button 
                                 type="button"
-                                onClick={() => {
-                                  if (formData.batchNumber) {
-                                    setBatchForFetch(formData.batchNumber);
-                                    setShowFetchTests(true);
-                                  } else {
-                                    toast.error('Enter Batch ID first');
-                                  }
-                                }}
+                                onClick={handleFetchTests}
                                 className="w-full bg-green-600 hover:bg-green-700 text-white font-bold"
                               >
-                                🔄 Fetch Tests from Batch Test Results
+                                🔄 Fetch Data & Tests by Batch ID
                               </Button>
                             </div>
                             <div className="col-span-2 space-y-1"><Label>Recall & Market Complaint Status</Label><Input value={formData.marketComplaintStatus || ''} onChange={e => setFormData({ ...formData, marketComplaintStatus: e.target.value })} placeholder="Verified and Compliant" className="border-slate-300" /></div>

@@ -15,6 +15,13 @@ try {
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
 
+  // Configure GitHub as the update server
+  autoUpdater.setFeedURL({
+    provider: 'github',
+    owner: 'daoudtajeldeinn-png',
+    repo: 'New-PharmaQMS-'
+  });
+
   // Try to attach electron-log for debug output
   try {
     const log = require('electron-log');

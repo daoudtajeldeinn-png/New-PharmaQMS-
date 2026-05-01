@@ -12,6 +12,40 @@ import { useStore } from '@/hooks/useStore';
 import { usePrintExport } from '@/hooks/usePrintExport';
 import { toast } from 'sonner';
 
+const getStandardProcedure = (department: string) => {
+    const lower = department.toLowerCase();
+    if (lower.includes('granulation')) {
+        return {
+            description: "Wet granulation using High Shear Mixer Granulator",
+            instructions: ["Load dry mix into RMG", "Add binder solution at specified rate", "Knead until correct consistency is achieved"],
+            equipmentId: "RMG-01",
+            criticalParameters: ["Impeller Speed (rpm): ____", "Chopper Speed (rpm): ____", "Binder Addition Rate: ____"]
+        };
+    } else if (lower.includes('sifting') || lower.includes('sizing') || lower.includes('milling')) {
+        return {
+            description: "Sifting/Milling of materials",
+            instructions: ["Check screen integrity before starting", "Feed material at a constant rate", "Collect sifted material in labeled containers"],
+            equipmentId: "MILL-01",
+            criticalParameters: ["Screen Size (mm): ____", "Speed (rpm): ____"]
+        };
+    } else if (lower.includes('drying') || lower.includes('fbd')) {
+        return {
+            description: "Drying of wet mass using Fluid Bed Dryer",
+            instructions: ["Load wet granules into FBD bowl", "Set inlet temperature and drying time", "Check LOD (Loss on Drying) periodically"],
+            equipmentId: "FBD-01",
+            criticalParameters: ["Inlet Temp (°C): ____", "Product Temp (°C): ____", "Air Flow (CFM): ____", "Target LOD (%): ____"]
+        };
+    } else if (lower.includes('mixing') || lower.includes('blending') || lower.includes('rmg')) {
+        return {
+            description: "Final mixing/blending of granules with extra-granular materials",
+            instructions: ["Load granules and sifted lubricants", "Mix for validated time", "Discharge into IPC bins"],
+            equipmentId: "BLEND-01",
+            criticalParameters: ["Blender Speed (rpm): ____", "Mixing Time (min): ____"]
+        };
+    }
+    return null;
+};
+
 export function MFRManagerPage() {
     const { state, dispatch } = useStore();
     const formulas = Object.values(state.masterFormulas);
@@ -392,6 +426,13 @@ export function MFRManagerPage() {
                                             <Input placeholder="Department" value={step.department} onChange={e => {
                                                 const newSteps = [...(formData.processSteps || [])];
                                                 newSteps[idx].department = e.target.value;
+                                                const template = getStandardProcedure(e.target.value);
+                                                if (template && (!newSteps[idx].description || newSteps[idx].description === '')) {
+                                                    newSteps[idx].description = template.description;
+                                                    newSteps[idx].instructions = template.instructions;
+                                                    newSteps[idx].equipmentId = template.equipmentId;
+                                                    newSteps[idx].criticalParameters = template.criticalParameters;
+                                                }
                                                 setFormData({ ...formData, processSteps: newSteps });
                                             }} />
                                             <Input placeholder="Role Required" value={step.roleRequired} onChange={e => {

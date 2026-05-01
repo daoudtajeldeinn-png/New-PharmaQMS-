@@ -1,4 +1,5 @@
 export interface Ingredient {
+    standardQty: number;
     itemCode: string;
     description: string;
     quantity: number;

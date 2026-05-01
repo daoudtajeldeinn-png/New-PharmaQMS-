@@ -41,3 +41,7 @@ SCI-clone
 dist-electron
 node_modules
 dist
+dist-electron/
+node_modules/
+dist-electron/
+node_modules/
