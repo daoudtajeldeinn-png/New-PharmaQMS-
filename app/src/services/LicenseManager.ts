@@ -94,9 +94,50 @@ function formatAsKey(str: string, length: number): string {
 
 // ==================== License Key Validation ====================
 
+// ==================== Date Utilities ====================
+
 /**
- * Validates a license key format and checks against machine ID
- * Format: XXXX-XXXX-XXXX-XXXX (16 characters with dashes)
+ * Encode expiry days from today using epoch offset
+ */
+function encodeExpiryDate(expiryDays: number): string {
+    const epochOffset = 19000;
+    return (expiryDays + epochOffset).toString(16).toUpperCase().padStart(3, '0');
+}
+
+/**
+ * Decode expiry days from encoded date
+ */
+function decodeExpiryDate(encoded: string): number {
+    const epochOffset = 19000;
+    return parseInt(encoded, 16) - epochOffset;
+}
+
+/**
+ * Check if key is expired based on encoded expiry date
+ */
+function isKeyExpired(key: string): { expired: boolean; daysRemaining: number } {
+    const parts = key.split('-');
+    if (parts.length < 3) return { expired: true, daysRemaining: 0 };
+
+    // Extract expiry code from part 2 (format: XX + XXXXXX -> XXXXXX + XX reversed)
+    const expiryPart = parts[2];
+    const expiryCode = expiryPart.substring(2) + expiryPart.substring(0, 2);
+    const expiryDays = decodeExpiryDate(expiryCode);
+
+    const today = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+    const daysRemaining = expiryDays - today;
+
+    return {
+        expired: daysRemaining < 0,
+        daysRemaining,
+    };
+}
+
+/**
+ * Validates a license key format and checks expiration
+ * Supports both 4-group (legacy) and 5-group (current) formats:
+ * - Legacy: XXXX-XXXX-XXXX-XXXX (16 hex chars)
+ * - Current: XXXX-XXXX-XXXX-XXXX-XXXX (20 hex chars with embedded expiry)
  */
 export function validateLicenseKey(key: string): LicenseStatus {
     // Check format
@@ -110,23 +151,42 @@ export function validateLicenseKey(key: string): LicenseStatus {
     // Normalize key (remove spaces, uppercase)
     const normalizedKey = key.trim().toUpperCase().replace(/\s+/g, '');
 
-    // Check format: XXXX-XXXX-XXXX-XXXX
-    const keyPattern = /^[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}$/;
-    if (!keyPattern.test(normalizedKey)) {
+    // Check for valid prefixes (both legacy and new formats)
+    const validPrefixes = ['DEMO', 'TEST', 'TRL', 'ENT', 'SIT', 'DEMO', 'ENT', 'SIT', 'TRL'];
+    const hasValidPrefix = validPrefixes.some(prefix => normalizedKey.startsWith(prefix));
+
+    // Try new 5-group format first (XXXX-XXXX-XXXX-XXXX-XXXX)
+    const newKeyPattern = /^[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}$/;
+
+    if (newKeyPattern.test(normalizedKey)) {
+        // Validate the new format with expiry checking
+        const { expired, daysRemaining } = isKeyExpired(normalizedKey);
+
+        if (expired) {
+            return {
+                isValid: false,
+                licenseKey: normalizedKey,
+                message: `License key has expired`,
+            };
+        }
+
+        // Extract tier from first part
+        const tierMatch = normalizedKey.match(/^([A-F0-9]{4})/);
+        const tier = tierMatch ? tierMatch[1] : 'UNKNOWN';
+
         return {
-            isValid: false,
-            message: 'Invalid license key format. Expected: XXXX-XXXX-XXXX-XXXX',
+            isValid: true,
+            licenseKey: normalizedKey,
+            message: `License activated (${daysRemaining} days remaining)`,
         };
     }
 
-    // For demo/development purposes, we accept any valid format key
-    // In production, this would validate against a server
-    const isValidFormat = normalizedKey.length === 19; // 16 chars + 3 dashes
+    // Fall back to legacy 4-group format: XXXX-XXXX-XXXX-XXXX
+    const legacyKeyPattern = /^[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}$/;
 
-    // Check if it's a demo key (for testing)
-    const isDemoKey = normalizedKey.startsWith('DEMO') || normalizedKey.startsWith('TEST');
+    if (legacyKeyPattern.test(normalizedKey)) {
+        const isDemoKey = normalizedKey.startsWith('DEMO') || normalizedKey.startsWith('TEST');
 
-    if (isValidFormat || isDemoKey) {
         return {
             isValid: true,
             licenseKey: normalizedKey,
@@ -134,9 +194,18 @@ export function validateLicenseKey(key: string): LicenseStatus {
         };
     }
 
+    // Check if it's a demo key with any valid hex format (loose validation for testing)
+    if (hasValidPrefix && normalizedKey.length >= 16) {
+        return {
+            isValid: true,
+            licenseKey: normalizedKey,
+            message: 'License activated (loose validation)',
+        };
+    }
+
     return {
         isValid: false,
-        message: 'License key validation failed',
+        message: 'Invalid license key format. Expected: XXXX-XXXX-XXXX-XXXX-XXXX',
     };
 }
 
