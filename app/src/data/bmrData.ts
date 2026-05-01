@@ -15,10 +15,19 @@ export interface BMRStepExecution {
     operatorSignature?: string;
     supervisorSignature?: string;
     qaSignature?: string;
+    completedBy?: string;
     status: 'Pending' | 'In-Progress' | 'Completed' | 'Skipped';
     comments?: string;
     realizedParameters?: Record<string, string>;
     instructionChecklist?: { text: string; completed: boolean }[];
+}
+
+export interface QuarantineStep {
+    stepNumber: number;
+    description: string;
+    status: 'Pending' | 'In-Progress' | 'Completed';
+    completedAt?: string;
+    completedBy?: string;
 }
 
 export interface MaterialVerification {
@@ -32,15 +41,22 @@ export interface BatchRecord {
     id: string;
     batchNumber: string;
     mfrId: string; // Linked MFR
+    mfrNumber?: string;
     productName: string;
     batchSize: number;
     batchSizeUnit: string;
+    batchSizeKg?: number;
+    productionDate?: string;
+    startDate?: string;
+    finishDate?: string;
     mfgDate: string;
     expiryDate: string;
-    status: 'Issuance' | 'Manufacturing' | 'Quarantine' | 'Released' | 'Rejected';
+    analysisNo?: string;
+    status: 'Issuance' | 'Manufacturing' | 'Quarantine' | 'Released' | 'Rejected' | 'Planned' | 'PLANNED';
     issuanceDate: string;
     issuedBy: string;
     stepExecutions: BMRStepExecution[];
+    quarantineSteps?: QuarantineStep[];
     materialVerifications?: MaterialVerification[];
     ingredients?: BatchIngredient[];
     actualYield?: number;

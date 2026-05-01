@@ -5,6 +5,7 @@ import { batchRecords, type BatchRecord, type QuarantineStep } from '@/data/bmrD
 import { masterFormulas } from '@/data/mfrData';
 import { SignatureModal } from '@/components/SignatureModal';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/lib/supabase';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,12 +29,58 @@ import { toast } from 'sonner';
 
 export default function BMRPage() {
     const [selectedBatch, setSelectedBatch] = React.useState<BatchRecord | null>(null);
+    const [allBatches, setAllBatches] = React.useState<BatchRecord[]>(batchRecords);
+    const [loading, setLoading] = React.useState(true);
     const [showSignature, setShowSignature] = React.useState(false);
     const [signatureAction, setSignatureAction] = React.useState<{
         type: 'operator' | 'supervisor' | 'qa';
         stepIndex: number;
         stepType: 'manufacturing' | 'quarantine';
     } | null>(null);
+
+    React.useEffect(() => {
+        const fetchBatches = async () => {
+            try {
+                const { data, error } = await supabase.from('batch_records').select('*');
+                if (error) {
+                    console.error('Supabase fetch error:', error);
+                    // Fallback to local
+                    setAllBatches(batchRecords);
+                } else if (data && data.length > 0) {
+                    // Map database rows to app format if needed. Here we assume direct match or we combine them.
+                    const mapped = data.map((d: any) => ({
+                        id: d.id,
+                        batchNumber: d.batch_number,
+                        mfrId: d.product_id || '',
+                        mfrNumber: d.mfr_no,
+                        productName: d.product_name || 'Fetched Product',
+                        batchSize: Number(d.batch_size_tablet) || 0,
+                        batchSizeUnit: 'Tablets',
+                        batchSizeKg: Number(d.batch_size_kg) || 0,
+                        productionDate: d.production_date,
+                        startDate: d.start_date,
+                        finishDate: d.finish_date,
+                        mfgDate: d.production_date || '',
+                        expiryDate: d.exp_date || '',
+                        analysisNo: d.analysis_no,
+                        status: d.status || 'Manufacturing',
+                        issuanceDate: d.created_at,
+                        issuedBy: d.created_by || 'Admin',
+                        stepExecutions: [], // To be fetched or initialized
+                        quarantineSteps: []
+                    })) as BatchRecord[];
+                    
+                    // Combine with local mock data for demo purposes, or replace entirely:
+                    setAllBatches([...batchRecords, ...mapped]);
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchBatches();
+    }, []);
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -60,10 +107,57 @@ export default function BMRPage() {
         setShowSignature(true);
     };
 
-    const handleConfirmSignature = (signatureData: { signerName: string; timestamp: Date; intent: string }) => {
+    const handleConfirmSignature = async (signatureData: { signerName: string; timestamp: Date; intent: string }) => {
         if (!selectedBatch || !signatureAction) return;
 
-        toast.success(`${signatureAction.type.toUpperCase()} signature executed by ${signatureData.signerName} at ${signatureData.timestamp.toLocaleString()}`);
+        const updatedBatch = { ...selectedBatch };
+        const formattedTime = signatureData.timestamp.toLocaleString('en-US', {
+            month: 'short', day: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit', hour12: true
+        });
+
+        if (signatureAction.stepType === 'manufacturing') {
+            const step = updatedBatch.stepExecutions[signatureAction.stepIndex];
+            if (signatureAction.type === 'operator') {
+                step.operatorSignature = signatureData.signerName;
+                if (step.status === 'Pending') {
+                    step.status = 'In-Progress';
+                    step.startedAt = formattedTime;
+                } else if (step.status === 'In-Progress') {
+                    step.status = 'Completed';
+                    step.completedAt = formattedTime;
+                }
+            } else if (signatureAction.type === 'supervisor') {
+                step.supervisorSignature = signatureData.signerName;
+            } else if (signatureAction.type === 'qa') {
+                step.qaSignature = signatureData.signerName;
+            }
+        } else if (signatureAction.stepType === 'quarantine' && updatedBatch.quarantineSteps) {
+            const step = updatedBatch.quarantineSteps[signatureAction.stepIndex];
+            if (signatureAction.type === 'qa') {
+                if (step.status === 'Pending') {
+                    step.status = 'In-Progress';
+                } else if (step.status === 'In-Progress') {
+                    step.status = 'Completed';
+                    step.completedAt = formattedTime;
+                    step.completedBy = signatureData.signerName;
+                }
+            }
+        }
+
+        setSelectedBatch(updatedBatch);
+        setAllBatches(allBatches.map(b => b.id === updatedBatch.id ? updatedBatch : b));
+
+        // Sync to Supabase in the background
+        if (!updatedBatch.id.startsWith('bmr_')) {
+            try {
+                await supabase.from('batch_records').update({ updated_at: new Date().toISOString() }).eq('id', updatedBatch.id);
+            } catch (e) {
+                console.error("Supabase update failed", e);
+            }
+        }
+
+        toast.success(`${signatureAction.type.toUpperCase()} signature executed by ${signatureData.signerName} at ${formattedTime}`);
         setShowSignature(false);
     };
 
@@ -88,7 +182,8 @@ export default function BMRPage() {
                 </div>
 
                 <div className="grid gap-4">
-                    {batchRecords.map((batch) => (
+                    {loading && <p className="text-sm text-slate-500">Loading batch records...</p>}
+                    {allBatches.map((batch) => (
                         <Card 
                             key={batch.id} 
                             className="cursor-pointer hover:border-indigo-500 transition-colors"

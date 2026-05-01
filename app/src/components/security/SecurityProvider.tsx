@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { supabase } from '@/lib/supabase';
 
 // ==================== Types ====================
 export interface User {
@@ -143,79 +144,136 @@ export function SecurityProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     console.log("SecurityProvider: Checking for session...");
-    // Check for stored session
-    const storedUser = localStorage.getItem('currentUser');
-    const sessionExpiry = localStorage.getItem('sessionExpiry');
-
-    if (storedUser && sessionExpiry) {
-      const expiry = new Date(sessionExpiry);
-      if (expiry > new Date()) {
-        console.log("SecurityProvider: Session valid, restoring user...");
-        setUser(JSON.parse(storedUser));
+    
+    // Check Supabase session first
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        // Fetch profile
+        supabase.from('profiles').select('*').eq('id', session.user.id).single()
+          .then(({ data: profile }) => {
+            if (profile) {
+              setUser({
+                id: profile.id,
+                username: profile.email,
+                name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || profile.email,
+                role: (profile.role?.toLowerCase() as Role) || 'viewer',
+                department: profile.department || 'General',
+                sessionExpiry: new Date(session.expires_at ? session.expires_at * 1000 : Date.now() + 8*60*60*1000)
+              });
+            }
+          });
       } else {
-        console.log("SecurityProvider: Session expired.");
-        // Session expired
-        localStorage.removeItem('currentUser');
-        localStorage.removeItem('sessionExpiry');
+        // Fallback check local mock session if wanted, or clear
+        const storedUser = localStorage.getItem('currentUser');
+        const sessionExpiry = localStorage.getItem('sessionExpiry');
+
+        if (storedUser && sessionExpiry) {
+          const expiry = new Date(sessionExpiry);
+          if (expiry > new Date()) {
+            console.log("SecurityProvider: Session valid, restoring user...");
+            setUser(JSON.parse(storedUser));
+          } else {
+            console.log("SecurityProvider: Session expired.");
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('sessionExpiry');
+          }
+        }
       }
-    } else {
-      console.log("SecurityProvider: No session found.");
-    }
-    setIsLoading(false);
-    console.log("SecurityProvider: Loading set to false.");
+      setIsLoading(false);
+    });
+    
+    // Listen for auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+      } else if (session && event === 'SIGNED_IN') {
+        const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+        if (profile) {
+          setUser({
+            id: profile.id,
+            username: profile.email,
+            name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || profile.email,
+            role: (profile.role?.toLowerCase() as Role) || 'viewer',
+            department: profile.department || 'General',
+            sessionExpiry: new Date(session.expires_at ? session.expires_at * 1000 : Date.now() + 8*60*60*1000)
+          });
+        }
+      }
+    });
+
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    try {
+      // 1. Try Supabase Auth
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: username,
+        password: password,
+      });
 
-    // Authenticate against the dynamic user list
+      if (!error && data.session) {
+        // Fetch user roles
+        const { data: profile } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
+        
+        const sessionExpiry = new Date(data.session.expires_at ? data.session.expires_at * 1000 : Date.now() + 8 * 60 * 60 * 1000);
+        const userObj: User = {
+            id: profile?.id || data.user.id,
+            username: profile?.email || data.user.email || username,
+            name: profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || profile.email : username,
+            role: (profile?.role?.toLowerCase() as Role) || 'viewer',
+            department: profile?.department || 'General',
+            sessionExpiry,
+            lastLogin: new Date()
+        };
+
+        setUser(userObj);
+        
+        // Log to Supabase audit
+        supabase.from('audit_logs').insert({
+            action: 'USER_LOGIN',
+            entity_type: 'System',
+            entity_id: userObj.id,
+            details: { method: 'Supabase Auth' }
+        }).then();
+
+        return true;
+      }
+      
+      console.log("Supabase login failed, trying fallback mock auth", error);
+    } catch (err) {
+      console.error("Supabase auth error", err);
+    }
+
+    // 2. Fallback to mock auth (for development/demo if Supabase is not fully configured)
+    await new Promise((resolve) => setTimeout(resolve, 500));
     const foundUser = allUsers.find((u) => u.username === username);
 
     if (foundUser && (password === foundUser.password || password === 'password')) {
-      // Set session expiry to 8 hours
       const sessionExpiry = new Date();
       sessionExpiry.setHours(sessionExpiry.getHours() + 8);
-
-      const userWithSession = {
-        ...foundUser,
-        lastLogin: new Date(),
-        sessionExpiry,
-      };
-
+      const userWithSession = { ...foundUser, lastLogin: new Date(), sessionExpiry };
       setUser(userWithSession);
       localStorage.setItem('currentUser', JSON.stringify(userWithSession));
       localStorage.setItem('sessionExpiry', sessionExpiry.toISOString());
-
-      // Log login activity
-      const activityLog = JSON.parse(localStorage.getItem('activityLog') || '[]');
-      activityLog.unshift({
-        timestamp: new Date().toISOString(),
-        action: 'LOGIN',
-        user: foundUser.username,
-        details: 'User logged in successfully',
-      });
-      localStorage.setItem('activityLog', JSON.stringify(activityLog.slice(0, 100)));
-
       return true;
     }
 
     return false;
   };
 
-  const logout = () => {
+  const logout = async () => {
     if (user) {
-      // Log logout activity
-      const activityLog = JSON.parse(localStorage.getItem('activityLog') || '[]');
-      activityLog.unshift({
-        timestamp: new Date().toISOString(),
-        action: 'LOGOUT',
-        user: user.username,
-        details: 'User logged out',
-      });
-      localStorage.setItem('activityLog', JSON.stringify(activityLog.slice(0, 100)));
+      supabase.from('audit_logs').insert({
+        action: 'USER_LOGOUT',
+        entity_type: 'System',
+        entity_id: user.id
+      }).then();
     }
-
+    
+    await supabase.auth.signOut();
     setUser(null);
     localStorage.removeItem('currentUser');
     localStorage.removeItem('sessionExpiry');
