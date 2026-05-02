@@ -4,9 +4,8 @@ import { defineConfig } from "vite"
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig(({ mode }) => {
-  // If deployed on Vercel, base should be '/', otherwise for GitHub Pages it's '/New-PharmaQMS-/'
-  const isVercel = process.env.VERCEL || process.env.VERCEL_ENV;
-  const basePath = isVercel ? '/' : '/New-PharmaQMS-/';
+  const isGitHubPages = process.env.GITHUB_PAGES === 'true';
+  const basePath = isGitHubPages ? '/New-PharmaQMS-/' : '/';
 
   return {
     base: basePath,
@@ -84,14 +83,21 @@ export default defineConfig(({ mode }) => {
     ],
 
     resolve: {
-      alias: { "@": path.resolve(__dirname, "./src") },
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
+        "@/components": path.resolve(__dirname, "./src/components"),
+        "@/hooks": path.resolve(__dirname, "./src/hooks"),
+        "@/pages": path.resolve(__dirname, "./src/pages"),
+        "@/lib": path.resolve(__dirname, "./src/lib"),
+      },
     },
 
     server: {
-      host: '0.0.0.0',
+      host: 'localhost',
       port: 5173,
-      hmr: { port: 5173 },
-      open: true,
+      hmr: false,
+      open: false,
+      cors: true,
     },
   }
 })
