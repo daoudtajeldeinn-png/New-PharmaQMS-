@@ -4,9 +4,9 @@ import { defineConfig } from "vite"
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig(({ mode }) => {
-  // If deployed on Vercel, base should be '/', otherwise for GitHub Pages it's '/SCI-/'
+  // If deployed on Vercel, base should be '/', otherwise for GitHub Pages it's '/New-PharmaQMS-/'
   const isVercel = process.env.VERCEL || process.env.VERCEL_ENV;
-  const basePath = isVercel ? '/' : '/SCI-/';
+  const basePath = isVercel ? '/' : '/New-PharmaQMS-/';
 
   return {
     base: basePath,
