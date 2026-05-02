@@ -1,8 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Get the environment variables from Vite
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://xxlxfhlliojkplrcvukc.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'YOUR_ANON_KEY_PLACEHOLDER';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL 
+  || 'https://xxlxfhlliojkplrcvukc.supabase.co';
+
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY 
+  || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bHhmaGxsaW9qa3BscmN2dWtjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2Mzc4NzYsImV4cCI6MjA4NTIxMzg3Nn0.Cvvlo_9WfpfdfiFn4ytF_xSViJE0ouimzypbznoUFFE';
 
 /**
  * Enterprise Supabase Client
@@ -14,7 +16,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export async function checkSupabaseHealth() {
   try {
     const { data, error } = await supabase.from('_health_check').select('*').limit(1);
-    if (error && error.code !== 'PGRST116') { // Ignore "no rows" errors
+    if (error && error.code !== 'PGRST116') {
       console.warn('Supabase Health Check Warning:', error.message);
       return false;
     }
