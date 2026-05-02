@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Environment Variables Debugger</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        header {
+            background: #1a2a6c;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        h2 {
+            color: #1a2a6c;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .env-status {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .status-item {
+            flex: 1;
+            min-width: 200px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .status-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .present {
+            color: #28a745;
+        }
+
+        .missing {
+            color: #dc3545;
+        }
+
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .instructions {
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+
+        .instructions ol {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .instructions li {
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            background: #1a2a6c;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-block;
+            margin: 10px 5px;
+        }
+
+        .btn:hover {
+            background: #2a3a9c;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .debug-output {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-family: 'Fira Code', monospace;
+            min-height: 100px;
+            white-space: pre-wrap;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            color: white;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                border-radius: 10px;
+            }
+
+            .env-status {
+                flex-direction: column;
+            }
+
+            .status-item {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Environment Variables Debugger</h1>
+            <p class="subtitle">Diagnose and fix Supabase configuration issues</p>
+        </header>
+
+        <div class="content">
+            <div class="card">
+                <h2>Current Environment Status</h2>
+                <div class="env-status">
+                    <div class="status-item">
+                        <div class="status-title">VITE_SUPABASE_URL</div>
+                        <div class="status-value" id="url-status">Checking...</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-title">VITE_SUPABASE_ANON_KEY</div>
+                        <div class="status-value" id="key-status">Checking...</div>
+                    </div>
+                </div>
+
+                <div class="instructions">
+                    <h3>What's happening?</h3>
+                    <p>Your application is checking for these environment variables to connect to Supabase. If they're
+                        missing, the app will run in local-only mode.</p>
+
+                    <h3>How to fix:</h3>
+                    <ol>
+                        <li>Create a <code>.env</code> file in your project root (same folder as package.json)</li>
+                        <li>Add your Supabase credentials:</li>
+                    </ol>
+
+                    <div class="code-block">
+                        VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+                        VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                    </div>
+
+                    <p>Replace the placeholder values with your actual Supabase credentials.</p>
+                </div>
+
+                <button class="btn" id="check-btn">Check Again</button>
+                <button class="btn btn-secondary" id="simulate-btn">Simulate Correct Setup</button>
+                <button class="btn btn-success" id="clear-btn">Clear Console</button>
+
+                <h3>Debug Console:</h3>
+                <div class="debug-output" id="debug-output">// Debug output will appear here</div>
+            </div>
+
+            <div class="card">
+                <h2>Next Steps</h2>
+                <div class="instructions">
+                    <p>After adding your environment variables:</p>
+                    <ol>
+                        <li>Restart your development server: <code>npm run dev</code></li>
+                        <li>Verify the values are being read correctly</li>
+                        <li>Build your application: <code>npm run build</code></li>
+                        <li>Deploy to your hosting platform</li>
+                    </ol>
+
+                    <p><strong>Note:</strong> For production deployments (Vercel, Netlify, etc.), you'll need to add
+                        these environment variables in your hosting platform's dashboard as well.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>PharmaQMS Environment Debugger | Created to help resolve Supabase configuration issues</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const urlStatus = document.getElementById('url-status');
+            const keyStatus = document.getElementById('key-status');
+            const debugOutput = document.getElementById('debug-output');
+            const checkBtn = document.getElementById('check-btn');
+            const simulateBtn = document.getElementById('simulate-btn');
+            const clearBtn = document.getElementById('clear-btn');
+
+            // Mock environment variables for demonstration
+            // In a real scenario, these would be read from import.meta.env
+            const mockEnv = {
+                VITE_SUPABASE_URL: '',
+                VITE_SUPABASE_ANON_KEY: ''
+            };
+
+            // Check environment variables
+            function checkEnvironment() {
+                // In a real app, you would use:
+                // const hasUrl = !!import.meta.env.VITE_SUPABASE_URL;
+                // const hasKey = !!import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+                const hasUrl = !!mockEnv.VITE_SUPABASE_URL;
+                const hasKey = !!mockEnv.VITE_SUPABASE_ANON_KEY;
+
+                urlStatus.textContent = hasUrl ? 'Present' : 'Missing';
+                urlStatus.className = `status-value ${hasUrl ? 'present' : 'missing'}`;
+
+                keyStatus.textContent = hasKey ? 'Present' : 'Missing';
+                keyStatus.className = `status-value ${hasKey ? 'present' : 'missing'}`;
+
+                logDebug(`Checking environment variables...`);
+                logDebug(`VITE_SUPABASE_URL: ${hasUrl ? mockEnv.VITE_SUPABASE_URL : 'NOT FOUND'}`);
+                logDebug(`VITE_SUPABASE_ANON_KEY: ${hasKey ? '••••••••' + mockEnv.VITE_SUPABASE_ANON_KEY.slice(-8) : 'NOT FOUND'}`);
+
+                if (!hasUrl || !hasKey) {
+                    logDebug('\nTo fix this, create a .env file with your Supabase credentials and restart the dev server.');
+                } else {
+                    logDebug('\nEnvironment variables are properly configured!');
+                }
+            }
+
+            // Simulate correct setup
+            function simulateCorrectSetup() {
+                mockEnv.VITE_SUPABASE_URL = 'https://your-project-ref.supabase.co';
+                mockEnv.VITE_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
+                logDebug('Simulating correct environment setup...');
+                checkEnvironment();
+            }
+
+            // Add message to debug output
+            function logDebug(message) {
+                debugOutput.textContent += message + '\n';
+                debugOutput.scrollTop = debugOutput.scrollHeight;
+            }
+
+            // Clear debug output
+            function clearDebug() {
+                debugOutput.textContent = '';
+            }
+
+            // Event listeners
+            checkBtn.addEventListener('click', checkEnvironment);
+            simulateBtn.addEventListener('click', simulateCorrectSetup);
+            clearBtn.addEventListener('click', clearDebug);
+
+            // Initial check
+            checkEnvironment();
+        });
+    </script>
+</body>
+
+</html>
