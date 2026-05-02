@@ -1,7 +1,7 @@
 {
   "name": "pharmaqms-enterprise",
   "private": true,
-  "version": "4.1.4",
+  "version": "4.1.5",
   "description": "Enterprise Pharmaceutical Quality Management System",
   "author": "Dr. Daoud Tajeldeinn",
   "main": "main.cjs",
@@ -12,12 +12,13 @@
     "preview": "vite preview",
     "deploy": "npm run build && gh-pages -d dist",
     "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
-    "electron:build": "npm run build && electron-builder"
+    "electron:build": "npm run build && electron-builder",
+    "electron:publish": "npm run build && electron-builder --publish always"
   },
   "build": {
     "appId": "com.pharmaqms.enterprise",
     "productName": "PharmaQMS Enterprise",
-    "copyright": "Copyright © 2026",
+    "copyright": "Copyright © 2026 Dr. Daoud Tajeldeinn",
     "directories": {
       "output": "dist-electron"
     },
@@ -32,6 +33,10 @@
     "win": {
       "target": [
         {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
           "target": "portable",
           "arch": ["x64"]
         }
@@ -41,14 +46,19 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "shortcutName": "PharmaQMS Enterprise"
+      "shortcutName": "PharmaQMS Enterprise",
+      "installerIcon": "public/icons/icon-512x512.png",
+      "uninstallerIcon": "public/icons/icon-512x512.png",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
     },
     "publish": [
       {
         "provider": "github",
         "owner": "daoudtajeldeinn-png",
         "repo": "New-PharmaQMS-",
-        "private": false
+        "private": false,
+        "releaseType": "release"
       }
     ]
   },
@@ -120,6 +130,7 @@
     "concurrently": "^8.2.2",
     "electron": "28.2.2",
     "electron-builder": "^24.9.1",
+    "electron-log": "^5.1.2",
     "electron-updater": "^6.8.3",
     "gh-pages": "^6.3.0",
     "postcss": "^8.4.35",
