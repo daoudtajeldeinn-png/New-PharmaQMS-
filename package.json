@@ -1,7 +1,7 @@
 {
   "name": "pharmaqms-enterprise",
   "private": true,
-  "version": "4.1.5",
+  "version": "4.1.8",
   "description": "Enterprise Pharmaceutical Quality Management System",
   "author": "Dr. Daoud Tajeldeinn",
   "main": "main.cjs",
@@ -18,7 +18,7 @@
   "build": {
     "appId": "com.pharmaqms.enterprise",
     "productName": "PharmaQMS Enterprise",
-    "copyright": "Copyright © 2026 Dr. Daoud Tajeldeinn",
+    "copyright": "Copyright \u00a9 2026 Dr. Daoud Tajeldeinn",
     "directories": {
       "output": "dist-electron"
     },
@@ -34,21 +34,25 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "portable",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
-      "icon": "public/icons/icon-512x512.png"
+      "icon": "public/icon.ico"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "shortcutName": "PharmaQMS Enterprise",
-      "installerIcon": "public/icons/icon-512x512.png",
-      "uninstallerIcon": "public/icons/icon-512x512.png",
+      "installerIcon": "public/icon.ico",
+      "uninstallerIcon": "public/icon.ico",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true
     },
@@ -58,7 +62,7 @@
         "owner": "daoudtajeldeinn-png",
         "repo": "New-PharmaQMS-",
         "private": false,
-        "releaseType": "release"
+        "releaseType": "draft"
       }
     ]
   },
