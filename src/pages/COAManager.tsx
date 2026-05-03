@@ -24,6 +24,7 @@ export function COAManagerPage() {
     const records = state.coaRecords || [];
     const [activeTab, setActiveTab] = useState('overview');
     const [showForm, setShowForm] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const [selectedCOA, setSelectedCOA] = useState<COARecord | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [isSignatureOpen, setIsSignatureOpen] = useState(false);
@@ -161,6 +162,7 @@ export function COAManagerPage() {
         if (isDraft) {
             saveToStore(record);
         } else {
+            setIsSaving(true);
             setPendingCOA(record);
             setIsSignatureOpen(true);
         }
@@ -188,6 +190,7 @@ export function COAManagerPage() {
         setShowForm(false);
         setIsEditing(false);
         setFormData(initialFormState);
+        setIsSaving(false);
     };
 
     const handleSignatureConfirm = (sigData: any) => {
@@ -382,7 +385,39 @@ export function COAManagerPage() {
                             <div className="space-y-1"><Label>Analysis Number</Label><Input value={formData.analysisNo || ''} onChange={e => setFormData({ ...formData, analysisNo: e.target.value })} className="border-slate-300" /></div>
                             <div className="space-y-1"><Label>Strength</Label><Input value={formData.strength || ''} onChange={e => setFormData({ ...formData, strength: e.target.value })} className="border-slate-300" /></div>
                             <div className="space-y-1"><Label>Dosage Form</Label><Input value={formData.dosageForm || ''} onChange={e => setFormData({ ...formData, dosageForm: e.target.value })} className="border-slate-300" /></div>
-                            <div className="space-y-1"><Label>Batch ID*</Label><Input value={formData.batchNumber || ''} onChange={e => setFormData({ ...formData, batchNumber: e.target.value })} className="border-slate-300" /></div>
+                            <div className="space-y-1">
+                              <Label>Batch Number Search*</Label>
+                              <div className="flex gap-1">
+                                <select 
+                                  className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-bold"
+                                  value={formData.batchNumber || ''}
+                                  onChange={(e) => {
+                                    const bn = e.target.value;
+                                    setFormData({ ...formData, batchNumber: bn });
+                                  }}
+                                >
+                                  <option value="">-- Search Inventory --</option>
+                                  {state.rawMaterials?.map(rm => (
+                                    <option key={rm.id} value={rm.batchNumber}>{rm.batchNumber} ({rm.name})</option>
+                                  ))}
+                                  <optgroup label="Finished Products">
+                                    {state.products?.map(p => (
+                                      p.batches?.map(bn => (
+                                        <option key={bn} value={bn}>{bn} ({p.name})</option>
+                                      ))
+                                    ))}
+                                  </optgroup>
+                                </select>
+                                <Button 
+                                  type="button"
+                                  variant="secondary"
+                                  onClick={handleFetchTests}
+                                  className="bg-indigo-50 text-indigo-600 border border-indigo-100"
+                                >
+                                  Auto-Fill
+                                </Button>
+                              </div>
+                            </div>
                             <div className="space-y-1"><Label>Batch Size</Label><Input value={formData.batchSize || ''} onChange={e => setFormData({ ...formData, batchSize: e.target.value })} className="border-slate-300" /></div>
                             <div className="space-y-1"><Label>Manufacturing Date</Label><Input type="date" value={formData.manufacturingDate || ''} onChange={e => setFormData({ ...formData, manufacturingDate: e.target.value })} className="border-slate-300" /></div>
                             <div className="space-y-1"><Label>Receiving Date</Label><Input type="date" value={formData.receivingDate || ''} onChange={e => setFormData({ ...formData, receivingDate: e.target.value })} className="border-slate-300" /></div>
@@ -391,15 +426,6 @@ export function COAManagerPage() {
                             <div className="space-y-1"><Label>Issue Date</Label><Input type="date" value={formData.issueDate || ''} onChange={e => setFormData({ ...formData, issueDate: e.target.value })} className="border-slate-300" /></div>
                             <div className="space-y-1"><Label>Manufacturer</Label><Input value={formData.manufacturer || ''} onChange={e => setFormData({ ...formData, manufacturer: e.target.value })} className="border-slate-300" /></div>
                             <div className="space-y-1"><Label>Manufacturing Address</Label><Input value={formData.address || ''} onChange={e => setFormData({ ...formData, address: e.target.value })} className="border-slate-300" /></div>
-                            <div className="space-y-1 col-span-2">
-                              <Button 
-                                type="button"
-                                onClick={handleFetchTests}
-                                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold"
-                              >
-                                🔄 Fetch Data & Tests by Batch ID
-                              </Button>
-                            </div>
                             <div className="col-span-2 space-y-1"><Label>Recall & Market Complaint Status</Label><Input value={formData.marketComplaintStatus || ''} onChange={e => setFormData({ ...formData, marketComplaintStatus: e.target.value })} placeholder="Verified and Compliant" className="border-slate-300" /></div>
                         </div>
 
@@ -429,7 +455,9 @@ export function COAManagerPage() {
                         </div>
                         <div className="flex gap-2">
                             <Button variant="outline" onClick={() => handleSaveCOA(true)} className="border-blue-200 text-blue-700 bg-white">Save as Draft</Button>
-                            <Button onClick={() => handleSaveCOA(false)} className="bg-green-600 hover:bg-green-700 min-w-[150px]">{isEditing ? 'Update & Release COA' : 'Issue Final COA'}</Button>
+                            <Button onClick={() => handleSaveCOA(false)} disabled={isSaving} className="bg-green-600 hover:bg-green-700 min-w-[150px]">
+                                {isSaving ? 'Processing...' : (isEditing ? 'Update & Release COA' : 'Issue Final COA')}
+                            </Button>
                         </div>
                     </DialogFooter>
                 </DialogContent>

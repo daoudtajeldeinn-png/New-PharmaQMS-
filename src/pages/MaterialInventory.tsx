@@ -20,6 +20,7 @@ export default function MaterialInventory() {
   const { state, dispatch } = useStore();
   const materials = state.rawMaterials;
   const [isNewMaterialOpen, setIsNewMaterialOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState<RawMaterial | null>(null);
   const [activeTab, setActiveTab] = useState('info');
   const [filterType, setFilterType] = useState<string>('all');
@@ -70,39 +71,58 @@ const [materialForm, setMaterialForm] = useState({
     rejected: materials.filter(m => m.status === 'Rejected').length,
   }), [materials]);
 
-  const handleCreateMaterial = () => {
+  const handleSaveMaterial = () => {
     if (!materialForm.name || !materialForm.batchNumber) {
-      toast.error('Please enter material name and batch number');
+      toast.error('Please fill mandatory fields (Name & Batch)');
       return;
     }
 
-    const tests = PHARMACOPEIA_TESTS[materialForm.type].map(test => ({
-      ...test,
-      result: undefined,
-      testedBy: '',
-      testedAt: undefined,
-      status: 'Pending' as const,
-      remarks: '',
-    }));
-
+    setIsSaving(true);
     const newMaterial: RawMaterial = {
-      id: `MAT-${Date.now()}`,
-      ...materialForm,
-      tests,
+      id: Math.random().toString(36).substr(2, 9),
+      name: materialForm.name,
+      type: materialForm.type,
+      batchNumber: materialForm.batchNumber,
+      supplier: materialForm.supplier,
+      quantity: materialForm.quantity,
+      unit: materialForm.unit,
       status: 'Quarantine',
-      createdAt: new Date(),
+      receivedDate: materialForm.receivedDate,
+      productionDate: materialForm.productionDate,
+      manufacturingDate: materialForm.manufacturingDate,
+      analysisDate: materialForm.analysisDate,
+      analysisNo: materialForm.analysisNo,
+      issueDate: materialForm.issueDate,
+      expiryDate: materialForm.expiryDate,
+      pharmacopeia: materialForm.pharmacopeia,
+      tests: [],
+      location: materialForm.location,
     };
 
     dispatch({ type: 'ADD_RAW_MATERIAL', payload: newMaterial });
-    toast.success(`Registered material: ${materialForm.name} with ${tests.length} tests`);
+    
+    // Log activity
+    dispatch({
+      type: 'ADD_ACTIVITY',
+      payload: {
+        id: Math.random().toString(36).substr(2, 9),
+        type: 'Inventory_Updated',
+        description: `Registered new batch ${newMaterial.batchNumber} of ${newMaterial.name}`,
+        user: 'Inventory Manager',
+        timestamp: new Date(),
+        relatedId: newMaterial.id
+      }
+    });
 
+    toast.success('Material registered successfully in Quarantine');
     setIsNewMaterialOpen(false);
+    setIsSaving(false);
     setMaterialForm({
       name: '',
       type: 'API',
       supplier: '',
       batchNumber: '',
-      pharmacopeia: 'BP',
+      pharmacopeia: 'USP',
       quantity: 0,
       unit: 'kg',
       receivedDate: new Date().toISOString().split('T')[0],
@@ -112,7 +132,7 @@ const [materialForm, setMaterialForm] = useState({
       analysisNo: '',
       issueDate: '',
       expiryDate: '',
-      location: '',
+      location: 'Store A-1',
     });
   };
 
@@ -251,6 +271,15 @@ const [materialForm, setMaterialForm] = useState({
     toast.success(`Recorded ${dispenseForm.type === 'Dispensing' ? 'dispensing' : 'movement'} of ${dispenseForm.quantity} ${selectedMaterial.unit}`);
   };
 
+  const handleDeleteMaterial = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm('Are you sure you want to delete this material record? This action cannot be undone.')) {
+      dispatch({ type: 'DELETE_RAW_MATERIAL', payload: id });
+      toast.success('Material record deleted successfully');
+      if (selectedMaterial?.id === id) setSelectedMaterial(null);
+    }
+  };
+
   const materialMovements = useMemo(() => {
     if (!selectedMaterial) return [];
     return state.materialMovements
@@ -345,7 +374,7 @@ const [materialForm, setMaterialForm] = useState({
         </div>
         <div className="flex gap-2">
           <Button onClick={() => generateInventoryReportPDF(materials)} variant="outline">
-            <FileText className="h-4 w-4 mr-2" /> Export Inventory Report
+            <FileText className="h-4 w-4 mr-2" /> Issue Inventory Report
           </Button>
           <Button onClick={() => setIsNewMaterialOpen(true)} className="bg-indigo-600">
             <Plus className="h-4 w-4 mr-2" /> Register New Material
@@ -500,6 +529,54 @@ const [materialForm, setMaterialForm] = useState({
                         : '0%'
                     }}
                   />
+                </div>
+                <div className="flex justify-end gap-2 mt-3 pt-3 border-t">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-7 text-[10px] font-bold text-indigo-600 hover:bg-indigo-50"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMaterialForm({
+                        name: material.name,
+                        type: material.type,
+                        supplier: material.supplier,
+                        batchNumber: material.batchNumber,
+                        pharmacopeia: material.pharmacopeia,
+                        quantity: material.quantity,
+                        unit: material.unit,
+                        receivedDate: material.receivedDate,
+                        productionDate: material.productionDate || '',
+                        manufacturingDate: material.manufacturingDate || '',
+                        analysisDate: material.analysisDate || '',
+                        analysisNo: material.analysisNo || '',
+                        issueDate: material.issueDate || '',
+                        expiryDate: material.expiryDate,
+                        location: material.location || '',
+                      });
+                      setIsNewMaterialOpen(true);
+                    }}
+                  >
+                    Edit
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-7 text-[10px] font-bold text-red-500 hover:bg-red-50"
+                    onClick={(e) => handleDeleteMaterial(material.id, e)}
+                  >
+                    Delete
+                  </Button>
+                  {material.status === 'Approved' && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-7 text-[10px] font-bold text-emerald-600 hover:bg-emerald-50"
+                      onClick={(e) => { e.stopPropagation(); handleIssueCOA(material); }}
+                    >
+                      Issue COA
+                    </Button>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -694,14 +771,12 @@ const [materialForm, setMaterialForm] = useState({
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsNewMaterialOpen(false)}>
-              Cancel
+          <div className="flex justify-end gap-3 bg-slate-50 -mx-6 -mb-6 p-6 mt-4 border-t">
+            <Button variant="outline" onClick={() => setIsNewMaterialOpen(false)}>Cancel Registration</Button>
+            <Button onClick={handleSaveMaterial} disabled={isSaving} className="bg-indigo-600 px-8">
+              {isSaving ? 'Processing...' : 'Register Batch'}
             </Button>
-            <Button onClick={handleCreateMaterial} className="bg-indigo-600">
-              Save Entry
-            </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
 
