@@ -192,15 +192,25 @@ export function SettingsPage() {
   };
 
   const handleCheckUpdate = async () => {
-    // Only available in Electron environment
-    if (!(window as any).ipcRenderer) {
+    // Robust check for Electron environment
+    const isElectron = (window as any).ipcRenderer || 
+                       ((window as any).process && (window as any).process.type) ||
+                       (navigator.userAgent.toLowerCase().indexOf(' electron/') > -1);
+
+    if (!isElectron) {
       toast.info('Update check is only available in the Desktop application.');
       return;
     }
 
+    const ipc = (window as any).ipcRenderer;
+    if (!ipc) {
+        toast.error('Electron IPC bridge is not active. Please restart the app.');
+        return;
+    }
+
     toast.loading('Checking for system updates...', { id: 'update-check' });
     try {
-      const result = await (window as any).ipcRenderer.invoke('check-for-updates');
+      const result = await ipc.invoke('check-for-updates');
       if (result.success) {
         if (result.info) {
           toast.success(`Update found: v${result.info.version}. Downloading in background...`, { id: 'update-check' });
