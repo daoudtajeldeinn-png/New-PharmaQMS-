@@ -52,6 +52,7 @@ import { Badge } from '@/components/ui/badge';
 import { useLicense } from '@/components/security/LicenseProvider';
 import { useSecurity, type User as UserType } from '@/components/security/SecurityProvider';
 import { backupSystemData, prepareGoogleDriveBackup, importSystemData, restoreSessionData } from '@/services/BackupService';
+import { triggerManualSync } from '@/services/CloudSyncService';
 import { db } from '@/db/db';
 import { toast } from 'sonner';
 
@@ -737,6 +738,10 @@ export function SettingsPage() {
                     <Globe className="mr-2 h-4 w-4" />
                     Backup to Google Drive
                   </Button>
+                  <Button className="bg-indigo-700 hover:bg-indigo-800" onClick={() => triggerManualSync()}>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Sync with Enterprise Cloud
+                  </Button>
                   <Button variant="secondary" className="bg-slate-200 hover:bg-slate-300 text-slate-700" onClick={handleCheckUpdate}>
                     <RefreshCw className="mr-2 h-4 w-4" />
                     Check for Updates
@@ -794,7 +799,7 @@ export function SettingsPage() {
             </div>
             <div className="text-right">
               <p className="text-sm text-slate-600 font-bold">Release Build</p>
-              <p className="text-lg font-black text-blue-900">v4.1.1-stable</p>
+              <p className="text-lg font-black text-blue-900">v4.2.2-stable</p>
               <p className="text-xs text-slate-500">© 2024-2026 All Rights Reserved</p>
             </div>
           </div>
