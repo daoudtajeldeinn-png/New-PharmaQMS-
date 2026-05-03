@@ -5,7 +5,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig(({ mode }) => {
   const isGitHubPages = process.env.GITHUB_PAGES === 'true';
-  const basePath = isGitHubPages ? '/New-PharmaQMS-/' : '/';
+  const basePath = isGitHubPages ? '/New-PharmaQMS-/' : './';
 
   return {
     base: basePath,
