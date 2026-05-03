@@ -168,19 +168,18 @@ function createWindow() {
   }
 }
 
-  // ── IPC Handlers (Available in both Dev and Prod) ─────────────────────────
-  ipcMain.handle('check-for-updates', async () => {
-    if (autoUpdater) {
-      try {
-        const result = await autoUpdater.checkForUpdatesAndNotify();
-        return { success: true, info: result?.updateInfo };
-      } catch (error) {
-        return { success: false, error: error.message };
-      }
+// ── IPC Handlers (Global) ───────────────────────────────────────────────────
+ipcMain.handle('check-for-updates', async () => {
+  if (autoUpdater) {
+    try {
+      const result = await autoUpdater.checkForUpdatesAndNotify();
+      return { success: true, info: result?.updateInfo };
+    } catch (error) {
+      return { success: false, error: error.message };
     }
-    return { success: false, error: 'Auto-updater not initialized' };
-  });
-}
+  }
+  return { success: false, error: 'Auto-updater not initialized' };
+});
 
 // ── Offline Page ──────────────────────────────────────────────────────────────
 function showOfflinePage(win) {
