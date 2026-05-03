@@ -167,7 +167,7 @@ export function ProductTable({
               <TableHead>Current Status</TableHead>
               <TableHead>EXP Health</TableHead>
               <TableHead>Pharmacopeia</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-center w-[120px]">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -227,31 +227,48 @@ export function ProductTable({
                     <TableCell>
                       <Badge variant="secondary">{product.pharmacopeiaStandard}</Badge>
                     </TableCell>
-                    <TableCell className="text-right">
-                      <DataTableActions<PharmaceuticalProduct>
-                        item={product}
-                        onEdit={onEdit}
-                        onDelete={(id) => onDelete(product)}
-                        onView={onView}
-                        extraActions={[
-                          {
-                            label: 'Perform QC Test',
-                            icon: <FlaskConical className="mr-2 h-4 w-4" />,
-                            onClick: onTest
-                          },
-                          {
-                            label: 'Approve & Release',
-                            icon: <Award className="mr-2 h-4 w-4 text-emerald-500" />,
-                            onClick: (product) => {
-                              dispatch({
-                                type: 'UPDATE_PRODUCT',
-                                payload: { ...product, status: 'Released' }
-                              });
-                              toast.success(`Product ${product.name} has been Released.`);
-                            }
-                          }
-                        ]}
-                      />
+                    <TableCell className="text-center">
+                      <div className="flex justify-center items-center gap-1">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-slate-500 hover:text-blue-600 hover:bg-blue-50"
+                          onClick={() => onView(product)}
+                          title="View Details"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50"
+                          onClick={() => onEdit(product)}
+                          title="Edit Product"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-slate-500 hover:text-rose-600 hover:bg-rose-50"
+                          onClick={() => onDelete(product)}
+                          title="Delete Product"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-slate-500 hover:text-amber-600 hover:bg-amber-50"
+                          onClick={() => onTest(product)}
+                          title="Perform QC Test"
+                        >
+                          <FlaskConical className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
