@@ -78,15 +78,21 @@ const [materialForm, setMaterialForm] = useState({
     }
 
     setIsSaving(true);
-    const newMaterial: RawMaterial = {
-      id: Math.random().toString(36).substr(2, 9),
+    
+    // Check if we are editing an existing material by matching batchNumber or having an ID
+    const existingMaterial = materials.find(m => 
+      m.batchNumber === materialForm.batchNumber && m.name === materialForm.name
+    );
+
+    const materialData: RawMaterial = {
+      id: existingMaterial?.id || Math.random().toString(36).substr(2, 9),
       name: materialForm.name,
       type: materialForm.type,
       batchNumber: materialForm.batchNumber,
       supplier: materialForm.supplier,
       quantity: materialForm.quantity,
       unit: materialForm.unit,
-      status: 'Quarantine',
+      status: existingMaterial?.status || 'Quarantine',
       receivedDate: materialForm.receivedDate,
       productionDate: materialForm.productionDate,
       manufacturingDate: materialForm.manufacturingDate,
@@ -95,26 +101,40 @@ const [materialForm, setMaterialForm] = useState({
       issueDate: materialForm.issueDate,
       expiryDate: materialForm.expiryDate,
       pharmacopeia: materialForm.pharmacopeia,
-      tests: [],
+      tests: existingMaterial?.tests || [],
       location: materialForm.location,
     };
 
-    dispatch({ type: 'ADD_RAW_MATERIAL', payload: newMaterial });
-    
-    // Log activity
-    dispatch({
-      type: 'ADD_ACTIVITY',
-      payload: {
-        id: Math.random().toString(36).substr(2, 9),
-        type: 'Inventory_Updated',
-        description: `Registered new batch ${newMaterial.batchNumber} of ${newMaterial.name}`,
-        user: 'Inventory Manager',
-        timestamp: new Date(),
-        relatedId: newMaterial.id
-      }
-    });
+    if (existingMaterial) {
+      dispatch({ type: 'UPDATE_RAW_MATERIAL', payload: materialData });
+      dispatch({
+        type: 'ADD_ACTIVITY',
+        payload: {
+          id: Math.random().toString(36).substr(2, 9),
+          type: 'Inventory_Updated',
+          description: `Updated record for batch ${materialData.batchNumber} of ${materialData.name}`,
+          user: 'Inventory Manager',
+          timestamp: new Date(),
+          relatedId: materialData.id
+        }
+      });
+      toast.success('Material record updated successfully');
+    } else {
+      dispatch({ type: 'ADD_RAW_MATERIAL', payload: materialData });
+      dispatch({
+        type: 'ADD_ACTIVITY',
+        payload: {
+          id: Math.random().toString(36).substr(2, 9),
+          type: 'Inventory_Updated',
+          description: `Registered new batch ${materialData.batchNumber} of ${materialData.name}`,
+          user: 'Inventory Manager',
+          timestamp: new Date(),
+          relatedId: materialData.id
+        }
+      });
+      toast.success('Material registered successfully in Quarantine');
+    }
 
-    toast.success('Material registered successfully in Quarantine');
     setIsNewMaterialOpen(false);
     setIsSaving(false);
     setMaterialForm({
@@ -135,6 +155,7 @@ const [materialForm, setMaterialForm] = useState({
       location: 'Store A-1',
     });
   };
+
 
   const handleUpdateTestResult = (materialId: string, testId: string, updates: Partial<MaterialTest>) => {
     const material = materials.find(m => m.id === materialId);

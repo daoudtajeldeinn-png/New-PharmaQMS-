@@ -756,4 +756,14 @@ export interface COARecord {
   status: 'Draft' | 'Approved' | 'Released';
 }
 
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  time: string;
+  type: 'error' | 'warning' | 'info' | 'success';
+  read: boolean;
+  createdAt: Date;
+}
+
 export * from './materials';

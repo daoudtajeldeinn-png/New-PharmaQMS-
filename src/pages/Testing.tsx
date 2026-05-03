@@ -129,6 +129,11 @@ export function Testing() {
     }
   };
 
+  const handleEditResult = (result: TestResult) => {
+    setSelectedResult(result);
+    setIsResultFormOpen(true);
+  };
+
   const handleSeedMethods = () => {
     try {
       let addCount = 0;
@@ -166,23 +171,33 @@ export function Testing() {
         return;
       }
 
-      dispatch({
-        type: 'ADD_TEST_RESULT',
-        payload: result as TestResult,
-      });
+      if (selectedResult) {
+        dispatch({
+          type: 'UPDATE_TEST_RESULT',
+          payload: result as TestResult,
+        });
+        toast.success(`Result for batch ${result.batchNumber} updated.`);
+      } else {
+        dispatch({
+          type: 'ADD_TEST_RESULT',
+          payload: result as TestResult,
+        });
+        toast.success(`Analytical result for ${result.batchNumber} saved.`);
+      }
+
       dispatch({
         type: 'ADD_ACTIVITY',
         payload: {
           id: crypto.randomUUID(),
           type: result.overallResult === 'OOS' ? 'OOS_Investigation' : 'Test_Completed',
-          description: `Test completed for batch ${result.batchNumber}: ${result.overallResult}`,
+          description: `${selectedResult ? 'Updated' : 'Logged'} test for batch ${result.batchNumber}: ${result.overallResult}`,
           user: user?.name || 'System',
           timestamp: new Date(),
         },
       });
       setIsResultFormOpen(false);
+      setSelectedResult(null);
       dispatch({ type: 'UPDATE_DASHBOARD_STATS' });
-      toast.success(`Analytical result for ${result.batchNumber} saved.`);
     } catch (error) {
       console.error('Test Result Error:', error);
       toast.error('Failed to log test result. Please verify all fields.');
@@ -361,15 +376,12 @@ export function Testing() {
                           <Badge variant="secondary">{result.status}</Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                        <DataTableActions<TestResult>
-                            item={result}
-                            onEdit={(item) => {
-                              // Open edit form - implement TestResultEditForm later
-                              toast.info('Edit functionality ready - form to be added');
-                            }}
-                            onDelete={(id) => dispatch({ type: 'DELETE_TEST_RESULT', payload: id })}
-                            onView={() => toast.info(`Viewing test results`)}
-                          />
+                          <DataTableActions<TestResult>
+                             item={result}
+                             onEdit={handleEditResult}
+                             onDelete={(id) => dispatch({ type: 'DELETE_TEST_RESULT', payload: id })}
+                             onView={() => toast.info(`Viewing test results`)}
+                           />
                         </TableCell>
                       </TableRow>
                     );
@@ -553,9 +565,9 @@ export function Testing() {
           <TestResultForm
             products={state.products}
             testMethods={state.testMethods}
-            preSelectedProductId={preSelectedProductId}
+            testResult={selectedResult || undefined}
             onSubmit={handleSubmitResult}
-            onCancel={() => setIsResultFormOpen(false)}
+            onCancel={() => { setIsResultFormOpen(false); setSelectedResult(null); }}
           />
         </DialogContent>
       </Dialog>

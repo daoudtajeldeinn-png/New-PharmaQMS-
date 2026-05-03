@@ -26,7 +26,10 @@ import {
   Trash2,
   Eye,
   FlaskConical,
+  Award,
 } from 'lucide-react';
+import { useStore } from '@/hooks/useStore';
+import { toast } from 'sonner';
 import type { PharmaceuticalProduct, ProductStatus } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -78,6 +81,7 @@ export function ProductTable({
   onView,
   onTest,
 }: ProductTableProps) {
+  const { dispatch } = useStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -234,6 +238,17 @@ export function ProductTable({
                             label: 'Perform QC Test',
                             icon: <FlaskConical className="mr-2 h-4 w-4" />,
                             onClick: onTest
+                          },
+                          {
+                            label: 'Approve & Release',
+                            icon: <Award className="mr-2 h-4 w-4 text-emerald-500" />,
+                            onClick: (product) => {
+                              dispatch({
+                                type: 'UPDATE_PRODUCT',
+                                payload: { ...product, status: 'Released' }
+                              });
+                              toast.success(`Product ${product.name} has been Released.`);
+                            }
                           }
                         ]}
                       />

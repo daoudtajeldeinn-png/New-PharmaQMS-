@@ -44,6 +44,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           materialMovements,
           reconciliationRecords,
           dbMFRs,
+          notifications,
         ] = await Promise.all([
           db.products.toArray(),
           db.testMethods.toArray(),
@@ -69,6 +70,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           db.materialMovements.toArray(),
           db.reconciliationRecords.toArray(),
           db.masterFormulas.toArray(),
+          db.notifications.toArray(),
         ]);
 
         // Convert MFR array to Record object
@@ -101,6 +103,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             activities,
             materialMovements,
             reconciliationRecords,
+            notifications,
             masterFormulas: dbMFRs.length > 0 ? mfrRecord : initialState.masterFormulas,
           }
         });

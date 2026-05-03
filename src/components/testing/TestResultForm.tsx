@@ -71,6 +71,16 @@ export function TestResultForm({
     }
   );
 
+  // Sync state if testResult prop changes
+  useEffect(() => {
+    if (testResult) {
+      setSelectedProductId(testResult.productId);
+      setSelectedTestMethodId(testResult.testMethodId);
+      setParameterResults(testResult.parameters);
+      setFormData(testResult);
+    }
+  }, [testResult]);
+
   const handleTestMethodChange = (testMethodId: string) => {
     setSelectedTestMethodId(testMethodId);
     const testMethod = testMethods.find((t) => t.id === testMethodId);

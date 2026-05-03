@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useStore } from '@/hooks/useStore';
 import {
   Bell,
   User,
@@ -30,41 +31,22 @@ interface HeaderProps {
 export function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
   // ✅ إضافة: استيراد useSecurity للحصول على بيانات المستخدم ودالة logout
   const { user, logout } = useSecurity();
+  const { state, dispatch } = useStore();
 
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      title: 'OOS Result Detected',
-      message: 'Amoxicillin batch AMX2024002 failed assay test',
-      time: '2 hours ago',
-      type: 'error',
-      read: false,
-    },
-    {
-      id: 2,
-      title: 'Calibration Due',
-      message: 'HPLC System 1 calibration due in 5 days',
-      time: '1 day ago',
-      type: 'warning',
-      read: false,
-    },
-    {
-      id: 3,
-      title: 'Product Expiring',
-      message: 'Insulin Glargine batch INS-2024-004 expires in 30 days',
-      time: '2 days ago',
-      type: 'info',
-      read: true,
-    },
-  ]);
+  const notifications = state.notifications || [];
 
-  const handleMarkRead = (id: number) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-    toast.success('Notification cleared');
+  const handleMarkRead = (id: string) => {
+    dispatch({ type: 'MARK_NOTIFICATION_READ', payload: id });
+    toast.success('Notification marked as read');
+  };
+
+  const clearNotification = (id: string) => {
+    dispatch({ type: 'CLEAR_NOTIFICATION', payload: id });
+    toast.success('Notification removed');
   };
 
   const clearAllNotifications = () => {
-    setNotifications([]);
+    dispatch({ type: 'CLEAR_ALL_NOTIFICATIONS' });
     toast.success('All notifications cleared');
   };
 
@@ -150,27 +132,32 @@ export function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                     variant="ghost" 
                     size="icon" 
                     className="absolute right-1 top-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity bg-white/10 hover:bg-red-500/20" 
-                    onClick={(e) => { e.stopPropagation(); handleMarkRead(notification.id); }}
+                    onClick={(e) => { e.stopPropagation(); clearNotification(notification.id); }}
                   >
                     <X className="h-3 w-3 text-slate-400 hover:text-red-500" />
                   </Button>
-                  <div className="flex w-full items-center justify-between mb-1 pr-6">
-                    <span className="text-sm font-bold">{notification.title}</span>
-                    <Badge
-                      variant={
-                        notification.type === 'error'
-                          ? 'destructive'
-                          : notification.type === 'warning'
-                            ? 'default'
-                            : 'secondary'
-                      }
-                      className="text-[9px] font-black uppercase"
-                    >
-                      {notification.type}
-                    </Badge>
+                  <div 
+                    className="flex w-full flex-col gap-1"
+                    onClick={() => handleMarkRead(notification.id)}
+                  >
+                    <div className="flex w-full items-center justify-between mb-1 pr-6">
+                      <span className="text-sm font-bold">{notification.title}</span>
+                      <Badge
+                        variant={
+                          notification.type === 'error'
+                            ? 'destructive'
+                            : notification.type === 'warning'
+                              ? 'default'
+                              : 'secondary'
+                        }
+                        className="text-[9px] font-black uppercase"
+                      >
+                        {notification.type}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-slate-500 leading-relaxed pr-6">{notification.message}</p>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase mt-1">{notification.time}</span>
                   </div>
-                  <p className="text-xs text-slate-500 leading-relaxed pr-6">{notification.message}</p>
-                  <span className="text-[9px] font-bold text-slate-400 uppercase mt-1">{notification.time}</span>
                 </DropdownMenuItem>
               ))}
             </div>

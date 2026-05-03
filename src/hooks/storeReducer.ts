@@ -81,6 +81,7 @@ export interface AppState {
     reconciliationRecords: ReconciliationRecord[];
     dashboardStats: DashboardStats;
     activities: Activity[];
+    notifications: Notification[];
     isLoading: boolean;
     error: string | null;
 }
@@ -120,6 +121,35 @@ export const initialState: AppState = {
         expiringProducts: 0, openComplaints: 0, activeRecalls: 0, recentActivities: [],
     },
     activities: [],
+    notifications: [
+        {
+            id: '1',
+            title: 'OOS Result Detected',
+            message: 'Amoxicillin batch AMX2024002 failed assay test',
+            time: '2 hours ago',
+            type: 'error',
+            read: false,
+            createdAt: new Date(),
+        },
+        {
+            id: '2',
+            title: 'Calibration Due',
+            message: 'HPLC System 1 calibration due in 5 days',
+            time: '1 day ago',
+            type: 'warning',
+            read: false,
+            createdAt: new Date(),
+        },
+        {
+            id: '3',
+            title: 'Product Expiring',
+            message: 'Insulin Glargine batch INS-2024-004 expires in 30 days',
+            time: '2 days ago',
+            type: 'info',
+            read: true,
+            createdAt: new Date(),
+        },
+    ],
     isLoading: true,
     error: null,
 };
@@ -218,6 +248,10 @@ export type Action =
     | { type: 'DELETE_RECONCILIATION_RECORD'; payload: string }
     | { type: 'ADD_TEST_METHOD_PDF'; payload: { testMethodId: string; pdfUrl: string } }
     | { type: 'FETCH_BATCH_TESTS_FOR_COA'; payload: { batchNumber: string; coaId?: string } }
+    | { type: 'ADD_NOTIFICATION'; payload: Notification }
+    | { type: 'MARK_NOTIFICATION_READ'; payload: string }
+    | { type: 'CLEAR_NOTIFICATION'; payload: string }
+    | { type: 'CLEAR_ALL_NOTIFICATIONS' }
     | { type: 'UPDATE_DASHBOARD_STATS' }
     | { type: 'INITIALIZE_DATA' };
 
@@ -406,6 +440,14 @@ export function appReducer(state: AppState, action: Action): AppState {
             return { ...state, reconciliationRecords: state.reconciliationRecords.map((r) => r.id === action.payload.id ? action.payload : r) };
         case 'DELETE_RECONCILIATION_RECORD':
             return { ...state, reconciliationRecords: state.reconciliationRecords.filter((r) => r.id !== action.payload) };
+        case 'ADD_NOTIFICATION':
+            return { ...state, notifications: [action.payload, ...state.notifications] };
+        case 'MARK_NOTIFICATION_READ':
+            return { ...state, notifications: state.notifications.map(n => n.id === action.payload ? { ...n, read: true } : n) };
+        case 'CLEAR_NOTIFICATION':
+            return { ...state, notifications: state.notifications.filter(n => n.id !== action.payload) };
+        case 'CLEAR_ALL_NOTIFICATIONS':
+            return { ...state, notifications: [] };
         case 'UPDATE_DASHBOARD_STATS':
             // Stat Calculation
             const pendingTests = state.testResults.filter(t => t.status === 'Scheduled' || t.status === 'In_Progress').length;
@@ -568,6 +610,14 @@ export function appReducerWithPersistence(state: AppState, action: Action): AppS
             db.reconciliationRecords.put(action.payload); break;
         case 'DELETE_RECONCILIATION_RECORD':
             db.reconciliationRecords.delete(action.payload); break;
+        case 'ADD_NOTIFICATION':
+            db.notifications.put(action.payload); break;
+        case 'MARK_NOTIFICATION_READ':
+            db.notifications.update(action.payload, { read: true }); break;
+        case 'CLEAR_NOTIFICATION':
+            db.notifications.delete(action.payload); break;
+        case 'CLEAR_ALL_NOTIFICATIONS':
+            db.notifications.clear(); break;
         case 'ADD_ACTIVITY':
             if ((action.payload as any).id) {
               db.activities.put(action.payload);
