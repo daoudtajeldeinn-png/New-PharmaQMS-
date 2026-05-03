@@ -1,7 +1,7 @@
 {
   "name": "pharmaqms-enterprise",
   "private": true,
-  "version": "4.1.8",
+  "version": "4.1.9",
   "description": "Enterprise Pharmaceutical Quality Management System",
   "author": "Dr. Daoud Tajeldeinn",
   "main": "main.cjs",
@@ -18,7 +18,7 @@
   "build": {
     "appId": "com.pharmaqms.enterprise",
     "productName": "PharmaQMS Enterprise",
-    "copyright": "Copyright \u00a9 2026 Dr. Daoud Tajeldeinn",
+    "copyright": "Copyright © 2026 Dr. Daoud Tajeldeinn",
     "directories": {
       "output": "dist-electron"
     },
@@ -101,6 +101,7 @@
     "cmdk": "^0.2.1",
     "date-fns": "^3.3.1",
     "dexie": "^3.2.4",
+    "electron-updater": "^6.8.3",
     "embla-carousel-react": "^8.0.0",
     "html2canvas": "^1.4.1",
     "html5-qrcode": "^2.3.8",
@@ -135,7 +136,6 @@
     "electron": "28.2.2",
     "electron-builder": "^24.9.1",
     "electron-log": "^5.1.2",
-    "electron-updater": "^6.8.3",
     "gh-pages": "^6.3.0",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
