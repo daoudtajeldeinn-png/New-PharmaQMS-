@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react';
-import { useStore } from '@/hooks/useStore';
+ import { useState, useMemo, useEffect } from 'react';
+ import { useStore } from '@/hooks/useStore';
+ import { useLocation } from 'react-router-dom';
 import {
   Table,
   TableBody,
@@ -55,8 +56,20 @@ export function EquipmentPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [activeTab, setActiveTab] = useState('all');
+  const location = useLocation();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isCalibrationDialogOpen, setIsCalibrationDialogOpen] = useState(false);
+
+  // Sync activeTab with URL
+  useEffect(() => {
+    if (location.pathname.includes('calibration')) {
+      setActiveTab('calibration');
+    } else if (location.pathname.includes('maintenance')) {
+      setActiveTab('maintenance');
+    } else {
+      setActiveTab('all');
+    }
+  }, [location.pathname]);
 
   // Form state for new/editing equipment
   const [newEquipment, setNewEquipment] = useState<Partial<Equipment>>({
