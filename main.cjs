@@ -9,6 +9,21 @@ try {
   // Ignore error if dotenv is missing in production
 }
 
+// ── Single Instance Lock ──────────────────────────────────────────────────────
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    // Someone tried to run a second instance, we should focus our window.
+    const windows = BrowserWindow.getAllWindows();
+    if (windows.length) {
+      if (windows[0].isMinimized()) windows[0].restore();
+      windows[0].focus();
+    }
+  });
+}
+
 // ── Auto Updater ──────────────────────────────────────────────────────────────
 let autoUpdater;
 try {
@@ -20,7 +35,7 @@ try {
   autoUpdater.setFeedURL({
     provider: 'github',
     owner: 'daoudtajeldeinn-png',
-    repo: 'pharmaqualify-pro'
+    repo: 'New-PharmaQMS-'
   });
 
   // Try to attach electron-log for debug output
