@@ -24,6 +24,7 @@ import type {
     RawMaterial,
     MaterialMovement,
     ReconciliationRecord,
+    Notification,
 } from '@/types';
 import { type MasterFormula } from '@/data/mfrData';
 import { type BatchRecord } from '@/data/bmrData';
@@ -53,6 +54,7 @@ export class PharmaDB extends Dexie {
     rawMaterials!: Table<RawMaterial, string>;
     materialMovements!: Table<MaterialMovement, string>;
     reconciliationRecords!: Table<ReconciliationRecord, string>;
+    notifications!: Table<Notification, string>;
     activities!: Table<Activity, string>;
     // Key-value store for singletons like stats
     keyValueStore!: Table<{ key: string; value: unknown }, string>;
@@ -92,9 +94,10 @@ this.version(6).stores({
             ipqcChecks: 'id, stage, status, batchNumber'
         });
 
-        this.version(7).stores({
+        this.version(8).stores({
             materialMovements: 'id, materialId, batchId, type, timestamp',
-            reconciliationRecords: 'id, batchId, productId, percentageYield'
+            reconciliationRecords: 'id, batchId, productId, percentageYield',
+            notifications: 'id, read, type, time'
         });
 
     }
