@@ -166,6 +166,7 @@ function createWindow() {
       });
 
   }
+}
 
   // ── IPC Handlers (Available in both Dev and Prod) ─────────────────────────
   ipcMain.handle('check-for-updates', async () => {
