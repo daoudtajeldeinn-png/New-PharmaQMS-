@@ -1,5 +1,6 @@
 const { app, BrowserWindow, Menu, dialog, ipcMain, session } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const { execSync } = require('child_process');
 
 try {
@@ -105,37 +106,24 @@ function createWindow() {
   Menu.setApplicationMenu(menu);
 
   const VERCEL_URL = 'https://new-pharma-qms.vercel.app';
+  const localIndex = path.join(__dirname, 'dist', 'index.html');
 
   if (isDev) {
     win.loadURL('http://localhost:5173');
   } else {
-    // ── Clear PWA service worker & HTTP cache so we always load the latest Vercel build
-    const ses = win.webContents.session;
-    Promise.all([
-      ses.clearCache(),
-      ses.clearStorageData({ storages: ['serviceworkers', 'cachestorage'] })
-    ]).then(() => {
+    // ── Load local dist files first, fall back to Vercel if not found ────────
+    if (fs.existsSync(localIndex)) {
+      win.loadFile(localIndex);
+    } else {
       win.loadURL(VERCEL_URL);
-    }).catch(() => {
-      // If clearing fails, still try to load
-      win.loadURL(VERCEL_URL);
-    });
+    }
+
     win.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
-      if (validatedURL === VERCEL_URL) {
-        win.loadURL(`data:text/html,
-          <html>
-            <body style="background:#020617;color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;text-align:center;padding:20px;">
-              <div style="background:rgba(255,255,255,0.05);padding:40px;border-radius:40px;border:1px solid rgba(255,255,255,0.1);max-width:500px;">
-                <h1 style="font-weight:900;letter-spacing:-0.05em;margin-bottom:20px;font-size:48px;">SYSTEM<br/>OFFLINE</h1>
-                <p style="color:#64748b;font-weight:500;line-height:1.6;margin-bottom:30px;">
-                  The Enterprise QMS environment could not be reached.<br/>
-                  Please verify your network connection and retry.
-                </p>
-                <button onclick="window.location.reload()" style="background:#4f46e5;color:white;border:none;padding:15px 40px;border-radius:20px;font-weight:900;text-transform:uppercase;cursor:pointer;">Reconnect</button>
-              </div>
-            </body>
-          </html>
-        `);
+      // If local file fails try Vercel, if Vercel fails show offline page
+      if (validatedURL !== VERCEL_URL) {
+        win.loadURL(VERCEL_URL).catch(() => showOfflinePage(win));
+      } else {
+        showOfflinePage(win);
       }
     });
 
@@ -174,8 +162,7 @@ function createWindow() {
       });
 
       autoUpdater.on('update-not-available', () => {
-        // Only show if manually triggered or we want to be verbose
-        // For now, let's just log it or we could add a flag to show dialog
+        console.log('App is up to date.');
       });
 
       ipcMain.handle('check-for-updates', async () => {
@@ -193,6 +180,24 @@ function createWindow() {
   }
 }
 
+// ── Offline Page ──────────────────────────────────────────────────────────────
+function showOfflinePage(win) {
+  win.loadURL(`data:text/html,
+    <html>
+      <body style="background:#020617;color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;text-align:center;padding:20px;">
+        <div style="background:rgba(255,255,255,0.05);padding:40px;border-radius:40px;border:1px solid rgba(255,255,255,0.1);max-width:500px;">
+          <h1 style="font-weight:900;letter-spacing:-0.05em;margin-bottom:20px;font-size:48px;">SYSTEM<br/>OFFLINE</h1>
+          <p style="color:#64748b;font-weight:500;line-height:1.6;margin-bottom:30px;">
+            The Enterprise QMS environment could not be reached.<br/>
+            Please verify your network connection and retry.
+          </p>
+          <button onclick="window.location.reload()" style="background:#4f46e5;color:white;border:none;padding:15px 40px;border-radius:20px;font-weight:900;text-transform:uppercase;cursor:pointer;">Reconnect</button>
+        </div>
+      </body>
+    </html>
+  `);
+}
+
 // ── App Lifecycle ─────────────────────────────────────────────────────────────
 app.whenReady().then(createWindow);
 
@@ -203,4 +208,3 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });
-
