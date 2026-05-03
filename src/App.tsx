@@ -22,20 +22,20 @@ import { ReportsPage } from '@/pages/Reports';
 import { SettingsPage } from '@/pages/Settings';
 import { DevPortal } from '@/pages/DevPortal';
 import { StabilityPage } from '@/pages/Stability';
-import { ArchivePage } from './pages/Archive';
-import { IPQCPage } from './pages/IPQC';
-import { COAManagerPage } from './pages/COAManager';
-import { MFRManagerPage } from './pages/MFRManager';
-import { BMRManagerPage } from './pages/BMRManager';
-import { MarketComplaintsPage } from './pages/MarketComplaints';
-import { RecallsPage } from './pages/Recalls';
-import { MaintenancePage } from './components/maintenance/MaintenanceProvider';
-import { Toaster } from './components/ui/sonner';
+import { ArchivePage } from '@/pages/Archive';
+import { IPQCPage } from '@/pages/IPQC';
+import { COAManagerPage } from '@/pages/COAManager';
+import { MFRManagerPage } from '@/pages/MFRManager';
+import { BMRManagerPage } from '@/pages/BMRManager';
+import { MarketComplaintsPage } from '@/pages/MarketComplaints';
+import { RecallsPage } from '@/pages/Recalls';
+import { MaintenancePage } from '@/components/maintenance/MaintenanceProvider';
+import { Toaster } from '@/components/ui/sonner';
 import { Loader2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import MaterialInventoryPage from './pages/MaterialInventory';
-import ReconciliationDashboard from './pages/ReconciliationDashboard';
-import { BatchTimelinePage } from './pages/BatchTimelinePage';
+import MaterialInventoryPage from '@/pages/MaterialInventory';
+import ReconciliationDashboard from '@/pages/ReconciliationDashboard';
+import { BatchTimelinePage } from '@/pages/BatchTimelinePage';
 
 // PWA Install Prompt Component
 function PWAInstallPrompt() {

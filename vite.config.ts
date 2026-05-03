@@ -5,7 +5,10 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig(({ mode }) => {
   const isGitHubPages = process.env.GITHUB_PAGES === 'true';
-  const basePath = isGitHubPages ? '/New-PharmaQMS-/' : './';
+  const isVercel = process.env.VERCEL === 'true';
+  
+  // Use absolute path for Vercel, relative for Electron/Local
+  const basePath = isGitHubPages ? '/New-PharmaQMS-/' : (isVercel ? '/' : './');
 
   return {
     base: basePath,
