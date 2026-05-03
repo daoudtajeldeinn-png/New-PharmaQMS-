@@ -190,14 +190,21 @@ export function SecurityProvider({ children }: { children: ReactNode }) {
   // Priority: 1) Supabase auth → 2) profiles table (admin-created users) → 3) local fallback
   const login = async (username: string, password: string): Promise<boolean> => {
 
-    // ── Step 1: Try Supabase auth ──
+    // ── Step 1: Try Supabase auth (with 3s timeout) ──
     try {
       const emailToUse = username.includes('@') ? username : `${username}@pharma.corp`;
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      
+      const authPromise = supabase.auth.signInWithPassword({
         email: emailToUse, password,
       });
 
-      if (!authError && authData.user) {
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Cloud timeout')), 3000)
+      );
+
+      const { data: authData, error: authError } = await Promise.race([authPromise, timeoutPromise]) as any;
+
+      if (!authError && authData?.user) {
         const { data: profile } = await supabase
           .from('profiles').select('*').eq('id', authData.user.id).single();
 
@@ -224,18 +231,25 @@ export function SecurityProvider({ children }: { children: ReactNode }) {
         return true;
       }
     } catch (e) {
-      console.error('Cloud auth exception:', e);
+      console.warn('Cloud auth attempt skipped or timed out:', e.message);
     }
 
-    // ── Step 2: Try profiles table (admin-created users with password_hash) ──
+    // ── Step 2: Try profiles table (with 2s timeout) ──
     try {
       const passwordHash = await hashPassword(password);
-      const { data: profile } = await supabase
+      
+      const profilePromise = supabase
         .from('profiles')
         .select('*')
         .eq('username', username)
         .eq('password_hash', passwordHash)
         .single();
+
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Profile timeout')), 2000)
+      );
+
+      const { data: profile } = await Promise.race([profilePromise, timeoutPromise]) as any;
 
       if (profile) {
         const expiry = new Date();
@@ -260,7 +274,7 @@ export function SecurityProvider({ children }: { children: ReactNode }) {
         return true;
       }
     } catch (e) {
-      console.warn('Profile table auth failed:', e);
+      console.warn('Profile table check skipped or timed out:', e.message);
     }
 
     // ── Step 3: Local fallback ──
