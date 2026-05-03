@@ -125,15 +125,29 @@ export function TestResultForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const overallResult = getOverallResult();
-    onSubmit({
-      ...formData,
-      productId: selectedProductId,
-      testMethodId: selectedTestMethodId,
-      parameters: parameterResults,
-      overallResult,
-      id: testResult?.id || crypto.randomUUID(),
-    });
+    
+    if (!selectedProductId) {
+      console.error('[Submit Error] No product selected');
+      return;
+    }
+    if (!selectedTestMethodId) {
+      console.error('[Submit Error] No test method selected');
+      return;
+    }
+
+    try {
+      const overallResult = getOverallResult();
+      onSubmit({
+        ...formData,
+        productId: selectedProductId,
+        testMethodId: selectedTestMethodId,
+        parameters: parameterResults,
+        overallResult,
+        id: testResult?.id || crypto.randomUUID(),
+      });
+    } catch (error) {
+      console.error('[Submit Error] Failed to process test result:', error);
+    }
   };
 
   return (

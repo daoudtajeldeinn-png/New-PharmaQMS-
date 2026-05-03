@@ -20,7 +20,7 @@ try {
   autoUpdater.setFeedURL({
     provider: 'github',
     owner: 'daoudtajeldeinn-png',
-    repo: 'New-PharmaQMS-'
+    repo: 'pharmaqualify-pro'
   });
 
   // Try to attach electron-log for debug output
@@ -130,7 +130,7 @@ function createWindow() {
     // ── Check for updates after window loads ─────────────────────────────────
     if (autoUpdater) {
       win.webContents.on('did-finish-load', () => {
-        autoUpdater.checkForUpdates().catch(err => {
+        autoUpdater.checkForUpdatesAndNotify().catch(err => {
           console.warn('Update check failed:', err.message);
         });
       });
@@ -168,7 +168,7 @@ function createWindow() {
       ipcMain.handle('check-for-updates', async () => {
         if (autoUpdater) {
           try {
-            const result = await autoUpdater.checkForUpdates();
+            const result = await autoUpdater.checkForUpdatesAndNotify();
             return { success: true, info: result?.updateInfo };
           } catch (error) {
             return { success: false, error: error.message };
@@ -198,13 +198,31 @@ function showOfflinePage(win) {
   `);
 }
 
+// ── Supabase Health Check ───────────────────────────────────────────────────
+function checkSupabaseHealth() {
+  const https = require('https');
+  const SUPABASE_URL = 'https://xxlxfhlliojkplrcvukc.supabase.co';
+  
+  https.get(`${SUPABASE_URL}/rest/v1/`, (res) => {
+    console.log(`[Supabase Health] Status: ${res.statusCode} at ${new Date().toISOString()}`);
+  }).on('error', (e) => {
+    console.error(`[Supabase Health] FAILED: ${e.message}`);
+  });
+}
+
 // ── App Lifecycle ─────────────────────────────────────────────────────────────
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+  checkSupabaseHealth();
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
 app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+    checkSupabaseHealth();
+  }
 });

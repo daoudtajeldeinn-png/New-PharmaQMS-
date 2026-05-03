@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useStore } from '@/hooks/useStore';
 import { toast, Toaster } from 'sonner';
 import {
@@ -57,8 +58,33 @@ const gradeLabels: Record<string, string> = {
 
 export function LaboratoryPage() {
   const { state, dispatch } = useStore();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Sync tab with URL
+  const getTabFromPath = () => {
+    const path = location.pathname.split('/').pop();
+    if (['reagents', 'standards', 'lab_operation'].includes(path || '')) {
+      return path || 'reagents';
+    }
+    return 'reagents';
+  };
+
+  const [activeTab, setActiveTab] = useState(getTabFromPath());
+
+  useEffect(() => {
+    const tab = getTabFromPath();
+    setActiveTab(tab);
+  }, [location.pathname]);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    // Note: sidebar paths for lab are /lab/reagents and /lab/standards. 
+    // lab_operation is a tab inside lab.
+    navigate(`/lab/${value}`);
+  };
+
   const now = useMemo(() => Date.now(), []);
-  const [activeTab, setActiveTab] = useState('reagents');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isReagentFormOpen, setIsReagentFormOpen] = useState(false);
@@ -161,7 +187,7 @@ export function LaboratoryPage() {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="grid w-full grid-cols-3 bg-slate-100 p-1">
           <TabsTrigger value="reagents">Chemical Reagents</TabsTrigger>
           <TabsTrigger value="standards">Reference Standards</TabsTrigger>
@@ -384,8 +410,20 @@ export function LaboratoryPage() {
                       <tbody className="divide-y divide-slate-100">
                         {(material.tests || []).map(test => (
                           <tr key={test.id} className="hover:bg-slate-50/50 transition-colors">
-                            <td className="p-2 font-medium text-slate-700">{test.name}</td>
-                            <td className="p-2 text-slate-500">{test.spec}</td>
+                            <td className="p-2">
+                              <Input
+                                className="h-8 text-xs font-medium border-transparent hover:border-slate-200 focus:border-indigo-500 bg-transparent"
+                                value={test.name}
+                                onChange={(e) => handleUpdateTestResult(material.id, test.id, { name: e.target.value })}
+                              />
+                            </td>
+                            <td className="p-2">
+                              <Input
+                                className="h-8 text-xs border-transparent hover:border-slate-200 focus:border-indigo-500 bg-transparent"
+                                value={test.spec}
+                                onChange={(e) => handleUpdateTestResult(material.id, test.id, { spec: e.target.value })}
+                              />
+                            </td>
                             <td className="p-2">
                               <Input
                                 size={1}

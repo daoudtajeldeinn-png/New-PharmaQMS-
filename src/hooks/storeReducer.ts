@@ -28,6 +28,7 @@ import type {
 } from '@/types';
 import { masterFormulas as initialMFRs, type MasterFormula } from '@/data/mfrData';
 import { batchRecords as initialBMRs, type BatchRecord } from '@/data/bmrData';
+import { logActivity } from '@/lib/supabase';
 
 // ==================== LocalStorage Keys (Legacy for Migration) ====================
 export const STORAGE_KEYS = {
@@ -568,7 +569,10 @@ export function appReducerWithPersistence(state: AppState, action: Action): AppS
         case 'DELETE_RECONCILIATION_RECORD':
             db.reconciliationRecords.delete(action.payload); break;
         case 'ADD_ACTIVITY':
-            if ((action.payload as any).id) db.activities.put(action.payload);
+            if ((action.payload as any).id) {
+              db.activities.put(action.payload);
+              logActivity(action.payload);
+            }
             break;
         case 'ADD_TEST_METHOD_PDF': {
             const { testMethodId, pdfUrl } = action.payload;

@@ -23,3 +23,19 @@ export async function checkSupabaseHealth(): Promise<boolean> {
     return false;
   }
 }
+
+/** Push activity to centralized audit logs */
+export async function logActivity(activity: any) {
+  try {
+    const { error } = await supabase.from('audit_logs').insert([{
+      id: activity.id,
+      action: activity.type,
+      module: 'General',
+      details: { description: activity.description, user: activity.user },
+      created_at: activity.timestamp
+    }]);
+    if (error) console.error('[Audit Log] Sync Error:', error.message);
+  } catch (err) {
+    console.error('[Audit Log] Failed to push to cloud:', err);
+  }
+}

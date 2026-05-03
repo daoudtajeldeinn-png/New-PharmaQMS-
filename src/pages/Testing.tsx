@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useLocation, useNavigate, Routes, Route, useSearchParams } from 'react-router-dom';
 import { useStore } from '@/hooks/useStore';
 import { TestMethodForm } from '@/components/testing/TestMethodForm';
 import { TestResultForm } from '@/components/testing/TestResultForm';
@@ -40,18 +40,42 @@ import { DataTableActions } from '@/components/ui/data-table-actions';
 
 export function Testing() {
   const { state, dispatch } = useStore();
-  const [activeTab, setActiveTab] = useState('results');
+  const { user } = useSecurity();
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  // Sync tab with URL
+  const getTabFromPath = () => {
+    const path = location.pathname.split('/').pop();
+    if (['results', 'methods', 'oos', 'pharmacopeia'].includes(path || '')) {
+      return path || 'results';
+    }
+    return 'results';
+  };
+
+  const [activeTab, setActiveTab] = useState(getTabFromPath());
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isMethodFormOpen, setIsMethodFormOpen] = useState(false);
+  const [isResultFormOpen, setIsResultFormOpen] = useState(false);
+  const [selectedMethod, setSelectedMethod] = useState<TestMethod | null>(null);
+  const [selectedResult, setSelectedResult] = useState<TestResult | null>(null);
+
+  useEffect(() => {
+    const tab = getTabFromPath();
+    setActiveTab(tab);
+  }, [location.pathname]);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    navigate(`/testing/${value}`);
+  };
+
   const [searchParams] = useSearchParams();
   const productId = searchParams.get('productId');
   const product = state.products.find(p => p.id === productId) || null;
   const preSelectedProductId = productId || '';
   const isProductView = !!productId;
-  const [isMethodFormOpen, setIsMethodFormOpen] = useState(false);
-  const [isResultFormOpen, setIsResultFormOpen] = useState(false);
-  const [selectedMethod, setSelectedMethod] = useState<TestMethod | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const { user } = useSecurity();
 
   const handleCloseOOS = (result: TestResult) => {
     dispatch({
@@ -79,62 +103,90 @@ export function Testing() {
   };
 
   const handleSubmitMethod = (method: Partial<TestMethod>) => {
-    if (selectedMethod) {
-      dispatch({
-        type: 'UPDATE_TEST_METHOD',
-        payload: method as TestMethod,
-      });
-    } else {
-      dispatch({
-        type: 'ADD_TEST_METHOD',
-        payload: method as TestMethod,
-      });
+    try {
+      if (!method.name || !method.category) {
+        toast.error('Method name and category are required.');
+        return;
+      }
+
+      if (selectedMethod) {
+        dispatch({
+          type: 'UPDATE_TEST_METHOD',
+          payload: method as TestMethod,
+        });
+        toast.success(`Method ${method.name} updated successfully.`);
+      } else {
+        dispatch({
+          type: 'ADD_TEST_METHOD',
+          payload: method as TestMethod,
+        });
+        toast.success(`New method ${method.name} registered.`);
+      }
+      setIsMethodFormOpen(false);
+    } catch (error) {
+      console.error('STP Method Error:', error);
+      toast.error('Failed to save test method. Please check console for details.');
     }
-    setIsMethodFormOpen(false);
   };
 
   const handleSeedMethods = () => {
-    let addCount = 0;
-    STANDARD_PHARMA_TESTS.forEach(method => {
-      const exists = state.testMethods.some(m => m.name === method.name);
-      if (!exists) {
-        dispatch({
-          type: 'ADD_TEST_METHOD',
-          payload: {
-            ...method,
-            id: crypto.randomUUID(),
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          } as TestMethod
-        });
-        addCount++;
-      }
-    });
+    try {
+      let addCount = 0;
+      STANDARD_PHARMA_TESTS.forEach(method => {
+        const exists = state.testMethods.some(m => m.name === method.name);
+        if (!exists) {
+          dispatch({
+            type: 'ADD_TEST_METHOD',
+            payload: {
+              ...method,
+              id: crypto.randomUUID(),
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            } as TestMethod
+          });
+          addCount++;
+        }
+      });
 
-    if (addCount > 0) {
-      toast.success(`Successfully imported ${addCount} standard test methods.`);
-    } else {
-      toast.info('Standard methods are already in your library.');
+      if (addCount > 0) {
+        toast.success(`Successfully imported ${addCount} standard test methods.`);
+      } else {
+        toast.info('Standard methods are already in your library.');
+      }
+    } catch (error) {
+      console.error('Import Error:', error);
+      toast.error('Failed to import standard methods.');
     }
   };
 
   const handleSubmitResult = (result: Partial<TestResult>) => {
-    dispatch({
-      type: 'ADD_TEST_RESULT',
-      payload: result as TestResult,
-    });
-    dispatch({
-      type: 'ADD_ACTIVITY',
-      payload: {
-        id: crypto.randomUUID(),
-        type: result.overallResult === 'OOS' ? 'OOS_Investigation' : 'Test_Completed',
-        description: `Test completed for batch ${result.batchNumber}: ${result.overallResult}`,
-        user: 'System',
-        timestamp: new Date(),
-      },
-    });
-    setIsResultFormOpen(false);
-    dispatch({ type: 'UPDATE_DASHBOARD_STATS' });
+    try {
+      if (!result.batchNumber || !result.sampleId) {
+        toast.error('Batch number and sample ID are required.');
+        return;
+      }
+
+      dispatch({
+        type: 'ADD_TEST_RESULT',
+        payload: result as TestResult,
+      });
+      dispatch({
+        type: 'ADD_ACTIVITY',
+        payload: {
+          id: crypto.randomUUID(),
+          type: result.overallResult === 'OOS' ? 'OOS_Investigation' : 'Test_Completed',
+          description: `Test completed for batch ${result.batchNumber}: ${result.overallResult}`,
+          user: user?.name || 'System',
+          timestamp: new Date(),
+        },
+      });
+      setIsResultFormOpen(false);
+      dispatch({ type: 'UPDATE_DASHBOARD_STATS' });
+      toast.success(`Analytical result for ${result.batchNumber} saved.`);
+    } catch (error) {
+      console.error('Test Result Error:', error);
+      toast.error('Failed to log test result. Please verify all fields.');
+    }
   };
 
   const filteredResults = state.testResults.filter((result) => {
@@ -200,7 +252,7 @@ export function Testing() {
           </div>
         )}
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="grid w-full grid-cols-4 bg-slate-100 p-1">
           <TabsTrigger value="results">Test Records</TabsTrigger>
           <TabsTrigger value="methods">STP Methods</TabsTrigger>
