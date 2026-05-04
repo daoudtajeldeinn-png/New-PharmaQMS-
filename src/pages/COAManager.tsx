@@ -53,7 +53,7 @@ export function COAManagerPage() {
       let tests: any[] = [];
       let updates: Partial<COARecord> = {};
 
-      // 1. Check Raw Materials
+      // 1. Check Raw Materials inventory first
       const rawMaterial = state.rawMaterials?.find(rm => rm.batchNumber === batchNo);
       if (rawMaterial) {
         if (rawMaterial.tests && rawMaterial.tests.length > 0) {
@@ -67,7 +67,7 @@ export function COAManagerPage() {
         updates = {
           productName: rawMaterial.name,
           manufacturingDate: rawMaterial.manufacturingDate || rawMaterial.receivedDate || '',
-          analysisDate: rawMaterial.analysisDate || '',
+          analysisDate: rawMaterial.analysisDate || new Date().toISOString().split('T')[0],
           analysisNo: rawMaterial.analysisNo || `AN-${rawMaterial.batchNumber}`,
           expiryDate: rawMaterial.expiryDate || '',
           manufacturer: rawMaterial.supplier || '',
@@ -75,28 +75,57 @@ export function COAManagerPage() {
           batchSize: `${rawMaterial.quantity} ${rawMaterial.unit}`,
         };
       } else {
-        // 2. Check Finished Products / Test Results
+        // 2. Check Finished Product Test Results
         const batchResults = state.testResults?.filter(tr => tr.batchNumber === batchNo);
         if (batchResults && batchResults.length > 0) {
-          tests = batchResults.map(tr => ({
-            test: tr.testMethodId || 'Test',
-            specification: 'Refer to Test Result',
-            result: tr.overallResult || 'Pass',
-            status: tr.overallResult === 'Pass' ? 'Pass' : 'Fail'
-          }));
+          tests = batchResults.flatMap(tr => {
+            // Try to get parameter-level test results
+            if (tr.parameters && tr.parameters.length > 0) {
+              return tr.parameters.map((p: any) => ({
+                test: p.parameterName || p.name || 'Parameter',
+                specification: p.unit ? `Limit: ${p.unit}` : 'See Test Method',
+                result: String(p.value || ''),
+                status: p.result === 'Pass' ? 'Pass' : p.result === 'Fail' ? 'Fail' : 'Pending'
+              }));
+            }
+            // Fallback: resolve testMethodId to actual name
+            const methodName = state.testMethods?.find((m: any) => m.id === tr.testMethodId)?.name
+              || tr.testMethodId || 'Analytical Test';
+            return [{
+              test: methodName,
+              specification: 'Refer to Test Method',
+              result: tr.overallResult || '',
+              status: tr.overallResult === 'Pass' ? 'Pass' : tr.overallResult === 'Fail' ? 'Fail' : 'Pending'
+            }];
+          });
         }
+
+        // 3. Check BMR batch records
+        const bmrRecord = state.batchRecords?.find(b => b.batchNumber === batchNo);
+        if (bmrRecord) {
+          updates = {
+            ...updates,
+            productName: bmrRecord.productName || updates.productName,
+            batchSize: bmrRecord.batchSize ? `${bmrRecord.batchSize} ${bmrRecord.batchSizeUnit || ''}`.trim() : updates.batchSize,
+            manufacturingDate: bmrRecord.mfgDate || updates.manufacturingDate,
+            expiryDate: bmrRecord.expiryDate || updates.expiryDate,
+          };
+        }
+
+        // 4. Check Products for meta info
         const product = state.products?.find(p => p.batches?.includes(batchNo) || p.id === batchResults?.[0]?.productId);
         if (product) {
           updates = {
-            productName: product.name,
-            dosageForm: product.dosageForm || '',
-            expiryDate: product.expiryDate || '',
+            ...updates,
+            productName: updates.productName || product.name,
+            dosageForm: product.dosageForm || updates.dosageForm || '',
+            expiryDate: product.expiryDate || updates.expiryDate || '',
           };
         }
       }
 
       if (tests.length === 0 && Object.keys(updates).length === 0) {
-        toast.error('No matching data found for this batch');
+        toast.error(`No data found for batch "${batchNo}". Check Material Inventory or BMR records.`);
         return;
       }
 
@@ -106,7 +135,10 @@ export function COAManagerPage() {
         testResults: tests.length > 0 ? tests : prev.testResults
       }));
       
-      toast.success('Batch data and tests successfully fetched!');
+      const summary = [];
+      if (Object.keys(updates).length > 0) summary.push('batch info');
+      if (tests.length > 0) summary.push(`${tests.length} test parameters`);
+      toast.success(`Auto-filled: ${summary.join(' and ')} from inventory data.`);
     };
     const printRef = useRef<HTMLDivElement>(null);
 

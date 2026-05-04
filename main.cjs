@@ -12,17 +12,17 @@ try {
 // ── Single Instance Lock ──────────────────────────────────────────────────────
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
+  // Another instance is already running — quit immediately, no window
   app.quit();
 } else {
   app.on('second-instance', (event, commandLine, workingDirectory) => {
-    // Someone tried to run a second instance, we should focus our window.
+    // Someone tried to run a second instance — focus our existing window
     const windows = BrowserWindow.getAllWindows();
     if (windows.length) {
       if (windows[0].isMinimized()) windows[0].restore();
       windows[0].focus();
     }
   });
-}
 
 // ── Auto Updater ──────────────────────────────────────────────────────────────
 let autoUpdater;
@@ -226,19 +226,20 @@ function checkSupabaseHealth() {
   });
 }
 
-// ── App Lifecycle ─────────────────────────────────────────────────────────────
-app.whenReady().then(() => {
-  createWindow();
-  checkSupabaseHealth();
-});
-
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
-});
-
-app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
+  // ── App Lifecycle (inside single-instance guard) ─────────────────────────
+  app.whenReady().then(() => {
     createWindow();
     checkSupabaseHealth();
-  }
-});
+  });
+
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') app.quit();
+  });
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+      checkSupabaseHealth();
+    }
+  });
+} // end single-instance guard
