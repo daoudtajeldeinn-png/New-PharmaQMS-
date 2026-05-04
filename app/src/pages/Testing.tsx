@@ -43,7 +43,7 @@ export function Testing() {
   const [activeTab, setActiveTab] = useState('results');
   const [searchParams] = useSearchParams();
   const productId = searchParams.get('productId');
-  const product = state.products.find(p => p.id === productId) || null;
+  const product = (state.products || []).find(p => p.id === productId) || null;
   const preSelectedProductId = productId || '';
   const isProductView = !!productId;
   const [isMethodFormOpen, setIsMethodFormOpen] = useState(false);
@@ -137,10 +137,10 @@ export function Testing() {
     dispatch({ type: 'UPDATE_DASHBOARD_STATS' });
   };
 
-  const filteredResults = state.testResults.filter((result) => {
+  const filteredResults = (state.testResults || []).filter((result) => {
     const matchesSearch =
-      result.batchNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      result.sampleId.toLowerCase().includes(searchTerm.toLowerCase());
+      (result.batchNumber || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (result.sampleId || '').toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
       statusFilter === 'all' || result.overallResult === statusFilter;
@@ -271,8 +271,8 @@ export function Testing() {
                   </TableCell>
                   </TableRow>
                 ) : (
-                  filteredResults.map((result) => {
-                    const testMethod = state.testMethods.find(
+                  (filteredResults || []).map((result) => {
+                    const testMethod = (state.testMethods || []).find(
                       (t) => t.id === result.testMethodId
                     );
                     return (
@@ -283,7 +283,7 @@ export function Testing() {
                           </code>
                         </TableCell>
                         <TableCell>{result.sampleId}</TableCell>
-                        <TableCell>{testMethod?.name || result.testMethodId}</TableCell>
+                        <TableCell>{testMethod?.name || (result.testMethodId?.startsWith('custom:') ? result.testMethodId.slice(7) : (result.testMethodId || 'Unknown'))}</TableCell>
                         <TableCell>{result.analystId}</TableCell>
                         <TableCell>
                           {new Date(result.testDate).toLocaleDateString('en-GB')}
@@ -347,7 +347,7 @@ export function Testing() {
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {state.testMethods.map((method) => (
+            {(state.testMethods || []).map((method) => (
               <Card key={method.id} className="cursor-pointer hover:shadow-md transition-shadow">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
@@ -405,11 +405,11 @@ export function Testing() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {state.testResults
+                {(state.testResults || [])
                   .filter((r) => r.overallResult === 'OOS')
                   .map((result) => {
-                    const product = state.products.find((p) => p.id === result.productId);
-                    const testMethod = state.testMethods.find(
+                    const product = (state.products || []).find((p) => p.id === result.productId);
+                    const testMethod = (state.testMethods || []).find(
                       (t) => t.id === result.testMethodId
                     );
                     return (
@@ -420,7 +420,7 @@ export function Testing() {
                           </code>
                         </TableCell>
                         <TableCell>{product?.name || result.productId}</TableCell>
-                        <TableCell>{testMethod?.name || result.testMethodId}</TableCell>
+                        <TableCell>{testMethod?.name || (result.testMethodId?.startsWith('custom:') ? result.testMethodId.slice(7) : (result.testMethodId || 'Unknown'))}</TableCell>
                         <TableCell>
                           {new Date(result.testDate).toLocaleDateString('en-GB')}
                         </TableCell>
@@ -499,8 +499,8 @@ export function Testing() {
             <DialogTitle className="text-xl font-black text-slate-900 uppercase">Record Analytical Deviation / Result</DialogTitle>
           </DialogHeader>
           <TestResultForm
-            products={state.products}
-            testMethods={state.testMethods}
+            products={state.products ?? []}
+            testMethods={state.testMethods ?? []}
             preSelectedProductId={preSelectedProductId}
             onSubmit={handleSubmitResult}
             onCancel={() => setIsResultFormOpen(false)}

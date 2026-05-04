@@ -61,7 +61,8 @@ export function TestMethodForm({ testMethod, onSubmit, onCancel }: TestMethodFor
   const [newEquipment, setNewEquipment] = useState('');
   const [newReagent, setNewReagent] = useState('');
 
-  const { testMethods } = useStore();
+  const { state } = useStore();
+  const testMethods = state.testMethods ?? [];
   const currentTestMethod = testMethods.find(m => m.id === testMethod?.id);
   const currentPdfUrl = currentTestMethod?.pdfUrl;
 
