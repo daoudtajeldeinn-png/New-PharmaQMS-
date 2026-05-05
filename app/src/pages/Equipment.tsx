@@ -92,7 +92,8 @@ export function EquipmentPage() {
       documents: [],
       purchaseDate: new Date(),
     };
-
+    // Set initial next calibration date
+    equipmentRecord.calibrationSchedule.nextCalibration = new Date(purchaseDate.getTime() + (equipmentRecord.calibrationSchedule.frequency * 24 * 60 * 60 * 1000));
     dispatch({ type: 'ADD_EQUIPMENT', payload: equipmentRecord });
     import('sonner').then(({ toast }) => toast.success('New asset registered successfully'));
     setIsFormOpen(false);
@@ -237,8 +238,16 @@ export function EquipmentPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex gap-2 justify-end">
-                            <Button variant="ghost" size="icon" onClick={() => { }} title="View Maintenance History">
-                              <FileText className="h-4 w-4" />
+                            <Button variant="ghost" size="icon" onClick={() => {
+                              const newStatus = eq.status === 'Under_Maintenance' ? 'Active' : 'Under_Maintenance';
+                              const updatedEq = { ...eq, status: newStatus as any };
+                              if (newStatus === 'Under_Maintenance') {
+                                updatedEq.maintenanceSchedule.lastMaintenance = new Date();
+                              }
+                              dispatch({ type: 'UPDATE_EQUIPMENT', payload: updatedEq });
+                              import('sonner').then(({ toast }) => toast.success(`Equipment ${newStatus === 'Under_Maintenance' ? 'sent for maintenance' : 'returned from maintenance'}`));
+                            }} title={eq.status === 'Under_Maintenance' ? 'Complete Maintenance' : 'Start Maintenance'}>
+                              <Wrench className="h-4 w-4" />
                             </Button>
                             <Button variant="ghost" size="icon" onClick={() => {
                               setSelectedEquipmentForCalibration(eq);

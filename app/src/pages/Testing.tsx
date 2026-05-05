@@ -311,7 +311,7 @@ export function Testing() {
                         <TableCell className="text-right">
                         <DataTableActions<TestResult>
                             item={result}
-                            onEdit={(item) => {
+                            onEdit={(_item) => {
                               // Open edit form - implement TestResultEditForm later
                               toast.info('Edit functionality ready - form to be added');
                             }}

@@ -33,23 +33,12 @@ export function COAManagerPage() {
         type: 'Finished Product',
         manufacturer: 'Pharma Corp',
         address: 'Industrial Zone, Phase 2, Pharmaceutical District',
-        productionDate: '',
+        manufacturingDate: '',
         analysisDate: '',
         status: 'Draft',
         marketComplaintStatus: 'Verified and Compliant'
     };
     const [formData, setFormData] = useState<Partial<COARecord>>(initialFormState);
-    const [showFetchTests, setShowFetchTests] = useState(false);
-    const [batchForFetch, setBatchForFetch] = useState('');
-
-    const handleFetchTests = () => {
-      dispatch({
-        type: 'FETCH_BATCH_TESTS_FOR_COA',
-        payload: { batchNumber: batchForFetch }
-      });
-      toast.success('Tests fetched from batch! Check test results section.');
-      setShowFetchTests(false);
-    };
     const printRef = useRef<HTMLDivElement>(null);
 
     const handlePrint = useReactToPrint({
@@ -338,12 +327,7 @@ export function COAManagerPage() {
                               <Button 
                                 type="button"
                                 onClick={() => {
-                                  if (formData.batchNumber) {
-                                    setBatchForFetch(formData.batchNumber);
-                                    setShowFetchTests(true);
-                                  } else {
-                                    toast.error('Enter Batch ID first');
-                                  }
+                                  toast.info('Fetch tests feature not yet implemented');
                                 }}
                                 className="w-full bg-green-600 hover:bg-green-700 text-white font-bold"
                               >

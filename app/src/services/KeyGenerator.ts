@@ -4,8 +4,6 @@
  * Following 21 CFR Part 11 compliance for audit trails
  */
 
-import { toast } from 'sonner';
-
 // ==================== License Tiers ====================
 export type LicenseTier = 'TRIAL' | 'DEMO' | 'ENTERPRISE' | 'SITE';
 
