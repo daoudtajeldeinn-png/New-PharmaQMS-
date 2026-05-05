@@ -42,6 +42,8 @@ export function DataTableActions<T extends { id: string }>({
 }: DataTableActionsProps<T>) {
   const { user } = useSecurity();
 
+  void dispatch;
+
   const handleDelete = () => {
     if (onDelete && window.confirm(deleteConfirmMsg)) {
       onDelete(item.id);
@@ -96,4 +98,3 @@ export function DataTableActions<T extends { id: string }>({
     </DropdownMenu>
   );
 }
-

@@ -421,6 +421,13 @@ export function TestMethodForm({ testMethod, onSubmit, onCancel }: TestMethodFor
         </CardContent>
       </Card>
 
+      {testMethod?.id && (
+        <TestMethodPdfUploader
+          testMethodId={testMethod.id}
+          currentPdfUrl={currentPdfUrl}
+        />
+      )}
+
       <div className="flex justify-end gap-3">
         <Button type="button" variant="outline" onClick={onCancel}>
           إلغاء

@@ -192,7 +192,7 @@ export function StabilityDetails({ protocol, onBack, onEdit }: StabilityDetailsP
             dosageForm: product?.dosageForm || '',
             batchNumber: protocol.batchNumber,
             batchSize: '', // Not specified in protocol
-            mfgDate: product?.manufacturingDate ? new Date(product.manufacturingDate).toISOString() : '',
+            manufacturingDate: product?.manufacturingDate ? new Date(product.manufacturingDate).toISOString() : '',
             expiryDate: product?.expiryDate ? new Date(product.expiryDate).toISOString() : '',
             issueDate: new Date().toISOString().split('T')[0],
             manufacturer: product?.manufacturer || 'Pharma Corp',

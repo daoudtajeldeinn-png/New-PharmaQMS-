@@ -572,6 +572,8 @@ export function appReducerWithPersistence(state: AppState, action: Action): AppS
             break;
         case 'ADD_TEST_METHOD_PDF': {
             const { testMethodId, pdfUrl } = action.payload;
+            void testMethodId;
+            void pdfUrl;
             // Note: Component should pass full updated TestMethod or handle separately
             // For now, skip DB put to avoid type error; use UPDATE_TEST_METHOD in component
             break;

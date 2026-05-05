@@ -7,7 +7,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { DataTableActions } from '@/components/ui/data-table-actions';
@@ -18,15 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  MoreHorizontal,
-  Search,
-  Filter,
-  Edit,
-  Trash2,
-  Eye,
-  FlaskConical,
-} from 'lucide-react';
+import { Search, Filter, FlaskConical } from 'lucide-react';
 import type { PharmaceuticalProduct, ProductStatus } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -227,7 +218,10 @@ export function ProductTable({
                       <DataTableActions<PharmaceuticalProduct>
                         item={product}
                         onEdit={onEdit}
-                        onDelete={(id) => onDelete(product)}
+                        onDelete={(id) => {
+                          void id;
+                          onDelete(product);
+                        }}
                         onView={onView}
                         extraActions={[
                           {

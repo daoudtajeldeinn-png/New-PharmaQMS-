@@ -86,7 +86,7 @@ export function BMRManagerPage() {
 
 
 interface StepUpdate {
-  realizedValue?: string;
+  realizedParameters?: Record<string, string>;
   startedAt?: string;
   completedAt?: string;
   operatorSignature?: string;
@@ -399,7 +399,11 @@ const handleUpdateStep = (stepNumber: number, updates: StepUpdate) => {
                                             <tbody className="divide-y">
 {(selectedBMR.ingredients || masterFormulas[selectedBMR.mfrId]?.ingredients || []).map((ing, idx) => {
                                                     const verification = selectedBMR.materialVerifications?.find((v) => v.itemCode === ing.itemCode);
-                                                    const qtyPerUnit = ing.standardQty / selectedBMR.batchSize;
+                                                    const standardQty =
+                                                        'standardQty' in ing
+                                                            ? (ing as any).standardQty
+                                                            : ing.quantity;
+                                                    const qtyPerUnit = standardQty / selectedBMR.batchSize;
                                                     const formattedQtyPerUnit = qtyPerUnit < 0.001 ? qtyPerUnit.toExponential(3) : qtyPerUnit.toFixed(6);
                                                     return (
                                                         <tr key={idx} className={`hover:bg-slate-50 transition-colors ${verification ? 'bg-emerald-50/20' : ''}`}>
@@ -413,7 +417,7 @@ const handleUpdateStep = (stepNumber: number, updates: StepUpdate) => {
                                                                     <Input
                                                                         type="number"
                                                                         className="w-24 ml-auto h-8 text-right font-bold border-dashed mb-1"
-                                                                        defaultValue={ing.standardQty || ing.quantity}
+                                                                        defaultValue={standardQty ?? ing.quantity}
                                                                         onChange={(e) => {
                                                                             const val = parseFloat(e.target.value);
                                                                             const updatedIngs = [...(selectedBMR.ingredients || [])];
@@ -539,8 +543,8 @@ const handleUpdateStep = (stepNumber: number, updates: StepUpdate) => {
                                                             <Input
                                                                 className="h-9 bg-white text-xs font-black"
                                                                 placeholder="Enter realized value (e.g. 15.2 kp, 45°C)..."
-                                                                value={step.realizedValue || ''}
-                                                                onChange={(e) => handleUpdateStep(step.stepNumber, { realizedValue: e.target.value })}
+                                                                value={(step.realizedParameters?.value || '') as string}
+                                                                onChange={(e) => handleUpdateStep(step.stepNumber, { realizedParameters: { ...(step.realizedParameters || {}), value: e.target.value } })}
                                                             />
                                                         </div>
                                                     </div>
@@ -680,8 +684,8 @@ selectedBMR.stepExecutions.filter((s: BMRStepExecution) => s.phase === 'Packagin
                                                                 <Input
                                                                     className="h-9 bg-white text-xs font-black"
                                                                     placeholder="Enter actual count or observation..."
-                                                                    value={step.realizedValue || ''}
-                                                                    onChange={(e) => handleUpdateStep(step.stepNumber, { realizedValue: e.target.value })}
+                                                            value={(step.realizedParameters?.value || '') as string}
+                                                            onChange={(e) => handleUpdateStep(step.stepNumber, { realizedParameters: { ...(step.realizedParameters || {}), value: e.target.value } })}
                                                                 />
                                                             </div>
                                                         </div>
