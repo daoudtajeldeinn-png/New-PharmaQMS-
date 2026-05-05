@@ -86,7 +86,7 @@ export function COAManagerPage() {
             dosageForm: formData.dosageForm || '',
             batchNumber: formData.batchNumber || '',
             batchSize: formData.batchSize || '',
-            mfgDate: formData.mfgDate || formData.manufacturingDate || '',
+            manufacturingDate: formData.manufacturingDate || '',
             receivingDate: formData.receivingDate || '',
             analysisDate: formData.analysisDate || '',
             expiryDate: formData.expiryDate || '',

@@ -57,6 +57,9 @@ export function EquipmentPage() {
   const [activeTab, setActiveTab] = useState('all');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isCalibrationDialogOpen, setIsCalibrationDialogOpen] = useState(false);
+  const [selectedEquipmentForCalibration, setSelectedEquipmentForCalibration] = useState<Equipment | null>(null);
+  const [nextCalibrationDate, setNextCalibrationDate] = useState('');
+  const [calibrationNotes, setCalibrationNotes] = useState('');
 
   // Form state for new/editing equipment
   const [newEquipment, setNewEquipment] = useState<Partial<Equipment>>({
@@ -237,7 +240,12 @@ export function EquipmentPage() {
                             <Button variant="ghost" size="icon" onClick={() => { }} title="View Maintenance History">
                               <FileText className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" onClick={() => setIsCalibrationDialogOpen(true)} title="Quick Schedule Calibration">
+                            <Button variant="ghost" size="icon" onClick={() => {
+                              setSelectedEquipmentForCalibration(eq);
+                              setNextCalibrationDate(eq.calibrationSchedule.nextCalibration ? new Date(eq.calibrationSchedule.nextCalibration).toISOString().split('T')[0] : '');
+                              setCalibrationNotes('');
+                              setIsCalibrationDialogOpen(true);
+                            }} title="Quick Schedule Calibration">
                               <Calendar className="h-4 w-4" />
                             </Button>
                           </div>
@@ -461,26 +469,54 @@ export function EquipmentPage() {
       </Dialog>
 
       {/* Quick Calibration Dialog */}
-      <Dialog open={isCalibrationDialogOpen} onOpenChange={setIsCalibrationDialogOpen}>
+      <Dialog open={isCalibrationDialogOpen} onOpenChange={(open) => {
+          setIsCalibrationDialogOpen(open);
+          if (!open) setSelectedEquipmentForCalibration(null);
+        }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Quick Schedule Calibration</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Next Calibration Date</Label>
-              <Input type="date" className="w-full" />
-            </div>
-            <div className="space-y-2">
-              <Label>Notes / Reference</Label>
-              <Input placeholder="Reference SOP or external service" />
-            </div>
+            {selectedEquipmentForCalibration ? (
+              <div className="space-y-4">
+                <div className="text-sm text-slate-600">
+                  <div><strong>Equipment:</strong> {selectedEquipmentForCalibration.name}</div>
+                  <div><strong>Asset Tag:</strong> {selectedEquipmentForCalibration.assetTag}</div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Next Calibration Date</Label>
+                  <Input type="date" className="w-full" value={nextCalibrationDate} onChange={(e) => setNextCalibrationDate(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Notes / Reference</Label>
+                  <Input placeholder="Reference SOP or external service" value={calibrationNotes} onChange={(e) => setCalibrationNotes(e.target.value)} />
+                </div>
+              </div>
+            ) : (
+              <div className="text-sm text-slate-500">Select an equipment item before scheduling a calibration.</div>
+            )}
           </div>
           <div className="flex justify-end gap-3 mt-4">
-            <Button variant="outline" onClick={() => setIsCalibrationDialogOpen(false)}>Cancel</Button>
-            <Button onClick={() => {
-              import('sonner').then(({ toast }) => toast.success('Calibration scheduled successfully'));
+            <Button variant="outline" onClick={() => {
               setIsCalibrationDialogOpen(false);
+              setSelectedEquipmentForCalibration(null);
+            }}>Cancel</Button>
+            <Button onClick={() => {
+              if (selectedEquipmentForCalibration) {
+                const updatedEquipment: Equipment = {
+                  ...selectedEquipmentForCalibration,
+                  calibrationSchedule: {
+                    ...selectedEquipmentForCalibration.calibrationSchedule,
+                    nextCalibration: nextCalibrationDate ? new Date(nextCalibrationDate) : selectedEquipmentForCalibration.calibrationSchedule.nextCalibration,
+                    lastCalibration: new Date()
+                  }
+                };
+                dispatch({ type: 'UPDATE_EQUIPMENT', payload: updatedEquipment });
+                import('sonner').then(({ toast }) => toast.success('Calibration scheduled successfully'));
+              }
+              setIsCalibrationDialogOpen(false);
+              setSelectedEquipmentForCalibration(null);
             }} className="bg-indigo-600">Update Schedule</Button>
           </div>
         </DialogContent>

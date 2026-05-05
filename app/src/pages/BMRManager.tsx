@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useReactToPrint } from 'react-to-print';
-import { type BatchRecord } from '@/data/bmrData';
+import { type BatchRecord, type BMRStepExecution } from '@/data/bmrData';
 import { useStore } from '@/hooks/useStore';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -18,6 +18,7 @@ export function BMRManagerPage() {
     const records = state.batchRecords;
     const masterFormulas = state.masterFormulas;
     const [showIssueDialog, setShowIssueDialog] = useState(false);
+    const [showEditDialog, setShowEditDialog] = useState(false);
     const [selectedBMR, setSelectedBMR] = useState<BatchRecord | null>(null);
     const [newBatch, setNewBatch] = useState<Partial<BatchRecord>>({
         mfgDate: new Date().toISOString().split('T')[0],
