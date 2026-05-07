@@ -1,0 +1,27 @@
+name: Build and Release Electron App
+
+on:
+  push:
+    tags:
+      - 'v*' # Triggers workflow when a tag starting with 'v' is pushed (e.g., v4.2.7)
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18 # Use the appropriate Node version for your project
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build and Publish Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Required to publish to GitHub Releases
+        run: npm run electron:build -- --publish always

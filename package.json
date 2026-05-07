@@ -1,7 +1,7 @@
 {
   "name": "pharmaqms",
   "private": true,
-  "version": "4.2.7",
+  "version": "4.2.8",
   "description": "Enterprise Pharmaceutical Quality Management System",
   "author": "Dr. Daoud Tajeldeinn",
   "type": "module",
