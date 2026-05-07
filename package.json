@@ -37,6 +37,13 @@
     "files": [
       "main.cjs",
       "dist/**/*"
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "daoudtajeldeinn-png",
+        "repo": "SCI-"
+      }
     ]
   },
   "dependencies": {
@@ -45,6 +52,7 @@
     "@radix-ui/react-tabs": "^1.0.4",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
+    "electron-updater": "^6.8.3",
     "html5-qrcode": "^2.3.8",
     "jspdf": "^4.2.0",
     "lucide-react": "^0.575.0",
