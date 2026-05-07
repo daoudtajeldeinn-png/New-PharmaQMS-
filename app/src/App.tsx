@@ -151,7 +151,7 @@ function AppLayout() {
             <Route path="/complaints" element={<MarketComplaintsPage />} />
             <Route path="/recalls" element={<RecallsPage />} />
             <Route path="/quality/*" element={<QualitySystems />} />
-            <Route path="/equipment" element={<EquipmentPage />} />
+            <Route path="/equipment/*" element={<EquipmentPage />} />
             <Route path="/lab/*" element={<LaboratoryPage />} />
             <Route path="/training/*" element={<TrainingPage />} />
             <Route path="/audits" element={<AuditsPage />} />

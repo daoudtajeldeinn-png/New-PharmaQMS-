@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useStore } from '@/hooks/useStore';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Table,
   TableBody,
@@ -55,6 +56,23 @@ export function EquipmentPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [activeTab, setActiveTab] = useState('all');
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Sync tab with URL
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.includes('/calibration')) setActiveTab('calibration');
+    else if (path.includes('/maintenance')) setActiveTab('maintenance');
+    else setActiveTab('all');
+  }, [location.pathname]);
+
+  const handleTabChange = (val: string) => {
+    setActiveTab(val);
+    if (val === 'all') navigate('/equipment');
+    else navigate(`/equipment/${val}`);
+  };
+
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isCalibrationDialogOpen, setIsCalibrationDialogOpen] = useState(false);
   const [selectedEquipmentForCalibration, setSelectedEquipmentForCalibration] = useState<Equipment | null>(null);
@@ -153,7 +171,7 @@ export function EquipmentPage() {
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="all">All Equipment</TabsTrigger>
           <TabsTrigger value="calibration">Pending Calibration</TabsTrigger>

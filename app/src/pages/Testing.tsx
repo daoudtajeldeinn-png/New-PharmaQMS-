@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import { useStore } from '@/hooks/useStore';
 import { TestMethodForm } from '@/components/testing/TestMethodForm';
 import { TestResultForm } from '@/components/testing/TestResultForm';
@@ -40,17 +40,24 @@ import { DataTableActions } from '@/components/ui/data-table-actions';
 
 export function Testing() {
   const { state, dispatch } = useStore();
-  const [activeTab, setActiveTab] = useState('results');
-  const [searchParams] = useSearchParams();
-  const productId = searchParams.get('productId');
-  const product = (state.products || []).find(p => p.id === productId) || null;
-  const preSelectedProductId = productId || '';
-  const isProductView = !!productId;
-  const [isMethodFormOpen, setIsMethodFormOpen] = useState(false);
-  const [isResultFormOpen, setIsResultFormOpen] = useState(false);
-  const [selectedMethod, setSelectedMethod] = useState<TestMethod | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Sync tab with URL
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.includes('/results')) setActiveTab('results');
+    else if (path.includes('/methods')) setActiveTab('methods');
+    else if (path.includes('/oos')) setActiveTab('oos');
+    else if (path.includes('/pharmacopeia')) setActiveTab('pharmacopeia');
+    else if (activeTab === '') setActiveTab('results');
+  }, [location.pathname]);
+
+  const handleTabChange = (val: string) => {
+    setActiveTab(val);
+    navigate(`/testing/${val}`);
+  };
+
   const { user } = useSecurity();
 
   const handleCloseOOS = (result: TestResult) => {
@@ -200,7 +207,7 @@ export function Testing() {
           </div>
         )}
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="grid w-full grid-cols-4 bg-slate-100 p-1">
           <TabsTrigger value="results">Test Records</TabsTrigger>
           <TabsTrigger value="methods">STP Methods</TabsTrigger>
