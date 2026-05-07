@@ -21,6 +21,8 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useSecurity } from '@/components/security/SecurityProvider';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase';
+import { useEffect } from 'react';
 
 interface HeaderProps {
   onMenuToggle?: () => void;
@@ -30,45 +32,77 @@ interface HeaderProps {
 export function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
   // ✅ إضافة: استيراد useSecurity للحصول على بيانات المستخدم ودالة logout
   const { user, logout } = useSecurity();
+  const [notifications, setNotifications] = useState<any[]>([]);
 
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      title: 'OOS Result Detected',
-      message: 'Amoxicillin batch AMX2024002 failed assay test',
-      time: '2 hours ago',
-      type: 'error',
-      read: false,
-    },
-    {
-      id: 2,
-      title: 'Calibration Due',
-      message: 'HPLC System 1 calibration due in 5 days',
-      time: '1 day ago',
-      type: 'warning',
-      read: false,
-    },
-    {
-      id: 3,
-      title: 'Product Expiring',
-      message: 'Insulin Glargine batch INS-2024-004 expires in 30 days',
-      time: '2 days ago',
-      type: 'info',
-      read: true,
-    },
-  ]);
+  useEffect(() => {
+    if (!user) return;
 
-  const handleMarkRead = (id: number) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-    toast.success('Notification acknowledged');
+    // Fetch initial notifications
+    const fetchNotifications = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(20);
+        
+        if (error) throw error;
+        setNotifications(data || []);
+      } catch (err) {
+        console.error('Error fetching notifications:', err);
+      }
+    };
+
+    fetchNotifications();
+
+    // Subscribe to new notifications
+    const subscription = supabase
+      .channel('notifications-channel')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'notifications',
+        filter: `user_id=eq.${user.id}`
+      }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          setNotifications(prev => [payload.new, ...prev]);
+          toast.info(`New Alert: ${payload.new.title}`);
+        } else if (payload.eventType === 'UPDATE') {
+          setNotifications(prev => prev.map(n => n.id === payload.new.id ? payload.new : n));
+        } else if (payload.eventType === 'DELETE') {
+          setNotifications(prev => prev.filter(n => n.id !== payload.old.id));
+        }
+      })
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [user]);
+
+  const handleMarkRead = async (id: string | number) => {
+    try {
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+      await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+      toast.success('Notification acknowledged');
+    } catch (err) {
+      console.error('Error updating notification', err);
+    }
   };
 
-  const clearAllNotifications = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    toast.success('All notifications cleared');
+  const clearAllNotifications = async () => {
+    try {
+      if (!user) return;
+      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+      await supabase.from('notifications').update({ is_read: true }).eq('user_id', user.id);
+      toast.success('All notifications cleared');
+    } catch (err) {
+      console.error('Error clearing notifications', err);
+    }
   };
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   // ✅ إضافة: دالة معالجة تسجيل الخروج مع تأكيد
   const handleLogout = () => {
@@ -144,7 +178,7 @@ export function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                   onDoubleClick={() => handleMarkRead(notification.id)}
                   className={cn(
                     'flex flex-col items-start gap-1 p-4 border-b border-white/5 cursor-pointer hover:bg-white/5 transition-all',
-                    !notification.read && 'bg-indigo-500/5'
+                    !notification.is_read && 'bg-indigo-500/5'
                   )}
                 >
                   <div className="flex w-full items-center justify-between mb-1">
@@ -163,7 +197,9 @@ export function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
                     </Badge>
                   </div>
                   <p className="text-xs text-slate-500 leading-relaxed">{notification.message}</p>
-                  <span className="text-[9px] font-bold text-slate-400 uppercase mt-1">{notification.time}</span>
+                  <span className="text-[9px] font-bold text-slate-400 uppercase mt-1">
+                    {notification.created_at ? new Date(notification.created_at).toLocaleString() : notification.time || 'Just now'}
+                  </span>
                 </DropdownMenuItem>
               ))}
             </div>

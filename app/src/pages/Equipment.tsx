@@ -93,7 +93,7 @@ export function EquipmentPage() {
       purchaseDate: new Date(),
     };
     // Set initial next calibration date
-    equipmentRecord.calibrationSchedule.nextCalibration = new Date(purchaseDate.getTime() + (equipmentRecord.calibrationSchedule.frequency * 24 * 60 * 60 * 1000));
+    equipmentRecord.calibrationSchedule.nextCalibration = new Date(equipmentRecord.purchaseDate.getTime() + (equipmentRecord.calibrationSchedule.frequency * 24 * 60 * 60 * 1000));
     dispatch({ type: 'ADD_EQUIPMENT', payload: equipmentRecord });
     import('sonner').then(({ toast }) => toast.success('New asset registered successfully'));
     setIsFormOpen(false);
