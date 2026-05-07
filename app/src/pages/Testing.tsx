@@ -40,6 +40,18 @@ import { DataTableActions } from '@/components/ui/data-table-actions';
 
 export function Testing() {
   const { state, dispatch } = useStore();
+  const [activeTab, setActiveTab] = useState('results');
+  const [searchParams] = useSearchParams();
+  const productId = searchParams.get('productId');
+  const product = (state.products || []).find(p => p.id === productId) || null;
+  const preSelectedProductId = productId || '';
+  const isProductView = !!productId;
+  const [isMethodFormOpen, setIsMethodFormOpen] = useState(false);
+  const [isResultFormOpen, setIsResultFormOpen] = useState(false);
+  const [selectedMethod, setSelectedMethod] = useState<TestMethod | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+
   const location = useLocation();
   const navigate = useNavigate();
 
