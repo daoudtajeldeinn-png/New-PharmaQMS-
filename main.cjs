@@ -2,6 +2,7 @@ const { app, BrowserWindow, Menu, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { execSync } = require('child_process');
+const { autoUpdater } = require('electron-updater');
 
 // Determine if we are in development
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
@@ -100,7 +101,39 @@ function createWindow() {
   }
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+  
+  // Check for updates
+  if (!isDev) {
+    autoUpdater.checkForUpdatesAndNotify();
+  }
+});
+
+autoUpdater.on('update-available', () => {
+  dialog.showMessageBox({
+    type: 'info',
+    title: 'Update Available',
+    message: 'A new version of PharmaQMS Enterprise is available. Downloading now...'
+  });
+});
+
+autoUpdater.on('update-downloaded', () => {
+  dialog.showMessageBox({
+    type: 'info',
+    title: 'Update Ready',
+    message: 'Update downloaded. The application will restart to install the update.',
+    buttons: ['Restart Now', 'Later']
+  }).then((result) => {
+    if (result.response === 0) {
+      autoUpdater.quitAndInstall(false, true);
+    }
+  });
+});
+
+autoUpdater.on('error', (err) => {
+  console.error('Error in auto-updater: ', err);
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
