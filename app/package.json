@@ -5,6 +5,9 @@
   "description": "Enterprise Pharmaceutical Quality Management System - Frontend App",
   "author": "Dr. Daoud Tajeldeinn",
   "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "main": "main.cjs",
   "scripts": {
     "dev": "vite",
