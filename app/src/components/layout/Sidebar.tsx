@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Pill,
@@ -94,6 +94,7 @@ const BASE_MENU_ITEMS: MenuItem[] = [
   {
     label: 'Asset Compliance',
     icon: Wrench,
+    path: '/equipment',
     children: [
       { label: 'Equipment Log', icon: ChevronRight, path: '/equipment' },
       { label: 'Calibration', icon: ChevronRight, path: '/equipment/calibration' },
@@ -103,6 +104,7 @@ const BASE_MENU_ITEMS: MenuItem[] = [
   {
     label: 'Lab Reagents',
     icon: Beaker,
+    path: '/lab',
     children: [
       { label: 'Inventory', icon: ChevronRight, path: '/lab/reagents' },
       { label: 'Ref Standards', icon: ChevronRight, path: '/lab/standards' },
@@ -117,8 +119,9 @@ const BASE_MENU_ITEMS: MenuItem[] = [
     ],
   },
   {
-    label: 'HR & Training',
+    label: 'Training & Competency',
     icon: GraduationCap,
+    path: '/training',
     children: [
       { label: 'Training Logs', icon: ChevronRight, path: '/training/records' },
       { label: 'Competency Matrix', icon: ChevronRight, path: '/training/competency' },
@@ -143,6 +146,8 @@ const getMenuItems = (): MenuItem[] => {
 
 function MenuItemComponent({ item, depth = 0 }: { item: MenuItem; depth?: number }) {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
   const hasChildren = item.children && item.children.length > 0;
 
   const content = (isActive: boolean = false) => (
@@ -178,10 +183,17 @@ function MenuItemComponent({ item, depth = 0 }: { item: MenuItem; depth?: number
   );
 
   if (hasChildren) {
+    const isParentActive = item.path && (location.pathname === item.path || location.pathname.startsWith(item.path + '/'));
     return (
       <div className="space-y-1">
-        <button className="w-full" onClick={() => setIsOpen(!isOpen)}>
-          {content(false)}
+        <button 
+          className="w-full text-left" 
+          onClick={() => {
+            setIsOpen(!isOpen);
+            if (item.path) navigate(item.path);
+          }}
+        >
+          {content(!!isParentActive)}
         </button>
         {isOpen && (
           <div className="space-y-1 ml-4 border-l border-white/5 pl-2 transition-all duration-500 animate-in slide-in-from-left-2">
