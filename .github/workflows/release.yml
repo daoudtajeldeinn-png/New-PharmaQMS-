@@ -25,4 +25,5 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DEBUG: electron-builder
+          CSC_LINK: "" # Disable code signing in CI to prevent failures without certificates
         run: npm run electron:build -- --publish always
