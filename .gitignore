@@ -4,3 +4,4 @@ dist-electron/
 build/  
 .vercel/  
 dist-electron-github-backup/
+.vercel
