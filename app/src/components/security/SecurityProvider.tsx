@@ -522,6 +522,7 @@ export function LoginPage({ forcedLicenseLock = false }: { forcedLicenseLock?: b
                   </div>
                   <div>
                     <h4 className="text-sm font-black text-white uppercase tracking-wider">System Certification</h4>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">PharmaQMS Enterprise v4.2.14-stable</p>
                     <p className="text-[10px] text-slate-500 font-medium leading-relaxed">Enter your organization's cryptographic activation key to unlock the GxP environment.</p>
                   </div>
                 </div>
