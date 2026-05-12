@@ -27,7 +27,8 @@ export const CLOUD_TABLES = [
     'rawMaterials',
     'materialMovements',
     'reconciliationRecords',
-    'activities'
+    'activities',
+    'pharmacopeiaMonographs'
 ];
 
 export async function syncAllTables() {

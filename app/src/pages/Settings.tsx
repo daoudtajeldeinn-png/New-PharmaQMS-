@@ -154,8 +154,11 @@ export function SettingsPage() {
       const result = await syncAllTables();
       
       if (result.failCount > 0) {
+        const failedTableNames = result.errors.map(e => e.split(':')[0]).join(', ');
         console.warn('Some tables failed to sync:', result.errors);
-        toast.warning(`Sync partially completed. ${result.successCount} tables synced, ${result.failCount} skipped.`);
+        toast.warning(`Sync partially completed. ${result.successCount} tables synced. Failed: ${failedTableNames}.`, {
+          duration: 6000
+        });
       } else {
         toast.success('Enterprise Cloud Synchronization Complete! All data is now at parity.');
       }
