@@ -51,7 +51,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useLicense } from '@/components/security/LicenseProvider';
 import { useSecurity, type User as UserType } from '@/components/security/SecurityProvider';
-import { backupSystemData, prepareGoogleDriveBackup } from '@/services/BackupService';
+import { backupSystemData, prepareGoogleDriveBackup, restoreSystemData } from '@/services/BackupService';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
@@ -187,6 +187,24 @@ export function SettingsPage() {
     } finally {
       setIsSyncing(false);
     }
+  };
+
+  const handleImportBackup = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const content = event.target?.result as string;
+      const success = await restoreSystemData(content);
+      if (success) {
+        toast.success('System data restored successfully! Reloading...');
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        toast.error('Failed to restore data. Please check the file format.');
+      }
+    };
+    reader.readAsText(file);
   };
 
   const openAddUserDialog = () => {
@@ -772,10 +790,23 @@ export function SettingsPage() {
               <div className="space-y-2">
                 <Label>Import Protocol</Label>
                 <p className="text-sm text-slate-500">Restore or update database from external file</p>
-                <Button variant="outline" className="border-emerald-200 text-emerald-700">
-                  <Upload className="mr-2 h-4 w-4" />
-                  Upload Data File
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    className="border-emerald-200 text-emerald-700"
+                    onClick={() => document.getElementById('backup-upload')?.click()}
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload Data File
+                  </Button>
+                  <input
+                    type="file"
+                    id="backup-upload"
+                    className="hidden"
+                    accept=".json"
+                    onChange={handleImportBackup}
+                  />
+                </div>
               </div>
               <Separator />
               <div className="space-y-2">

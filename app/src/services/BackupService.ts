@@ -51,6 +51,31 @@ export const restoreSessionData = (jsonData: string) => {
     }
 };
 
+export const restoreSystemData = async (jsonData: string) => {
+    try {
+        const backup = JSON.parse(jsonData);
+        if (!backup.data) throw new Error("Invalid backup format");
+        
+        // Clear and restore each table
+        const tableNames = Object.keys(backup.data);
+        
+        await db.transaction('rw', db.tables, async () => {
+            for (const tableName of tableNames) {
+                const table = db.table(tableName);
+                if (table) {
+                    await table.clear();
+                    await table.bulkAdd(backup.data[tableName]);
+                }
+            }
+        });
+        
+        return true;
+    } catch (e) {
+        console.error("Restore failed:", e);
+        return false;
+    }
+};
+
 export const backupSessionData = async () => {
   return await backupSystemData();
 };
