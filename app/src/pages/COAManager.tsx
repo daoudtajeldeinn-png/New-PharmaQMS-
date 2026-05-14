@@ -339,7 +339,8 @@ export function COAManagerPage() {
                                   }
 
                                   if (formData.type === 'Raw Material') {
-                                    const material = state.rawMaterials.find(m => m.batchNumber === formData.batchNumber);
+                                    const batchQuery = formData.batchNumber?.trim().toLowerCase();
+                                    const material = state.rawMaterials.find(m => m.batchNumber?.trim().toLowerCase() === batchQuery);
                                     if (material && material.tests && material.tests.length > 0) {
                                       const fetchedTests = material.tests.map(t => ({
                                         test: t.name,
@@ -363,7 +364,8 @@ export function COAManagerPage() {
                                     }
                                   } else {
                                     // For Finished Product, look in TestResults
-                                    const results = state.testResults.filter(r => r.batchNumber === formData.batchNumber);
+                                    const batchQuery = formData.batchNumber?.trim().toLowerCase();
+                                    const results = state.testResults.filter(r => r.batchNumber?.trim().toLowerCase() === batchQuery);
                                     if (results.length > 0) {
                                       const fetchedTests = results.flatMap(r => r.parameters.map(p => ({
                                         test: p.parameterName,

@@ -62,6 +62,7 @@ export async function syncAllTables() {
 
                 if (pushError) {
                     console.warn(`Push error for ${tableName}:`, pushError);
+                    throw pushError;
                 }
             }
 
