@@ -86,6 +86,7 @@ export async function syncAllTables() {
                         const dateKeys = ['date', 'time', 'timestamp', 'at', 'expiry', 'next', 'schedule', 'created', 'updated', 'lastLogin'];
                         const isDateKey = dateKeys.some(dk => key.toLowerCase().includes(dk));
                         
+                        const val = cleanItem[key];
                         if (isDateKey && typeof val === 'string' && /^\d{4}-\d{2}-\d{2}/.test(val)) {
                             const dateVal = new Date(val);
                             if (!isNaN(dateVal.getTime())) {
