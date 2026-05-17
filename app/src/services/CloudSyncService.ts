@@ -78,27 +78,11 @@ export async function syncAllTables() {
             }
 
             if (remoteData && remoteData.length > 0) {
-                // Convert ISO strings back to Date objects for Dexie/App Compatibility
-                const processedData = remoteData.map((item: any) => {
-                    const cleanItem = { ...item };
-                    for (const key in cleanItem) {
-                        // Robust check for ISO date strings - Only for keys likely to be dates
-                        const dateKeys = ['date', 'time', 'timestamp', 'at', 'expiry', 'next', 'schedule', 'created', 'updated', 'lastLogin'];
-                        const isDateKey = dateKeys.some(dk => key.toLowerCase().includes(dk));
-                        
-                        const val = cleanItem[key];
-                        if (isDateKey && typeof val === 'string' && /^\d{4}-\d{2}-\d{2}/.test(val)) {
-                            const dateVal = new Date(val);
-                            if (!isNaN(dateVal.getTime())) {
-                                cleanItem[key] = dateVal;
-                            }
-                        }
-                    }
-                    return cleanItem;
-                });
-
-                // Put into Dexie (bulkPut handles upsert/merge)
-                await (db as any)[tableName].bulkPut(processedData);
+                // Store remote data as-is (ISO strings stay as strings).
+                // Converting to Date objects here caused React error #31 when components
+                // rendered date values directly as JSX children. Components that need
+                // actual Date methods should call new Date(value) themselves.
+                await (db as any)[tableName].bulkPut(remoteData);
             }
 
             successCount++;
