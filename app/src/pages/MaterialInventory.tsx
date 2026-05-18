@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Package, Plus, FileText, Search, Trash2, PlusCircle, ArrowDownToLine, Beaker } from 'lucide-react';
+import { Package, Plus, FileText, Search, Trash2, PlusCircle, ArrowDownToLine, Beaker, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast, Toaster } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useStore } from '@/hooks/useStore';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { MATERIAL_TYPES, PHARMACOPEIA_TESTS } from '@/lib/constants';
 import { g1Monographs } from '@/data/g1Data';
 import { generateCOA, generateCOAPDF, generateInventoryReportPDF } from '@/lib/coaExport';
@@ -18,6 +19,7 @@ import type { RawMaterial, MaterialTest, MaterialMovement } from '@/types';
 
 export default function MaterialInventory() {
   const { state, dispatch } = useStore();
+  const { canModify, canDelete, user } = useRoleAccess();
   const materials = state.rawMaterials;
   const [isNewMaterialOpen, setIsNewMaterialOpen] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState<RawMaterial | null>(null);
@@ -70,6 +72,10 @@ const [materialForm, setMaterialForm] = useState({
   }), [materials]);
 
   const handleCreateMaterial = () => {
+    if (!canModify) {
+      toast.error('Access Denied: Only IT Admin or QA Admin can register new materials.');
+      return;
+    }
     if (!materialForm.name || !materialForm.batchNumber) {
       toast.error('Please enter material name and batch number');
       return;
@@ -189,6 +195,10 @@ const [materialForm, setMaterialForm] = useState({
   };
 
   const handleDeleteTest = (materialId: string, testId: string) => {
+    if (!canDelete) {
+      toast.error('Access Denied: Only IT Admin or QA Admin can delete test entries.');
+      return;
+    }
     const material = materials.find(m => m.id === materialId);
     if (!material) return;
 
@@ -301,9 +311,15 @@ const [materialForm, setMaterialForm] = useState({
           <Button onClick={() => generateInventoryReportPDF(materials)} variant="outline">
             <FileText className="h-4 w-4 mr-2" /> Export Inventory Report
           </Button>
-          <Button onClick={() => setIsNewMaterialOpen(true)} className="bg-indigo-600">
-            <Plus className="h-4 w-4 mr-2" /> Register New Material
-          </Button>
+          {canModify ? (
+            <Button onClick={() => setIsNewMaterialOpen(true)} className="bg-indigo-600">
+              <Plus className="h-4 w-4 mr-2" /> Register New Material
+            </Button>
+          ) : (
+            <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-lg text-slate-400 text-xs font-bold">
+              <Lock className="h-3 w-3" /> View Only — Admin Required
+            </div>
+          )}
         </div>
       </div>
 

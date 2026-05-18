@@ -54,6 +54,8 @@ import { useSecurity, type User as UserType } from '@/components/security/Securi
 import { backupSystemData, prepareGoogleDriveBackup, restoreSystemData } from '@/services/BackupService';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { isGlobalDeleteEnabled, setGlobalDeleteEnabled } from '@/hooks/useDelete';
+import { AlertTriangle } from 'lucide-react';
 
 // ==================== Helper: Load/Save Company Settings ====================
 interface CompanySettings {
@@ -123,6 +125,22 @@ export function SettingsPage() {
   const license = useLicense();
   const { user, allUsers, addUser, updateUser, deleteUser } = useSecurity();
   const [newLicenseKey, setNewLicenseKey] = useState('');
+  const [globalDeleteEnabled, setGlobalDeleteEnabledState] = useState(isGlobalDeleteEnabled);
+
+  const handleToggleGlobalDelete = (enabled: boolean) => {
+    // Only admins can toggle this
+    if (!user || (!user.permissions.includes('*') && !user.permissions.includes('data.delete'))) {
+      toast.error('Only Administrators can change this setting.');
+      return;
+    }
+    setGlobalDeleteEnabled(enabled);
+    setGlobalDeleteEnabledState(enabled);
+    if (enabled) {
+      toast.warning('⚠ Destructive Delete is now ENABLED system-wide. All Admin/QA deletions will permanently remove cloud records.', { duration: 8000 });
+    } else {
+      toast.success('Delete operations disabled system-wide. Data is protected.');
+    }
+  };
 
   // User management state
   const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
@@ -601,6 +619,50 @@ export function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="security" className="space-y-4">
+          {/* ── Global Delete Control ── */}
+          {(user?.permissions.includes('*') || user?.permissions.includes('data.delete')) && (
+            <Card className={`border-2 ${globalDeleteEnabled ? 'border-red-300 bg-red-50/40' : 'border-slate-200'}`}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertTriangle className={`h-5 w-5 ${globalDeleteEnabled ? 'text-red-600' : 'text-slate-400'}`} />
+                  Global Delete Operations Control
+                </CardTitle>
+                <CardDescription>
+                  Master switch for all destructive delete operations across the entire system.
+                  Only Administrators and QA Admins can toggle this.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between p-4 rounded-xl border bg-white">
+                  <div className="space-y-1">
+                    <p className="font-semibold text-slate-900">
+                      {globalDeleteEnabled ? '🔴 Delete Operations: ENABLED' : '🟢 Delete Operations: DISABLED (Protected)'}
+                    </p>
+                    <p className="text-sm text-slate-500">
+                      {globalDeleteEnabled
+                        ? 'Admins and QA Admins can permanently delete records from the local DB and Supabase cloud. All actions are audit-logged.'
+                        : 'All delete buttons are hidden and inactive system-wide. Toggle ON to allow authorized deletions.'}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={globalDeleteEnabled}
+                    onCheckedChange={handleToggleGlobalDelete}
+                    className={globalDeleteEnabled ? 'data-[state=checked]:bg-red-600' : ''}
+                  />
+                </div>
+                {globalDeleteEnabled && (
+                  <div className="mt-3 flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs">
+                    <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                    <span>
+                      <strong>Warning:</strong> Records deleted by Admins are permanently removed from Supabase.
+                      Recovery requires direct database intervention. Disable this switch when not actively performing cleanup.
+                    </span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {/* User Management Section */}
           <Card>
             <CardHeader>

@@ -13,7 +13,7 @@ export interface User {
   id: string;
   username: string;
   name: string;
-  role: 'admin' | 'qc_manager' | 'manager' | 'analyst' | 'viewer';
+  role: 'admin' | 'it_admin' | 'qa_admin' | 'qc_manager' | 'manager' | 'analyst' | 'viewer';
   department: string;
   permissions: string[];
   password?: string; // stored for mock auth, hashed in production
@@ -42,22 +42,29 @@ const DEFAULT_USERS: User[] = [
     id: '1',
     username: 'admin',
     name: 'System Administrator',
-    role: 'admin',
+    role: 'it_admin',
     department: 'IT',
     permissions: ['*'],
-    password: 'password',
+    password: 'Admin@2026',
   },
   {
     id: '2',
+    username: 'qa_admin',
+    name: 'QA Administrator',
+    role: 'qa_admin',
+    department: 'QA',
+    permissions: ['*', 'data.modify', 'data.delete', 'data.recover'],
+    password: 'QaAdmin@2026',
+  },
+  {
+    id: '3',
     username: 'qa_manager',
     name: 'QA Director',
     role: 'manager',
     department: 'QA',
     permissions: [
       'products.read',
-      'products.write',
       'testing.read',
-      'testing.write',
       'capa.read',
       'capa.write',
       'deviations.read',
@@ -68,7 +75,7 @@ const DEFAULT_USERS: User[] = [
     password: 'password',
   },
   {
-    id: '3',
+    id: '4',
     username: 'analyst',
     name: 'Laboratory Analyst',
     role: 'analyst',
@@ -76,13 +83,12 @@ const DEFAULT_USERS: User[] = [
     permissions: [
       'products.read',
       'testing.read',
-      'testing.write',
       'reports.read',
     ],
     password: 'password',
   },
   {
-    id: '4',
+    id: '5',
     username: 'viewer',
     name: 'Guest Viewer',
     role: 'viewer',
@@ -93,24 +99,34 @@ const DEFAULT_USERS: User[] = [
 ];
 
 // ==================== Role Permissions Map ====================
+// 'data.modify'  → can create / edit records
+// 'data.delete'  → can delete records (soft-delete with tombstone)
+// 'data.recover' → can restore soft-deleted records
 const ROLE_PERMISSIONS: Record<string, string[]> = {
-  admin: ['*'],
+  // ── Privileged Admin Roles ──────────────────────────────────────
+  it_admin: ['*', 'data.modify', 'data.delete', 'data.recover'],
+  qa_admin: ['*', 'data.modify', 'data.delete', 'data.recover'],
+  // Legacy alias kept for backward compat
+  admin:    ['*', 'data.modify', 'data.delete', 'data.recover'],
+
+  // ── Standard Roles (READ-ONLY for persistent data) ──────────────
   qc_manager: [
     'products.read',
-    'testing.read', 'testing.write',
+    'testing.read',
     'reports.read', 'reports.write',
-    'equipment.read', 'equipment.write',
+    'equipment.read',
+    'capa.read', 'deviations.read',
   ],
   manager: [
-    'products.read', 'products.write',
-    'testing.read', 'testing.write',
+    'products.read',
+    'testing.read',
     'capa.read', 'capa.write',
     'deviations.read', 'deviations.write',
     'reports.read', 'reports.write',
   ],
   analyst: [
     'products.read',
-    'testing.read', 'testing.write',
+    'testing.read',
     'reports.read',
   ],
   viewer: ['products.read', 'testing.read', 'reports.read'],
@@ -587,11 +603,17 @@ export function LoginPage({ forcedLicenseLock = false }: { forcedLicenseLock?: b
             <div className="mt-12 pt-12 border-t border-white/10">
               <p className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-500/50 mb-4 text-center">Sandbox Debug Profiles</p>
               <div className="grid grid-cols-2 gap-2 text-[8px] font-black uppercase tracking-widest">
-                <div className="p-3 bg-white/5 border border-white/5 rounded-xl text-slate-500 hover:border-indigo-500/30 transition-colors">
-                  Admin: <span className="text-white">admin</span>
+                <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-300 hover:border-rose-500/50 transition-colors">
+                  IT Admin: <span className="text-white">admin</span> / Admin@2026
                 </div>
-                <div className={`p-3 bg-white/5 border border-white/5 rounded-xl text-slate-500 hover:border-indigo-500/30 transition-colors`}>
-                  Manager: <span className="text-white">qa_manager</span>
+                <div className="p-3 bg-violet-500/10 border border-violet-500/20 rounded-xl text-violet-300 hover:border-violet-500/50 transition-colors">
+                  QA Admin: <span className="text-white">qa_admin</span> / QaAdmin@2026
+                </div>
+                <div className="p-3 bg-white/5 border border-white/5 rounded-xl text-slate-500 hover:border-indigo-500/30 transition-colors">
+                  Manager: <span className="text-white">qa_manager</span> / password
+                </div>
+                <div className="p-3 bg-white/5 border border-white/5 rounded-xl text-slate-500 hover:border-indigo-500/30 transition-colors">
+                  Analyst: <span className="text-white">analyst</span> / password
                 </div>
               </div>
             </div>

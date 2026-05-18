@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from 'react';
-import { Plus, CheckCircle2, Printer, ClipboardCheck, Activity, Thermometer, ShieldCheck, PenLine, AlertTriangle, Scale, AlertCircle } from 'lucide-react';
+import { Plus, CheckCircle2, Printer, ClipboardCheck, Activity, Thermometer, ShieldCheck, PenLine, AlertTriangle, Scale, AlertCircle, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,11 +10,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useReactToPrint } from 'react-to-print';
 import { type BatchRecord, type BMRStepExecution } from '@/data/bmrData';
 import { useStore } from '@/hooks/useStore';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 export function BMRManagerPage() {
     const { state, dispatch } = useStore();
+    const { canModify, canDelete, user } = useRoleAccess();
     const records = state.batchRecords;
     const masterFormulas = state.masterFormulas;
     const [showIssueDialog, setShowIssueDialog] = useState(false);
@@ -33,6 +35,10 @@ export function BMRManagerPage() {
     const [editingBMR, setEditingBMR] = useState<BatchRecord | null>(null);
 
     const handleIssueBatch = () => {
+        if (!canModify) {
+            toast.error('Access Denied: Only IT Admin or QA Admin can issue Batch Records.');
+            return;
+        }
         if (!newBatch.mfrId || !newBatch.batchNumber) {
             toast.error('Please select MFR and enter Batch Number');
             return;
@@ -77,9 +83,18 @@ export function BMRManagerPage() {
 
     const handleDeleteBMR = (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
-        if (confirm('Are you sure you want to delete this Batch Record? This will also remove it from the archive.')) {
+        if (!canDelete) {
+            toast.error('Access Denied: Only IT Admin or QA Admin can delete Batch Records.');
+            return;
+        }
+        if (confirm('ADMIN ACTION: Are you sure you want to permanently delete this Batch Record? This will remove it for ALL users and cannot be undone without admin recovery.')) {
+            // Record the soft-delete tombstone so sync never restores this record
+            import('@/services/DeletedRecordsService').then(({ recordDeletion }) => {
+                const snapshot = state.batchRecords.find(b => b.id === id);
+                recordDeletion('batchRecords', id, user?.username || 'admin', snapshot, 'Admin deletion');
+            });
             dispatch({ type: 'DELETE_BMR', payload: id });
-            toast.success('BMR Deleted');
+            toast.success('BMR permanently deleted and synced for all users.');
         }
     };
 
@@ -212,12 +227,20 @@ const handleUpdateStep = (stepNumber: number, updates: StepUpdate) => {
                     <p className="text-slate-500 font-medium">GMP Execution & Real-time Batch Monitoring</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button onClick={() => setShowIssueDialog(true)} variant="outline" className="border-emerald-600 text-emerald-600 hover:bg-emerald-50 shadow-sm font-bold">
-                        <PenLine className="h-4 w-4 mr-2" /> Write New BMR
-                    </Button>
-                    <Button onClick={() => setShowIssueDialog(true)} className="bg-emerald-600 hover:bg-emerald-700 shadow-lg">
-                        <Plus className="h-4 w-4 mr-2" /> Issue Batch Record
-                    </Button>
+                    {canModify && (
+                      <Button onClick={() => setShowIssueDialog(true)} variant="outline" className="border-emerald-600 text-emerald-600 hover:bg-emerald-50 shadow-sm font-bold">
+                          <PenLine className="h-4 w-4 mr-2" /> Write New BMR
+                      </Button>
+                    )}
+                    {canModify ? (
+                      <Button onClick={() => setShowIssueDialog(true)} className="bg-emerald-600 hover:bg-emerald-700 shadow-lg">
+                          <Plus className="h-4 w-4 mr-2" /> Issue Batch Record
+                      </Button>
+                    ) : (
+                      <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-lg text-slate-400 text-xs font-bold">
+                          <Lock className="h-3 w-3" /> View Only — Admin Required to Issue
+                      </div>
+                    )}
                 </div>
             </div>
 
@@ -262,12 +285,19 @@ const handleUpdateStep = (stepNumber: number, updates: StepUpdate) => {
                                 })()}
                             </div>
                             <div className="mt-4 flex justify-end gap-2">
-                                <Button variant="ghost" size="sm" className="h-7 text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50" onClick={(e) => { e.stopPropagation(); setEditingBMR(batch); setShowEditDialog(true); }}>
-                                    <PenLine className="h-3 w-3 mr-1" /> Edit Meta
-                                </Button>
-                                <Button variant="ghost" size="sm" className="h-7 text-[10px] font-bold text-red-500 hover:text-red-700 hover:bg-red-50" onClick={(e) => handleDeleteBMR(batch.id, e)}>
-                                    <Plus className="h-3 w-3 mr-1 rotate-45" /> Delete
-                                </Button>
+                                {canModify && (
+                                  <Button variant="ghost" size="sm" className="h-7 text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50" onClick={(e) => { e.stopPropagation(); setEditingBMR(batch); setShowEditDialog(true); }}>
+                                      <PenLine className="h-3 w-3 mr-1" /> Edit Meta
+                                  </Button>
+                                )}
+                                {canDelete && (
+                                  <Button variant="ghost" size="sm" className="h-7 text-[10px] font-bold text-red-500 hover:text-red-700 hover:bg-red-50" onClick={(e) => handleDeleteBMR(batch.id, e)}>
+                                      <Plus className="h-3 w-3 mr-1 rotate-45" /> Delete
+                                  </Button>
+                                )}
+                                {!canModify && !canDelete && (
+                                  <span className="text-[9px] text-slate-400 flex items-center gap-1"><Lock className="h-3 w-3" /> Read Only</span>
+                                )}
                             </div>
                         </CardContent>
                     </Card>

@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useStore } from '@/hooks/useStore';
-import { Download, Printer, Plus, Activity, AlertCircle, Database, ShieldCheck } from 'lucide-react';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
+import { Download, Printer, Plus, Activity, AlertCircle, Database, ShieldCheck, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -21,6 +22,7 @@ import type { COARecord, COAType } from '@/types';
 
 export function COAManagerPage() {
     const { state, dispatch } = useStore();
+    const { canModify, canDelete, user } = useRoleAccess();
     const records = state.coaRecords || [];
     const [activeTab, setActiveTab] = useState('overview');
     const [showForm, setShowForm] = useState(false);
@@ -59,6 +61,10 @@ export function COAManagerPage() {
     };
 
     const handleSaveCOA = (isDraft: boolean = false) => {
+        if (!canModify) {
+            toast.error('Access Denied: Only IT Admin or QA Admin can create or modify COA records.');
+            return;
+        }
         if (!isDraft && (!formData.productName || !formData.batchNumber)) {
             toast.error('Please fill mandatory fields (Product Name & Batch ID)');
             return;
@@ -218,10 +224,12 @@ export function COAManagerPage() {
                                         <Button size="icon" variant="ghost" onClick={() => { setSelectedCOA(record); setTimeout(handleDownloadPDF, 100); }}>
                                             <Download className="h-4 w-4" />
                                         </Button>
-                                        <Button size="icon" variant="ghost" onClick={() => { setFormData(record); setIsEditing(true); setShowForm(true); }} className="text-indigo-600">
-                                            <Activity className="h-4 w-4" />
-                                        </Button>
-                                        {record.status !== 'Approved' && record.status !== 'Released' && (
+                                        {canModify && (
+                                          <Button size="icon" variant="ghost" onClick={() => { setFormData(record); setIsEditing(true); setShowForm(true); }} className="text-indigo-600">
+                                              <Activity className="h-4 w-4" />
+                                          </Button>
+                                        )}
+                                        {canModify && record.status !== 'Approved' && record.status !== 'Released' && (
                                             <Button size="icon" variant="ghost" onClick={() => {
                                                 if (window.confirm(`QA AUTHORIZATION: Are you sure you want to OFFICIALLY RELEASE this COA for ${record.productName}?`)) {
                                                     dispatch({ type: 'UPDATE_COA_RECORD', payload: { ...record, status: 'Released' } });
@@ -230,6 +238,23 @@ export function COAManagerPage() {
                                             }} className="text-emerald-600" title="QA Release">
                                                 <ShieldCheck className="h-4 w-4" />
                                             </Button>
+                                        )}
+                                        {canDelete && (
+                                          <Button size="icon" variant="ghost" className="text-red-500 hover:text-red-700"
+                                            onClick={() => {
+                                              if (window.confirm(`ADMIN DELETE: Permanently remove COA ${record.coaNumber}? This removes it for ALL users.`)) {
+                                                import('@/services/DeletedRecordsService').then(({ recordDeletion }) => {
+                                                  recordDeletion('coaRecords', record.id, user?.username || 'admin', record, 'Admin deletion');
+                                                });
+                                                dispatch({ type: 'DELETE_COA_RECORD', payload: record.id });
+                                                toast.success('COA permanently deleted.');
+                                              }
+                                            }}>
+                                            <Lock className="h-4 w-4" />
+                                          </Button>
+                                        )}
+                                        {!canModify && !canDelete && (
+                                          <span className="text-[9px] text-slate-400 flex items-center gap-1"><Lock className="h-3 w-3" /> Read Only</span>
                                         )}
                                     </div>
                                 </td>
@@ -253,9 +278,15 @@ export function COAManagerPage() {
                     <Button onClick={backupSystemData} variant="outline" className="gap-2 border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100">
                         <Database className="h-4 w-4" /> Backup System
                     </Button>
-                    <Button onClick={() => { setFormData(initialFormState); setShowForm(true); }} className="gap-2 bg-blue-600 shadow-lg">
-                        <Plus className="h-4 w-4" /> Issue New COA
-                    </Button>
+                    {canModify ? (
+                      <Button onClick={() => { setFormData(initialFormState); setShowForm(true); }} className="gap-2 bg-blue-600 shadow-lg">
+                          <Plus className="h-4 w-4" /> Issue New COA
+                      </Button>
+                    ) : (
+                      <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-lg text-slate-400 text-xs font-bold">
+                          <Lock className="h-3 w-3" /> View Only — Admin Required
+                      </div>
+                    )}
                 </div>
             </div>
 

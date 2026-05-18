@@ -37,12 +37,30 @@ export async function syncAllTables() {
     let failCount = 0;
     const errors: string[] = [];
 
+    // ── Step 0: Pull the latest tombstone list from cloud so all workstations
+    //            honour admin deletions made on other machines. ──────────────
+    try {
+        const { syncTombstonesFromCloud } = await import('./DeletedRecordsService');
+        await syncTombstonesFromCloud();
+        console.log('Tombstones synchronised from cloud.');
+    } catch (err) {
+        console.warn('Could not sync tombstones – proceeding without:', err);
+    }
+
     for (const tableName of CLOUD_TABLES) {
         try {
             console.log(`Syncing table: ${tableName}`);
             
             // 1. PUSH: Get local data from Dexie
-            const localData = await (db as any)[tableName].toArray();
+            // Before pushing, remove any locally tombstoned records so they do
+            // not get re-uploaded and then immediately ignored on pull.
+            const { getDeletedIds } = await import('./DeletedRecordsService');
+            const deletedIds = getDeletedIds(tableName);
+
+            const allLocalData = await (db as any)[tableName].toArray();
+            const localData = deletedIds.size > 0
+                ? allLocalData.filter((item: any) => !deletedIds.has(item.id))
+                : allLocalData;
             
             if (localData.length > 0) {
                 // Convert Date objects to ISO strings for Supabase
@@ -78,11 +96,19 @@ export async function syncAllTables() {
             }
 
             if (remoteData && remoteData.length > 0) {
+                // ── TOMBSTONE FILTER ──────────────────────────────────────────
+                // Remove any records that an admin has permanently deleted.
+                // This prevents sync from "resurrecting" deleted data.
+                const safeData = deletedIds.size > 0
+                    ? remoteData.filter((row: any) => !deletedIds.has(row.id))
+                    : remoteData;
+                // ─────────────────────────────────────────────────────────────
+
                 // Store remote data as-is (ISO strings stay as strings).
                 // Converting to Date objects here caused React error #31 when components
                 // rendered date values directly as JSX children. Components that need
                 // actual Date methods should call new Date(value) themselves.
-                await (db as any)[tableName].bulkPut(remoteData);
+                await (db as any)[tableName].bulkPut(safeData);
             }
 
             successCount++;

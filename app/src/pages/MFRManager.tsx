@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Layout, Layers, ClipboardList, Printer, ShieldCheck, Thermometer, Droplets, Box } from 'lucide-react';
+import { Plus, Layout, Layers, ClipboardList, Printer, ShieldCheck, Thermometer, Droplets, Box, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,11 +9,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { type MasterFormula } from '@/data/mfrData';
 import { g1Monographs } from '@/data/g1Data';
 import { useStore } from '@/hooks/useStore';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { usePrintExport } from '@/hooks/usePrintExport';
 import { toast } from 'sonner';
 
 export function MFRManagerPage() {
     const { state, dispatch } = useStore();
+    const { canModify, canDelete, user } = useRoleAccess();
     const formulas = Object.values(state.masterFormulas);
     const [showForm, setShowForm] = useState(false);
     const [selectedMFR, setSelectedMFR] = useState<MasterFormula | null>(null);
@@ -54,9 +56,17 @@ export function MFRManagerPage() {
     };
 
     const handleDeleteMFR = (id: string) => {
-        if (confirm('Are you sure you want to delete this Master Formula?')) {
+        if (!canDelete) {
+            toast.error('Access Denied: Only IT Admin or QA Admin can delete Master Formula Records.');
+            return;
+        }
+        if (confirm('ADMIN ACTION: Permanently delete this Master Formula for ALL users?')) {
+            import('@/services/DeletedRecordsService').then(({ recordDeletion }) => {
+                const snap = Object.values(state.masterFormulas).find((m: any) => m.id === id);
+                recordDeletion('masterFormulas', id, user?.username || 'admin', snap, 'Admin deletion');
+            });
             dispatch({ type: 'DELETE_MFR', payload: id });
-            toast.success('MFR deleted successfully');
+            toast.success('MFR permanently deleted for all users.');
         }
     };
 
@@ -88,9 +98,15 @@ export function MFRManagerPage() {
                     </h1>
                     <p className="text-slate-500">Managing Manufacturing Master Templates & Bill of Materials</p>
                 </div>
-                <Button onClick={() => { setFormData({ ingredients: [], processSteps: [] }); setIsEditing(false); setShowForm(true); }} className="bg-indigo-600">
-                    <Plus className="h-4 w-4 mr-2" /> Create New MFR
-                </Button>
+                {canModify ? (
+                  <Button onClick={() => { setFormData({ ingredients: [], processSteps: [] }); setIsEditing(false); setShowForm(true); }} className="bg-indigo-600">
+                      <Plus className="h-4 w-4 mr-2" /> Create New MFR
+                  </Button>
+                ) : (
+                  <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-lg text-slate-400 text-xs font-bold">
+                      <Lock className="h-3 w-3" /> View Only — Admin Required
+                  </div>
+                )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -130,10 +146,13 @@ export function MFRManagerPage() {
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex justify-end gap-1">
-                                            <Button size="icon" variant="ghost" title="Edit Formula" className="text-blue-600 hover:text-blue-700" onClick={(e) => { e.stopPropagation(); handleEditMFR(mfr); }}><Layers className="h-4 w-4" /></Button>
-                                            <Button size="icon" variant="ghost" title="Issue New BMR" className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50" onClick={(e: React.MouseEvent) => { e.stopPropagation(); toast.info('Navigating to BMR Issuance...'); }}><Plus className="h-4 w-4" /></Button>
+                                            {canModify && (
+                                              <Button size="icon" variant="ghost" title="Edit Formula" className="text-blue-600 hover:text-blue-700" onClick={(e) => { e.stopPropagation(); handleEditMFR(mfr); }}><Layers className="h-4 w-4" /></Button>
+                                            )}
                                             <Button size="icon" variant="ghost" title="Print MFR" onClick={(e) => { e.stopPropagation(); setSelectedMFR(mfr); setTimeout(handlePrint, 500); }}><Printer className="h-4 w-4" /></Button>
-                                            <Button size="icon" variant="ghost" title="Delete MFR" className="text-red-500" onClick={(e) => { e.stopPropagation(); handleDeleteMFR(mfr.id); }}><Plus className="h-4 w-4 rotate-45" /></Button>
+                                            {canDelete && (
+                                              <Button size="icon" variant="ghost" title="Delete MFR" className="text-red-500" onClick={(e) => { e.stopPropagation(); handleDeleteMFR(mfr.id); }}><Plus className="h-4 w-4 rotate-45" /></Button>
+                                            )}
                                         </div>
                                     </td>
                                 </tr>
