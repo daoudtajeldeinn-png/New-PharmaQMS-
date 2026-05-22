@@ -8,4 +8,4 @@
 ⏳ **Step 4**: Apply pattern to other tables (Products, COA, BMR, etc.)  
 ⏳ **Step 5**: Verify auto-save works via store/dispatch  
 ✅ **Step 6**: Complete & test before Electron build  
-✅ **Bonus**: Updated version to 2.0.0 in package.json
+✅ **Bonus**: Updated version to 3.0.0 in package.json

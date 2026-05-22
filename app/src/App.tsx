@@ -37,6 +37,7 @@ import MaterialInventoryPage from './pages/MaterialInventory';
 import ReconciliationDashboard from './pages/ReconciliationDashboard';
 import { BatchTimelinePage } from './pages/BatchTimelinePage';
 import { DataRecoveryConsole } from '@/pages/DataRecoveryConsole';
+import { DataResetPage } from '@/pages/DataResetPage';
 
 // PWA Install Prompt Component
 function PWAInstallPrompt() {
@@ -187,6 +188,7 @@ function AppLayout() {
             <Route path="/maintenance" element={<MaintenancePage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/recovery" element={<DataRecoveryConsole />} />
+            <Route path="/admin/data-reset" element={<DataResetPage />} />
             {import.meta.env.DEV && <Route path="/dev/licensing" element={<DevPortal />} />}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
