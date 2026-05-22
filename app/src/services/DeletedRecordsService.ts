@@ -26,7 +26,42 @@ export interface DeletedRecord {
 }
 
 const LOCAL_KEY = 'pqms_deleted_records';
-const CLOUD_TABLE = 'deletedRecords';
+const CLOUD_TABLE_ALIASES = ['deletedRecords', 'deletedrecords', 'deleted_records'];
+let resolvedCloudTable: string | null = null;
+
+export async function getDeletedRecordsCloudTableName(): Promise<string> {
+  if (resolvedCloudTable) {
+    return resolvedCloudTable;
+  }
+
+  for (const tableName of CLOUD_TABLE_ALIASES) {
+    const { error } = await supabase
+      .from(tableName)
+      .select('id')
+      .limit(1);
+
+    if (!error) {
+      resolvedCloudTable = tableName;
+      return tableName;
+    }
+
+    const isMissingTable =
+      error.status === 404 ||
+      error.message?.includes('missing relation') ||
+      error.message?.includes('does not exist') ||
+      error.details?.includes('missing relation');
+
+    if (isMissingTable) {
+      continue;
+    }
+
+    console.warn(`DeletedRecordsService: Could not probe table ${tableName}:`, error);
+    break;
+  }
+
+  resolvedCloudTable = CLOUD_TABLE_ALIASES[0];
+  return resolvedCloudTable;
+}
 
 // ==================== Local Storage Helpers ====================
 
@@ -77,8 +112,9 @@ export async function recordDeletion(
 
   // 2. Push to Supabase (best effort – non-blocking)
   try {
+    const cloudTable = await getDeletedRecordsCloudTableName();
     await supabase
-      .from(CLOUD_TABLE)
+      .from(cloudTable)
       .upsert({
         id: `${tableName}__${recordId}`,   // composite PK
         record_id: recordId,
@@ -113,8 +149,9 @@ export function getDeletedIds(tableName: string): Set<string> {
  */
 export async function syncTombstonesFromCloud(): Promise<void> {
   try {
+    const cloudTable = await getDeletedRecordsCloudTableName();
     const { data, error } = await supabase
-      .from(CLOUD_TABLE)
+      .from(cloudTable)
       .select('*');
 
     if (error || !data) {
@@ -169,8 +206,9 @@ export async function recoverRecord(
 
   // Push recovery flag to cloud
   try {
+    const cloudTable = await getDeletedRecordsCloudTableName();
     await supabase
-      .from(CLOUD_TABLE)
+      .from(cloudTable)
       .update({ recovered: true, recovered_by: recoveredByUsername, recovered_at: new Date().toISOString() })
       .eq('id', `${tableName}__${recordId}`);
   } catch (err) {
@@ -193,8 +231,9 @@ export async function purgeTombstone(
 
   // Remove tombstone from cloud
   try {
+    const cloudTable = await getDeletedRecordsCloudTableName();
     await supabase
-      .from(CLOUD_TABLE)
+      .from(cloudTable)
       .delete()
       .eq('id', `${tableName}__${recordId}`);
   } catch (err) {

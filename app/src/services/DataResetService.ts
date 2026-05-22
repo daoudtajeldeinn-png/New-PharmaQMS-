@@ -9,6 +9,7 @@
 
 import { supabase } from '@/lib/supabase';
 import { db } from '@/db/db';
+import { getDeletedRecordsCloudTableName } from './DeletedRecordsService';
 
 const CLOUD_TABLES = [
     'products',
@@ -124,7 +125,8 @@ export async function resetAllData(
 
         // ============ STAGE 3: Clear Tombstones ============
         try {
-            await supabase.from('deletedRecords').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+            const tombstoneTable = await getDeletedRecordsCloudTableName();
+            await supabase.from(tombstoneTable).delete().neq('id', '00000000-0000-0000-0000-000000000000');
             localStorage.removeItem('pqms_deleted_records');
             console.log('✅ Cleared tombstones');
         } catch (err) {
