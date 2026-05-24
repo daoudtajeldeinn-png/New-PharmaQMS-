@@ -130,8 +130,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function AppLayout() {
   const { user } = useSecurity();
   const { status } = useLicense();
-  const { reloadFromDB } = useStore();
+  const { state, reloadFromDB } = useStore();
   const backgroundSyncStarted = useRef(false);
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   // Background Sync on App Load (once per session — avoids duplicate runs from re-renders)
   useEffect(() => {
@@ -141,7 +143,8 @@ function AppLayout() {
 
       console.log('AppLayout: Initializing background cloud synchronization...');
       try {
-        const { syncAllTables } = await import('@/services/CloudSyncService');
+        const { flushAppStateToDexie, syncAllTables } = await import('@/services/CloudSyncService');
+        await flushAppStateToDexie(stateRef.current);
         const result = await syncAllTables();
         console.log(`AppLayout: Background sync complete. Success: ${result.successCount}, Fail: ${result.failCount}`);
         await reloadFromDB();

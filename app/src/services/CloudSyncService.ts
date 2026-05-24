@@ -1,7 +1,7 @@
 
 import { supabase } from '@/lib/supabase';
 import { db } from '@/db/db';
-import { toast } from 'sonner';
+import type { AppState } from '@/hooks/storeReducer';
 
 export const CLOUD_TABLES = [
     'products',
@@ -29,7 +29,75 @@ export const CLOUD_TABLES = [
     'reconciliationRecords',
     'activities',
     'pharmacopeiaMonographs'
-];
+] as const;
+
+function getRecordTimestamp(item: Record<string, unknown>): number {
+    const ts =
+        item.updatedAt ??
+        item.updated_at ??
+        item.createdAt ??
+        item.created_at ??
+        item.deleted_at;
+    if (!ts) return 0;
+    const n = new Date(ts as string | Date).getTime();
+    return Number.isFinite(n) ? n : 0;
+}
+
+function pickNewerRecord(
+    local: Record<string, unknown>,
+    remote: Record<string, unknown>
+): Record<string, unknown> {
+    return getRecordTimestamp(remote) >= getRecordTimestamp(local) ? remote : local;
+}
+
+function serializeForSupabase(item: Record<string, unknown>): Record<string, unknown> {
+    const cleanItem = { ...item };
+    for (const key in cleanItem) {
+        const dateKeys = ['date', 'time', 'timestamp', 'at', 'expiry', 'next', 'schedule', 'created', 'updated', 'lastLogin'];
+        const isDateKey = dateKeys.some((dk) => key.toLowerCase().includes(dk));
+        if (isDateKey && cleanItem[key] instanceof Date) {
+            cleanItem[key] = (cleanItem[key] as Date).toISOString();
+        }
+    }
+    return cleanItem;
+}
+
+/** Write in-memory store rows to Dexie before cloud sync so today's work is included in PUSH. */
+export async function flushAppStateToDexie(state: AppState): Promise<void> {
+    const tableData: Record<string, unknown[]> = {
+        products: state.products,
+        testMethods: state.testMethods,
+        testResults: state.testResults,
+        capas: state.capas,
+        deviations: state.deviations,
+        equipment: state.equipment,
+        chemicalReagents: state.chemicalReagents,
+        referenceStandards: state.referenceStandards,
+        qualitySystems: state.qualitySystems,
+        trainingRecords: state.trainingRecords,
+        audits: state.audits,
+        suppliers: state.suppliers,
+        changeControls: state.changeControls,
+        marketComplaints: state.marketComplaints,
+        productRecalls: state.productRecalls,
+        stabilityProtocols: state.stabilityProtocols,
+        ipqcChecks: state.ipqcChecks,
+        coaRecords: state.coaRecords,
+        masterFormulas: Object.values(state.masterFormulas ?? {}),
+        batchRecords: state.batchRecords,
+        rawMaterials: state.rawMaterials,
+        materialMovements: state.materialMovements,
+        reconciliationRecords: state.reconciliationRecords,
+        activities: state.activities,
+        pharmacopeiaMonographs: state.pharmacopeiaMonographs,
+    };
+
+    for (const tableName of CLOUD_TABLES) {
+        const rows = tableData[tableName];
+        if (!rows?.length) continue;
+        await (db as any)[tableName].bulkPut(rows);
+    }
+}
 
 export async function syncAllTables() {
     console.log('Starting Cloud Synchronization...');
@@ -37,8 +105,6 @@ export async function syncAllTables() {
     let failCount = 0;
     const errors: string[] = [];
 
-    // ── Step 0: Pull the latest tombstone list from cloud so all workstations
-    //            honour admin deletions made on other machines. ──────────────
     try {
         const { syncTombstonesFromCloud } = await import('./DeletedRecordsService');
         await syncTombstonesFromCloud();
@@ -50,38 +116,26 @@ export async function syncAllTables() {
     for (const tableName of CLOUD_TABLES) {
         try {
             console.log(`Syncing table: ${tableName}`);
-            
-            // 1. PUSH: Get local data from Dexie
-            // Before pushing, remove any locally tombstoned records so they do
-            // not get re-uploaded and then immediately ignored on pull.
+
             const { getDeletedIds } = await import('./DeletedRecordsService');
             const deletedIds = getDeletedIds(tableName);
 
-            // Clean up locally deleted records from Dexie so deletion propagates locally
             if (deletedIds.size > 0) {
                 for (const idToDelete of Array.from(deletedIds)) {
                     await (db as any)[tableName].delete(idToDelete);
                 }
             }
 
-            const allLocalData = await (db as any)[tableName].toArray();
-            const localData = deletedIds.size > 0
-                ? allLocalData.filter((item: any) => !deletedIds.has(item.id))
-                : allLocalData;
-            
+            const allLocalData: Record<string, unknown>[] = await (db as any)[tableName].toArray();
+            const localData =
+                deletedIds.size > 0
+                    ? allLocalData.filter((item) => !deletedIds.has(String(item.id)))
+                    : allLocalData;
+
+            const pushedIds = new Set(localData.map((item) => String(item.id)));
+
             if (localData.length > 0) {
-                // Convert Date objects to ISO strings for Supabase
-                const dataToPush = localData.map((item: any) => {
-                    const cleanItem = { ...item };
-                    for (const key in cleanItem) {
-                        const dateKeys = ['date', 'time', 'timestamp', 'at', 'expiry', 'next', 'schedule', 'created', 'updated', 'lastLogin'];
-                        const isDateKey = dateKeys.some(dk => key.toLowerCase().includes(dk));
-                        if (isDateKey && cleanItem[key] instanceof Date) {
-                            cleanItem[key] = cleanItem[key].toISOString();
-                        }
-                    }
-                    return cleanItem;
-                });
+                const dataToPush = localData.map((item) => serializeForSupabase(item));
 
                 const { error: pushError } = await supabase
                     .from(tableName)
@@ -93,7 +147,6 @@ export async function syncAllTables() {
                 }
             }
 
-            // 2. PULL: Get remote data from Supabase
             const { data: remoteData, error: pullError } = await supabase
                 .from(tableName)
                 .select('*');
@@ -102,44 +155,55 @@ export async function syncAllTables() {
                 throw pullError;
             }
 
-            if (remoteData) {
-                // ── TOMBSTONE FILTER ──────────────────────────────────────────
-                // Remove any records that an admin has permanently deleted.
-                // This prevents sync from "resurrecting" deleted data.
-                const safeData = deletedIds.size > 0
-                    ? remoteData.filter((row: any) => {
-                        // Supabase tombstones store `record_id`, but different tables may expose it as `id` or `record_id`.
-                        const rowId = row.id ?? row.record_id;
-                        return rowId ? !deletedIds.has(String(rowId)) : true;
+            const safeData =
+                remoteData && deletedIds.size > 0
+                    ? remoteData.filter((row: Record<string, unknown>) => {
+                          const rowId = row.id ?? row.record_id;
+                          return rowId ? !deletedIds.has(String(rowId)) : true;
                       })
-                    : remoteData;
+                    : remoteData ?? [];
 
-                // ─────────────────────────────────────────────────────────────
+            const remoteById = new Map(
+                safeData.map((row: Record<string, unknown>) => [String(row.id), row])
+            );
 
-                // Ensure local data exactly matches remote data after push
-                const remoteIds = new Set(safeData.map((row: any) => row.id));
-                const allLocalDataNow = await (db as any)[tableName].toArray();
+            const mergedById = new Map<string, Record<string, unknown>>();
 
-                for (const localItem of allLocalDataNow) {
-                    if (!remoteIds.has(localItem.id)) {
-                        await (db as any)[tableName].delete(localItem.id);
-                    }
-                }
+            for (const remoteRow of safeData) {
+                const id = String(remoteRow.id);
+                const localRow = localData.find((l) => String(l.id) === id);
+                mergedById.set(
+                    id,
+                    localRow ? pickNewerRecord(localRow, remoteRow) : remoteRow
+                );
+            }
 
-                // Store remote data as-is (ISO strings stay as strings).
-                // Converting to Date objects here caused React error #31 when components
-                // rendered date values directly as JSX children. Components that need
-                // actual Date methods should call new Date(value) themselves.
-                if (safeData.length > 0) {
-                    await (db as any)[tableName].bulkPut(safeData);
+            // Keep local-only rows (e.g. today's work not yet visible in pull) — never wipe by empty remote.
+            for (const localRow of localData) {
+                const id = String(localRow.id);
+                if (!mergedById.has(id)) {
+                    mergedById.set(id, localRow);
                 }
             }
 
+            const merged = Array.from(mergedById.values());
+            if (merged.length > 0) {
+                await (db as any)[tableName].bulkPut(merged);
+            }
+
+            const keptLocalOnly = localData.filter((l) => !remoteById.has(String(l.id))).length;
+            if (keptLocalOnly > 0) {
+                console.log(
+                    `CloudSync: ${tableName} — kept ${keptLocalOnly} local-only row(s) after merge (pushed: ${pushedIds.size})`
+                );
+            }
+
             successCount++;
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(`Failed to sync ${tableName}:`, err);
             failCount++;
-            errors.push(`${tableName}: ${err.message || 'Unknown error'}`);
+            const message = err instanceof Error ? err.message : 'Unknown error';
+            errors.push(`${tableName}: ${message}`);
         }
     }
 
