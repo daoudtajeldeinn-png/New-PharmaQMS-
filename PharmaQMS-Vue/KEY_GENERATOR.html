@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PharmaQMS Key Generator</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: #f3f4f6;
+        }
+
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h1 {
+            margin-top: 0;
+            color: #1f2937;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        select,
+        button,
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #d1d5db;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: #10b981;
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #059669;
+        }
+
+        .result {
+            background: #f9fafb;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb;
+            word-break: break-all;
+            font-family: monospace;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <h1>🔑 Key Generator</h1>
+        <p>Generate license keys for your clients.</p>
+
+        <label>Validity Period</label>
+        <select id="duration">
+            <option value="90">3 Months (Trial)</option>
+            <option value="365">1 Year</option>
+            <option value="1095">3 Years</option>
+            <option value="3650">Lifetime</option>
+        </select>
+
+        <button onclick="generate()">Generate Key</button>
+
+        <div id="result-box" class="hidden">
+            <label>Generated Key:</label>
+            <div class="result" id="output"></div>
+            <button onclick="copyHelper()" style="margin-top: 0.5rem; background: #3b82f6;">Copy to Clipboard</button>
+        </div>
+    </div>
+
+    <script>
+        const SALT = 'PHARMA_SECURE_2024';
+
+        function generate() {
+            const days = parseInt(document.getElementById('duration').value);
+            const now = new Date();
+            const expiry = new Date(now.getTime() + (days * 24 * 60 * 60 * 1000));
+            const dateStr = expiry.toISOString(); // Use ISO string for consistency
+
+            // Create Key: Base64(Date_SALT)
+            const raw = `${dateStr}_${SALT}`;
+            const key = btoa(raw);
+
+            document.getElementById('output').textContent = key;
+            document.getElementById('result-box').classList.remove('hidden');
+        }
+
+        function copyHelper() {
+            const key = document.getElementById('output').textContent;
+            navigator.clipboard.writeText(key);
+            alert("Key copied!");
+        }
+    </script>
+</body>
+
+</html>
