@@ -50,7 +50,7 @@ function pickNewerRecord(
     return getRecordTimestamp(remote) >= getRecordTimestamp(local) ? remote : local;
 }
 
-function serializeForSupabase(item: Record<string, unknown>): Record<string, unknown> {
+function serializeForSupabase(item: Record<string, unknown>, tableName?: string): Record<string, unknown> {
     const cleanItem = { ...item };
     for (const key in cleanItem) {
         const dateKeys = ['date', 'time', 'timestamp', 'at', 'expiry', 'next', 'schedule', 'created', 'updated', 'lastLogin'];
@@ -58,6 +58,10 @@ function serializeForSupabase(item: Record<string, unknown>): Record<string, unk
         if (isDateKey && cleanItem[key] instanceof Date) {
             cleanItem[key] = (cleanItem[key] as Date).toISOString();
         }
+    }
+    // Filter out batchNumber for chemicalReagents table (not in Supabase schema)
+    if (tableName === 'chemicalReagents' && 'batchNumber' in cleanItem) {
+        delete cleanItem.batchNumber;
     }
     return cleanItem;
 }
@@ -135,7 +139,7 @@ export async function syncAllTables() {
             const pushedIds = new Set(localData.map((item) => String(item.id)));
 
             if (localData.length > 0) {
-                const dataToPush = localData.map((item) => serializeForSupabase(item));
+                const dataToPush = localData.map((item) => serializeForSupabase(item, tableName));
 
                 const { error: pushError } = await supabase
                     .from(tableName)
