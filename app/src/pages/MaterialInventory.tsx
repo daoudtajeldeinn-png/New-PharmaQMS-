@@ -1155,19 +1155,19 @@ const [materialForm, setMaterialForm] = useState({
       </Dialog>
 
       <DeleteConfirmationDialog
-        isOpen={isDeleteDialogOpen}
+        open={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
         onConfirm={confirmDeleteMaterial}
-        recordName={selectedMaterial?.name || ''}
-        isDeleting={isDeleting}
+        recordLabel={selectedMaterial?.name || ''}
+        tableName="rawMaterials"
       />
 
       <DeleteConfirmationDialog
-        isOpen={isDeleteMovementOpen}
+        open={isDeleteMovementOpen}
         onClose={() => setIsDeleteMovementOpen(false)}
         onConfirm={confirmDeleteMovement}
-        recordName={selectedMovement ? `${selectedMovement.type} movement of ${selectedMovement.quantity} ${selectedMovement.unit}` : ''}
-        isDeleting={isDeleting}
+        recordLabel={selectedMovement ? `${selectedMovement.type} movement of ${selectedMovement.quantity} ${selectedMovement.unit}` : ''}
+        tableName="materialMovements"
       />
     </div >
   );
