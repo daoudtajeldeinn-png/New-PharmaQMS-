@@ -116,8 +116,30 @@ export async function flushAppStateToDexie(state: AppState): Promise<void> {
     }
 }
 
+/** One-time cleanup: physically remove any records with deleted_at from ALL Dexie tables */
+async function purgeLocalSoftDeleted(): Promise<void> {
+    for (const tableName of CLOUD_TABLES) {
+        try {
+            const table = (db as any)[tableName];
+            if (!table) continue;
+            const allRows: Record<string, unknown>[] = await table.toArray();
+            const dirtyIds = allRows
+                .filter((r) => r.deleted_at)
+                .map((r) => r.id as string);
+            if (dirtyIds.length > 0) {
+                await table.bulkDelete(dirtyIds);
+                console.log(`CloudSync cleanup: purged ${dirtyIds.length} soft-deleted records from ${tableName}`);
+            }
+        } catch (err) {
+            console.warn(`CloudSync cleanup: failed for ${tableName}:`, err);
+        }
+    }
+}
+
 export async function syncAllTables() {
     console.log('Starting Cloud Synchronization...');
+    // Purge any locally soft-deleted records before syncing
+    await purgeLocalSoftDeleted();
     let successCount = 0;
     let failCount = 0;
     const errors: string[] = [];
