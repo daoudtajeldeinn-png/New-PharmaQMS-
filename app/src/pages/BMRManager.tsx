@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from 'react';
-import { Plus, CheckCircle2, Printer, ClipboardCheck, Activity, Thermometer, ShieldCheck, PenLine, AlertTriangle, Scale, AlertCircle, Lock } from 'lucide-react';
+import { Plus, CheckCircle2, Printer, ClipboardCheck, Activity, Thermometer, ShieldCheck, PenLine, AlertTriangle, Scale, AlertCircle, Lock, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -33,6 +33,17 @@ export function BMRManagerPage() {
         documentTitle: selectedBMR ? `BMR-${selectedBMR.batchNumber}` : 'BMR',
     });
     const [editingBMR, setEditingBMR] = useState<BatchRecord | null>(null);
+    const [bmrSearchTerm, setBmrSearchTerm] = useState('');
+
+    const filteredBMRs = useMemo(() => {
+        if (!bmrSearchTerm) return records;
+        const term = bmrSearchTerm.toLowerCase();
+        return records.filter((batch: BatchRecord) =>
+            batch.batchNumber.toLowerCase().includes(term) ||
+            batch.productName.toLowerCase().includes(term) ||
+            batch.status.toLowerCase().includes(term)
+        );
+    }, [records, bmrSearchTerm]);
 
     const handleIssueBatch = () => {
         if (!canModify) {
@@ -250,8 +261,18 @@ const handleUpdateStep = (stepNumber: number, updates: StepUpdate) => {
                 <Card className="bg-white border-none shadow-sm"><CardHeader className="pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Released</CardHeader><CardContent><div className="text-3xl font-black text-blue-600">{records.filter(r => r.status === 'Released').length}</div></CardContent></Card>
             </div>
 
+            <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                    placeholder="Search BMR by batch number, product name, or status..."
+                    value={bmrSearchTerm}
+                    onChange={(e) => setBmrSearchTerm(e.target.value)}
+                    className="pl-9"
+                />
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-                {records.map((batch: BatchRecord) => (
+                {filteredBMRs.map((batch: BatchRecord) => (
                     <Card key={batch.id} className="hover:shadow-xl transition-all cursor-pointer border-t-4 border-t-emerald-500 bg-white" onClick={() => setSelectedBMR(batch)}>
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <div>

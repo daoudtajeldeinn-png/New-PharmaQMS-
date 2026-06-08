@@ -1,5 +1,25 @@
 import type { RawMaterial } from '@/types/materials';
 
+interface CompanySettings {
+  name: string;
+  address: string;
+  phone: string;
+  email: string;
+}
+
+function loadCompanySettings(): CompanySettings {
+  try {
+    const stored = localStorage.getItem('pqms_company_settings');
+    if (stored) return JSON.parse(stored);
+  } catch { /* fallback */ }
+  return {
+    name: 'Company Name',
+    address: 'Company Address',
+    phone: '',
+    email: '',
+  };
+}
+
 export function generateCOA(material: RawMaterial): void {
   const coaContent = `
 CERTIFICATE OF ANALYSIS
@@ -48,6 +68,8 @@ export async function generateCOAPDF(material: RawMaterial): Promise<void> {
     format: 'a4'
   });
 
+  const companySettings = loadCompanySettings();
+
   // Outer Border
   doc.setLineWidth(0.5);
   doc.rect(5, 5, 200, 287);
@@ -55,11 +77,11 @@ export async function generateCOAPDF(material: RawMaterial): Promise<void> {
   // Header Section
   doc.setFont('times', 'bold');
   doc.setFontSize(22);
-  doc.text('PHARMA CORP', 105, 20, { align: 'center' });
+  doc.text(companySettings.name, 105, 20, { align: 'center' });
 
   doc.setFont('times', 'italic');
   doc.setFontSize(10);
-  doc.text('Industrial Zone, Phase 2, Pharmaceutical District', 105, 25, { align: 'center' });
+  doc.text(companySettings.address, 105, 25, { align: 'center' });
 
   doc.setFont('times', 'bold');
   doc.setFontSize(12);
@@ -175,6 +197,8 @@ export async function generateInventoryReportPDF(materials: RawMaterial[]): Prom
     format: 'a4'
   });
 
+  const companySettings = loadCompanySettings();
+
   // Outer Border
   doc.setLineWidth(0.5);
   doc.rect(5, 5, 200, 287);
@@ -182,9 +206,9 @@ export async function generateInventoryReportPDF(materials: RawMaterial[]): Prom
   // Header Section
   doc.setFont('times', 'bold');
   doc.setFontSize(20);
-  doc.text('PHARMA CORP', 105, 20, { align: 'center' });
+  doc.text(companySettings.name, 105, 20, { align: 'center' });
   doc.setFontSize(10);
-  doc.text('Industrial Zone, Phase 2, Pharmaceutical District', 105, 25, { align: 'center' });
+  doc.text(companySettings.address, 105, 25, { align: 'center' });
   doc.setFontSize(14);
   doc.text('MATERIAL INVENTORY STOCK REPORT', 105, 35, { align: 'center' });
   doc.setLineWidth(0.8);
