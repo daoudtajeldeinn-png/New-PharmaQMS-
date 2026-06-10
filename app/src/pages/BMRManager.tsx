@@ -81,6 +81,17 @@ export function BMRManagerPage() {
 >>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
     });
     const [editingBMR, setEditingBMR] = useState<BatchRecord | null>(null);
+    const [bmrSearchTerm, setBmrSearchTerm] = useState('');
+
+    const filteredBMRs = useMemo(() => {
+        if (!bmrSearchTerm) return records;
+        const term = bmrSearchTerm.toLowerCase();
+        return records.filter((batch: BatchRecord) =>
+            batch.batchNumber.toLowerCase().includes(term) ||
+            batch.productName.toLowerCase().includes(term) ||
+            batch.status.toLowerCase().includes(term)
+        );
+    }, [records, bmrSearchTerm]);
 
     const handleIssueBatch = () => {
         if (!canModify) {
