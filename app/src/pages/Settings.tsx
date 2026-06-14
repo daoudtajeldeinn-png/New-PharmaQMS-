@@ -582,11 +582,7 @@ export function SettingsPage() {
                   </div>
                   <div>
                     <p className="text-sm text-slate-500 font-medium">Installed Version</p>
-<<<<<<< HEAD
                     <p className="text-xl font-black text-slate-900 tracking-tight">v4.3.0</p>
-=======
-                    <p className="text-xl font-black text-slate-900 tracking-tight">v4.3.3</p>
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-2">

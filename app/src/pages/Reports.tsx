@@ -2,10 +2,6 @@ import { useState } from 'react';
 import { useStore } from '@/hooks/useStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-<<<<<<< HEAD
-=======
-import { toast, Toaster } from 'sonner';
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
 // Badge not used
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -17,16 +13,6 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
-<<<<<<< HEAD
-=======
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
 // DatePicker removed - not used
 import {
   FileText,
@@ -38,16 +24,7 @@ import {
   Printer,
   Share2,
   FileSpreadsheet,
-<<<<<<< HEAD
   FileBarChart
-=======
-  FileBarChart,
-  Loader2,
-  Beaker,
-  FlaskConical,
-  LineChart as LineChartIcon,
-  Building2,
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
 } from 'lucide-react';
 import {
   BarChart,
@@ -72,383 +49,6 @@ export function ReportsPage() {
   const { state } = useStore();
   const [reportType, setReportType] = useState('products');
   const [dateRange, setDateRange] = useState('month');
-
-<<<<<<< HEAD
-  const handleExportArchive = () => {
-    const data = {
-=======
-  // New States for interactive reports operations
-  const [isFiltering, setIsFiltering] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
-  const [exportProgress, setExportProgress] = useState(0);
-  const [exportPhase, setExportPhase] = useState('');
-  
-  const [isDistributeOpen, setIsDistributeOpen] = useState(false);
-  const [distributeEmail, setDistributeEmail] = useState('');
-  const [isDistributeSending, setIsDistributeSending] = useState(false);
-
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [previewTitle, setPreviewTitle] = useState('');
-  const [previewHeaders, setPreviewHeaders] = useState<string[]>([]);
-  const [previewRows, setPreviewRows] = useState<any[]>([]);
-
-  const handleApplyFilter = () => {
-    // This page is currently client-side and State-driven.
-    // Keep filtering lightweight: we only filter datasets we actually render.
-    // (Reagent/Reference datasets are handled in the sections below.)
-    setIsFiltering(true);
-    setTimeout(() => {
-      setIsFiltering(false);
-      toast.success(`Loaded QMS datasets for target: ${reportType.toUpperCase()} within period: ${dateRange}`);
-    }, 300);
-  };
-
-  const handleHardcopy = () => {
-    toast.success('Opening print layout spooler...');
-    setTimeout(() => {
-      window.print();
-    }, 300);
-  };
-
-  const handleDistributeSubmit = () => {
-    if (!distributeEmail.trim()) {
-      toast.error('Recipient Email is required');
-      return;
-    }
-    setIsDistributeSending(true);
-    setTimeout(() => {
-      setIsDistributeSending(false);
-      setIsDistributeOpen(false);
-      toast.success(`Dossier package securely dispatched to ${distributeEmail}`);
-      setDistributeEmail('');
-    }, 1200);
-  };
-
-  const handlePreview = (templateId: string) => {
-    let title = '';
-    let headers: string[] = [];
-    let rows: any[] = [];
-
-    if (templateId === 'product-summary') {
-      title = 'Inventory Summary Report';
-      headers = ['ID', 'Name', 'Category', 'Dosage Form', 'Quantity', 'Status'];
-      rows = state.products.map(p => [
-        p.id,
-        p.name,
-        p.category,
-        p.dosageForm,
-        `${p.quantity} ${p.unit}`,
-        p.status
-      ]);
-    } else if (templateId === 'test-results') {
-      title = 'QC Test Metrics Report';
-      headers = ['ID', 'Batch #', 'Test Date', 'Result Status', 'Overall Result'];
-      rows = state.testResults.map(r => [
-        r.id,
-        r.batchNumber,
-        new Date(r.testDate).toLocaleDateString(),
-        r.status,
-        r.overallResult
-      ]);
-    } else if (templateId === 'capa-report') {
-      title = 'CAPA Efficacy Report';
-      headers = ['ID', 'Title', 'Priority', 'Source', 'Initiator', 'Status'];
-      rows = state.capas.map(c => [
-        c.id,
-        c.title,
-        c.priority,
-        c.source,
-        c.initiatedBy,
-        c.status
-      ]);
-    } else if (templateId === 'deviation-report') {
-      title = 'Deviation Severity Log';
-      headers = ['ID', 'Title', 'Severity Type', 'Discovered By', 'Status'];
-      rows = state.deviations.map(d => [
-        d.id,
-        d.title,
-        d.type,
-        d.discoveredBy,
-        d.status
-      ]);
-    } else if (templateId === 'equipment-report') {
-      title = 'Asset Compliance Report';
-      headers = ['ID', 'Name', 'Model', 'Serial #', 'Location', 'Status'];
-      rows = state.equipment.map(e => [
-        e.id,
-        e.name,
-        e.model,
-        e.serialNumber,
-        e.location,
-        e.status
-      ]);
-    } else if (templateId === 'training-report') {
-      title = 'Personnel Training Competency Report';
-      headers = ['ID', 'Employee Name', 'Department', 'Training Title', 'Type', 'Status'];
-      rows = state.trainingRecords.map(t => [
-        t.id,
-        t.employeeName,
-        t.department,
-        t.trainingTitle,
-        t.trainingType,
-        t.status
-      ]);
-    } else if (templateId === 'reagent-inventory') {
-      title = 'Chemical Reagent Inventory Report';
-      headers = ['ID', 'Name', 'CAS Number', 'Grade', 'Batch #', 'Stock', 'Unit', 'Status', 'Expiry'];
-      rows = state.chemicalReagents.map(r => [
-        r.id,
-        r.name,
-        r.casNumber || '-',
-        r.grade,
-        r.batchNumber,
-        r.quantity,
-        r.unit,
-        r.status,
-        new Date(r.expiryDate).toLocaleDateString()
-      ]);
-    } else if (templateId === 'reference-standards') {
-      title = 'Reference Standards Registry Report';
-      headers = ['ID', 'Name', 'Lot Number', 'Purity (%)', 'Expiry Date', 'Storage', 'Status'];
-      rows = state.referenceStandards.map(s => [
-        s.id,
-        s.name,
-        s.lotNumber,
-        s.purity ? `${s.purity}%` : '-',
-        new Date(s.expiryDate).toLocaleDateString(),
-        s.storageConditions,
-        s.status
-      ]);
-    } else if (templateId === 'stability-summary') {
-      title = 'Stability Studies Summary Report';
-      headers = ['ID', 'Protocol #', 'Product', 'Batch', 'Type', 'Initiation Date', 'Status'];
-      rows = state.stabilityProtocols.map(p => [
-        p.id,
-        p.protocolNumber,
-        p.productName,
-        p.batchNumber,
-        p.studyType,
-        new Date(p.initiationDate).toLocaleDateString(),
-        p.status
-      ]);
-    } else if (templateId === 'supplier-audit') {
-      title = 'Supplier Qualification & Audit Report';
-      headers = ['ID', 'Name', 'Type', 'Contact', 'Email', 'Qualification Status', 'Status'];
-      rows = state.suppliers.map(s => [
-        s.id,
-        s.name,
-        s.type,
-        s.contactPerson,
-        s.email,
-        s.qualificationStatus,
-        s.status
-      ]);
-    }
-
-    setPreviewTitle(title);
-    setPreviewHeaders(headers);
-    setPreviewRows(rows);
-    setIsPreviewOpen(true);
-    toast.info(`Preview loaded: ${title}`);
-  };
-
-  const handleDownload = (templateId: string, templateName: string) => {
-    let csvContent = '';
-    
-    if (templateId === 'product-summary') {
-      csvContent = 'ID,Name,Category,Dosage Form,Quantity,Status\n' + 
-        state.products.map(p => `"${p.id}","${p.name}","${p.category}","${p.dosageForm}","${p.quantity} ${p.unit}","${p.status}"`).join('\n');
-    } else if (templateId === 'test-results') {
-      csvContent = 'ID,Batch #,Test Date,Result Status,Overall Result\n' + 
-        state.testResults.map(r => `"${r.id}","${r.batchNumber}","${new Date(r.testDate).toLocaleDateString()}","${r.status}","${r.overallResult}"`).join('\n');
-    } else if (templateId === 'capa-report') {
-      csvContent = 'ID,Title,Priority,Source,Initiator,Status\n' + 
-        state.capas.map(c => `"${c.id}","${c.title}","${c.priority}","${c.source}","${c.initiatedBy}","${c.status}"`).join('\n');
-    } else if (templateId === 'deviation-report') {
-      csvContent = 'ID,Title,Severity Type,Discovered By,Status\n' + 
-        state.deviations.map(d => `"${d.id}","${d.title}","${d.type}","${d.discoveredBy}","${d.status}"`).join('\n');
-    } else if (templateId === 'equipment-report') {
-      csvContent = 'ID,Name,Model,Serial #,Location,Status\n' + 
-        state.equipment.map(e => `"${e.id}","${e.name}","${e.model}","${e.serialNumber}","${e.location}","${e.status}"`).join('\n');
-    } else if (templateId === 'training-report') {
-      csvContent = 'ID,Employee Name,Department,Training Title,Type,Status\n' + 
-        state.trainingRecords.map(t => `"${t.id}","${t.employeeName}","${t.department}","${t.trainingTitle}","${t.trainingType}","${t.status}"`).join('\n');
-    } else if (templateId === 'reagent-inventory') {
-      csvContent = 'ID,Name,CAS Number,Grade,Batch #,Stock,Unit,Status,Expiry\n' + 
-        state.chemicalReagents.map(r => `"${r.id}","${r.name}","${r.casNumber || '-'}","${r.grade}","${r.batchNumber}","${r.quantity}","${r.unit}","${r.status}","${new Date(r.expiryDate).toLocaleDateString()}"`).join('\n');
-    } else if (templateId === 'reference-standards') {
-      csvContent = 'ID,Name,Lot Number,Purity (%),Expiry Date,Storage,Status\n' + 
-        state.referenceStandards.map(s => `"${s.id}","${s.name}","${s.lotNumber}","${s.purity || '-'}","${new Date(s.expiryDate).toLocaleDateString()}","${s.storageConditions}","${s.status}"`).join('\n');
-    } else if (templateId === 'stability-summary') {
-      csvContent = 'ID,Protocol #,Product,Batch,Type,Initiation Date,Status\n' + 
-        state.stabilityProtocols.map(p => `"${p.id}","${p.protocolNumber}","${p.productName}","${p.batchNumber}","${p.studyType}","${new Date(p.initiationDate).toLocaleDateString()}","${p.status}"`).join('\n');
-    } else if (templateId === 'supplier-audit') {
-      csvContent = 'ID,Name,Type,Contact,Email,Qualification Status,Status\n' + 
-        state.suppliers.map(s => `"${s.id}","${s.name}","${s.type}","${s.contactPerson}","${s.email}","${s.qualificationStatus}","${s.status}"`).join('\n');
-    }
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `${templateId}_export_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    toast.success(`Successfully downloaded CSV file for ${templateName}`);
-  };
-
-  const handleExportArchive = async () => {
-    setIsExporting(true);
-    setExportProgress(10);
-    setExportPhase('Gathering system entities...');
-    
-    await new Promise(r => setTimeout(r, 400));
-    setExportProgress(35);
-    setExportPhase('Compressing product database and audit events...');
-    
-    await new Promise(r => setTimeout(r, 450));
-    setExportProgress(65);
-    setExportPhase('Formatting QC testing metrics & STP protocols...');
-    
-    await new Promise(r => setTimeout(r, 400));
-    setExportProgress(85);
-    setExportPhase('Generating FDA Part 11 compliant digital signatures hash...');
-    
-    await new Promise(r => setTimeout(r, 350));
-    setExportProgress(100);
-    setExportPhase('Dossier package ready for download.');
-
-    // Save actual full QMS state backup as JSON file
-    const qmsBackup = {
-      exportedAt: new Date().toISOString(),
-      version: 'PharmaQMS v4.3.3',
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
-      products: state.products,
-      testResults: state.testResults,
-      capas: state.capas,
-      deviations: state.deviations,
-      equipment: state.equipment,
-<<<<<<< HEAD
-      chemicalReagents: state.chemicalReagents,
-      referenceStandards: state.referenceStandards,
-      dashboardStats: state.dashboardStats,
-      exportDate: new Date().toISOString()
-    };
-    
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `pharmaqms-export-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const handleDownloadReport = (templateId: string) => {
-    let data: any;
-    let filename: string;
-
-    switch (templateId) {
-      case 'product-summary':
-        data = state.products.map(p => ({
-          name: p.name,
-          batchNumber: p.batchNumber,
-          status: p.status,
-          expiryDate: p.expiryDate,
-          manufacturer: p.manufacturer
-        }));
-        filename = 'inventory-summary.csv';
-        break;
-      case 'test-results':
-        data = state.testResults.map(t => ({
-          testName: t.testName,
-          batchNumber: t.batchNumber,
-          overallResult: t.overallResult,
-          testDate: t.testDate
-        }));
-        filename = 'qc-test-metrics.csv';
-        break;
-      case 'capa-report':
-        data = state.capas.map(c => ({
-          title: c.title,
-          status: c.status,
-          dueDate: c.dueDate,
-          assignedTo: c.assignedTo
-        }));
-        filename = 'capa-efficacy.csv';
-        break;
-      case 'deviation-report':
-        data = state.deviations.map(d => ({
-          title: d.title,
-          type: d.type,
-          status: d.status,
-          reportedDate: d.reportedDate
-        }));
-        filename = 'non-conformity-log.csv';
-        break;
-      case 'equipment-report':
-        data = state.equipment.map(e => ({
-          name: e.name,
-          status: e.status,
-          nextCalibration: e.nextCalibration,
-          location: e.location
-        }));
-        filename = 'asset-compliance.csv';
-        break;
-      case 'training-report':
-        data = state.trainingRecords.map(t => ({
-          employeeName: t.employeeName,
-          trainingType: t.trainingType,
-          status: t.status,
-          completionDate: t.completionDate
-        }));
-        filename = 'competency-matrix.csv';
-        break;
-      default:
-        return;
-    }
-
-    const csv = [
-      Object.keys(data[0]).join(','),
-      ...data.map((row: any) => Object.values(row).join(','))
-    ].join('\n');
-
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-=======
-      trainingRecords: state.trainingRecords,
-      chemicalReagents: state.chemicalReagents,
-      referenceStandards: state.referenceStandards,
-      stabilityProtocols: state.stabilityProtocols,
-      suppliers: state.suppliers,
-    };
-
-    const blob = new Blob([JSON.stringify(qmsBackup, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `PharmaQMS_Compliance_Archive_${new Date().toISOString().split('T')[0]}.json`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    setTimeout(() => {
-      setIsExporting(false);
-      toast.success('System compliance archive downloaded!');
-    }, 500);
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
-  };
 
   // Product Status Data
   const productStatusData = Object.entries(state.dashboardStats.productsByStatus).map(([status, count]) => ({
@@ -499,13 +99,6 @@ export function ReportsPage() {
     { id: 'deviation-report', name: 'Non-Conformity Log', icon: PieChart, description: 'Detailed analysis of process deviations by severity/type.' },
     { id: 'equipment-report', name: 'Asset Compliance', icon: FileSpreadsheet, description: 'Maintenance and calibration schedules for lab equipment.' },
     { id: 'training-report', name: 'Competency Matrix', icon: FileBarChart, description: 'Personnel training logs and certification status.' },
-<<<<<<< HEAD
-=======
-    { id: 'reagent-inventory', name: 'Reagent Database', icon: Beaker, description: 'Chemical reagent inventory, expiry tracking, and stock status report.' },
-    { id: 'reference-standards', name: 'Reference Standards', icon: FlaskConical, description: 'Reference standard registry with purity and lot traceability.' },
-    { id: 'stability-summary', name: 'Stability Studies', icon: LineChartIcon, description: 'Stability protocol status and trend analysis report.' },
-    { id: 'supplier-audit', name: 'Supplier Qualification', icon: Building2, description: 'Qualified supplier list with audit history and status.' },
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
   ];
 
   return (
@@ -516,23 +109,15 @@ export function ReportsPage() {
           <p className="text-slate-500">Generate compliance dossiers and system performance distributions</p>
         </div>
         <div className="flex gap-2">
-<<<<<<< HEAD
           <Button variant="outline" className="text-indigo-700 border-indigo-200">
             <Printer className="mr-2 h-4 w-4" />
             Hardcopy
           </Button>
           <Button variant="outline" className="text-indigo-700 border-indigo-200">
-=======
-          <Button variant="outline" className="text-indigo-700 border-indigo-200" onClick={handleHardcopy}>
-            <Printer className="mr-2 h-4 w-4" />
-            Hardcopy
-          </Button>
-          <Button variant="outline" className="text-indigo-700 border-indigo-200" onClick={() => setIsDistributeOpen(true)}>
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
             <Share2 className="mr-2 h-4 w-4" />
             Distribute
           </Button>
-          <Button className="bg-indigo-600" onClick={handleExportArchive}>
+          <Button className="bg-indigo-600">
             <Download className="mr-2 h-4 w-4" />
             Export Archive
           </Button>
@@ -586,22 +171,8 @@ export function ReportsPage() {
                 </div>
               </>
             )}
-<<<<<<< HEAD
             <Button variant="outline" className="mb-0.5 border-slate-300">
               <Filter className="mr-2 h-4 w-4" />
-=======
-            <Button
-              variant="outline"
-              className="mb-0.5 border-slate-300"
-              onClick={handleApplyFilter}
-              disabled={isFiltering}
-            >
-              {isFiltering ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Filter className="mr-2 h-4 w-4" />
-              )}
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
               Apply
             </Button>
           </div>
@@ -732,19 +303,11 @@ export function ReportsPage() {
                         <h3 className="font-medium">{template.name}</h3>
                         <p className="text-sm text-slate-500 mt-1">{template.description}</p>
                         <div className="flex gap-2 mt-4">
-<<<<<<< HEAD
                           <Button size="sm" variant="outline" className="border-indigo-100 text-indigo-700">
                             <FileText className="mr-2 h-4 w-4" />
                             Preview
                           </Button>
-                          <Button size="sm" className="bg-indigo-600" onClick={() => handleDownloadReport(template.id)}>
-=======
-                          <Button size="sm" variant="outline" className="border-indigo-100 text-indigo-700" onClick={() => handlePreview(template.id)}>
-                            <FileText className="mr-2 h-4 w-4" />
-                            Preview
-                          </Button>
-                          <Button size="sm" className="bg-indigo-600" onClick={() => handleDownload(template.id, template.name)}>
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
+                          <Button size="sm" className="bg-indigo-600">
                             <Download className="mr-2 h-4 w-4" />
                             Download
                           </Button>
@@ -805,122 +368,6 @@ export function ReportsPage() {
           </div>
         </TabsContent>
       </Tabs>
-<<<<<<< HEAD
-=======
-
-      {/* sonner Toaster notifications support */}
-      <Toaster position="top-center" />
-
-      {/* Live Preview Dialog */}
-      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-black text-indigo-900 border-b pb-2 uppercase tracking-wide">
-              {previewTitle}
-            </DialogTitle>
-            <DialogDescription>
-              Interactive live preview of target compliance dataset as of {new Date().toLocaleDateString()}.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="my-4 border rounded-lg overflow-x-auto shadow-sm">
-            <table className="w-full text-sm text-left">
-              <thead className="bg-indigo-50/50 text-indigo-900 font-semibold border-b">
-                <tr>
-                  {previewHeaders.map((header, idx) => (
-                    <th key={idx} className="p-3 border-r last:border-r-0">{header}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y bg-white">
-                {previewRows.length === 0 ? (
-                  <tr>
-                    <td colSpan={previewHeaders.length} className="p-8 text-center text-slate-400 italic">
-                      No data available in this report scope.
-                    </td>
-                  </tr>
-                ) : (
-                  previewRows.map((row, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                      {row.map((cell: any, cidx: number) => (
-                        <td key={cidx} className="p-3 border-r last:border-r-0 font-mono text-xs">{cell}</td>
-                      ))}
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-          <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" onClick={() => setIsPreviewOpen(false)}>Close</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Secure Distribution Dialog */}
-      <Dialog open={isDistributeOpen} onOpenChange={setIsDistributeOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-black text-slate-900">Distribute Compliance Dossier</DialogTitle>
-            <DialogDescription>
-              Enter recipient email below to dispatch the fully signed QMS data package.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Recipient Email Address *</Label>
-              <Input 
-                type="email" 
-                placeholder="qa.director@pharmaco.com"
-                value={distributeEmail}
-                onChange={(e) => setDistributeEmail(e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="flex justify-end gap-3 mt-4">
-            <Button variant="outline" onClick={() => setIsDistributeOpen(false)} disabled={isDistributeSending}>
-              Cancel
-            </Button>
-            <Button className="bg-indigo-600 px-6 font-semibold" onClick={handleDistributeSubmit} disabled={isDistributeSending}>
-              {isDistributeSending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sending Securely...
-                </>
-              ) : (
-                'Send Securely'
-              )}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Export Compliance Archive Loading Dialog */}
-      <Dialog open={isExporting} onOpenChange={() => {}}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-black text-slate-900">Exporting QMS Compliance Dossier</DialogTitle>
-            <DialogDescription>
-              Compiling 21 CFR Part 11 electronic records log...
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-6 space-y-4">
-            <div className="flex items-center gap-3 text-indigo-600 font-medium">
-              <Loader2 className="h-5 w-5 animate-spin" />
-              <span className="text-sm font-semibold">{exportPhase}</span>
-            </div>
-            <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-              <div 
-                className="bg-indigo-600 h-full transition-all duration-300 ease-out" 
-                style={{ width: `${exportProgress}%` }}
-              />
-            </div>
-            <div className="text-right text-xs text-slate-400 font-mono">
-              {exportProgress}% Complete
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
     </div>
   );
 }

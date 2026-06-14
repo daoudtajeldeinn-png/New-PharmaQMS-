@@ -373,11 +373,7 @@ const [materialForm, setMaterialForm] = useState({
     try {
       const d = typeof date === 'string' ? new Date(date) : date;
       if (isNaN(d.getTime())) return String(date);
-<<<<<<< HEAD
-      return d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
-=======
       return d.toLocaleDateString('en-GB');
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
     } catch (e) {
       return String(date);
     }
@@ -620,10 +616,6 @@ const [materialForm, setMaterialForm] = useState({
                 value={materialForm.supplier}
                 onChange={(e) => setMaterialForm(prev => ({ ...prev, supplier: e.target.value }))}
                 placeholder="Enter company name"
-<<<<<<< HEAD
-                maxLength={200}
-=======
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
               />
             </div>
 
@@ -848,11 +840,7 @@ const [materialForm, setMaterialForm] = useState({
                       <div className="flex justify-between">
                         <span className="text-slate-500">Expiry Date:</span>
                         <span className={new Date(selectedMaterial.expiryDate) < new Date() ? 'text-red-600 font-bold' : ''}>
-<<<<<<< HEAD
-                          {formatDate(selectedMaterial.expiryDate)}
-=======
                           {typeof selectedMaterial.expiryDate === 'object' ? (selectedMaterial.expiryDate as any).toLocaleDateString() : selectedMaterial.expiryDate}
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
                         </span>
                       </div>
                       <div className="flex justify-between">
@@ -1167,7 +1155,6 @@ const [materialForm, setMaterialForm] = useState({
       </Dialog>
 
       <DeleteConfirmationDialog
-<<<<<<< HEAD
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
         onConfirm={confirmDeleteMaterial}
@@ -1181,21 +1168,6 @@ const [materialForm, setMaterialForm] = useState({
         onConfirm={confirmDeleteMovement}
         recordName={selectedMovement ? `${selectedMovement.type} movement of ${selectedMovement.quantity} ${selectedMovement.unit}` : ''}
         isDeleting={isDeleting}
-=======
-        open={isDeleteDialogOpen}
-        onClose={() => setIsDeleteDialogOpen(false)}
-        onConfirm={confirmDeleteMaterial}
-        recordLabel={selectedMaterial?.name || ''}
-        tableName="rawMaterials"
-      />
-
-      <DeleteConfirmationDialog
-        open={isDeleteMovementOpen}
-        onClose={() => setIsDeleteMovementOpen(false)}
-        onConfirm={confirmDeleteMovement}
-        recordLabel={selectedMovement ? `${selectedMovement.type} movement of ${selectedMovement.quantity} ${selectedMovement.unit}` : ''}
-        tableName="materialMovements"
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
       />
     </div >
   );

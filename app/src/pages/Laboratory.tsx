@@ -28,19 +28,9 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
-<<<<<<< HEAD
-import { Search, Beaker, FlaskConical, AlertTriangle, Edit, Trash2 } from 'lucide-react';
+import { Search, Beaker, FlaskConical, AlertTriangle } from 'lucide-react';
 import { Combobox } from '@/components/ui/combobox';
 import { cn } from '@/lib/utils';
-=======
-import { Search, Beaker, FlaskConical, AlertTriangle, Trash2, Edit } from 'lucide-react';
-import { Combobox } from '@/components/ui/combobox';
-import { cn } from '@/lib/utils';
-import { generateAnalyticalWorksheet } from '@/lib/coaExport';
-import { useRoleAccess } from '@/hooks/useRoleAccess';
-import { useDelete } from '@/hooks/useDelete';
-import { DeleteConfirmationDialog } from '@/components/security/DeleteConfirmationDialog';
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
 
 const reagentStatusColors = {
   Available: 'bg-green-100 text-green-800 border-green-300',
@@ -65,313 +55,16 @@ const gradeLabels: Record<string, string> = {
   Spectrophotometric: 'Spectrophotometric Grade',
 };
 
-<<<<<<< HEAD
-const formatDate = (date: Date | string | undefined) => {
-  if (!date) return '';
-  try {
-    const d = typeof date === 'string' ? new Date(date) : date;
-    if (isNaN(d.getTime())) return String(date);
-    return d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  } catch (e) {
-    return String(date);
-  }
-};
-
 export function LaboratoryPage() {
   const { state, dispatch } = useStore();
-=======
-export function LaboratoryPage() {
-  const { state, dispatch } = useStore();
-  const { canModify, canDelete, user } = useRoleAccess();
-  const { handleDelete } = useDelete();
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
   const now = useMemo(() => Date.now(), []);
   const [activeTab, setActiveTab] = useState('reagents');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isReagentFormOpen, setIsReagentFormOpen] = useState(false);
-<<<<<<< HEAD
   const [, setIsStandardFormOpen] = useState(false);
   const [reagentGrade, setReagentGrade] = useState('');
   const [reagentUnit, setReagentUnit] = useState('');
-  const [editingReagent, setEditingReagent] = useState<string | null>(null);
-  const [newReagent, setNewReagent] = useState({
-    name: '',
-    casNumber: '',
-    manufacturer: '',
-    supplier: '',
-    quantity: '',
-    expiryDate: '',
-    dateReceived: new Date().toISOString().split('T')[0],
-    location: '',
-    storageConditions: '',
-    batchNumber: ''
-  });
-=======
-  const [isStandardFormOpen, setIsStandardFormOpen] = useState(false);
-  const [reagentGrade, setReagentGrade] = useState('');
-  const [reagentUnit, setReagentUnit] = useState('');
-  
-  // Reagent Registration Form States
-  const [reagentName, setReagentName] = useState('');
-  const [reagentCas, setReagentCas] = useState('');
-  const [reagentManufacturer, setReagentManufacturer] = useState('');
-  const [reagentQuantity, setReagentQuantity] = useState('');
-  const [reagentExpiry, setReagentExpiry] = useState('');
-
-  // Reference Standard Registration Form States
-  const [stdName, setStdName] = useState('');
-  const [stdLot, setStdLot] = useState('');
-  const [stdPurity, setStdPurity] = useState('');
-  const [stdExpiry, setStdExpiry] = useState('');
-
-  // Edit / Delete State
-  const [editingReagent, setEditingReagent] = useState<any>(null);
-  const [editingStandard, setEditingStandard] = useState<any>(null);
-  
-  const [isReagentDeleteDialogOpen, setIsReagentDeleteDialogOpen] = useState(false);
-  const [selectedReagentToDelete, setSelectedReagentToDelete] = useState<any>(null);
-
-  const [isStandardDeleteDialogOpen, setIsStandardDeleteDialogOpen] = useState(false);
-  const [selectedStandardToDelete, setSelectedStandardToDelete] = useState<any>(null);
-
-  const handleEditReagentClick = (reagent: any) => {
-    setEditingReagent(reagent);
-    setReagentName(reagent.name);
-    setReagentCas(reagent.casNumber || '');
-    setReagentGrade(reagent.grade);
-    setReagentManufacturer(reagent.manufacturer || reagent.supplier || '');
-    setReagentQuantity(String(reagent.quantity));
-    setReagentUnit(reagent.unit);
-    const dateStr = typeof reagent.expiryDate === 'string' 
-      ? reagent.expiryDate.split('T')[0]
-      : new Date(reagent.expiryDate).toISOString().split('T')[0];
-    setReagentExpiry(dateStr);
-    setIsReagentFormOpen(true);
-  };
-
-  const handleEditStandardClick = (std: any) => {
-    setEditingStandard(std);
-    setStdName(std.name);
-    setStdLot(std.lotNumber);
-    setStdPurity(std.purity ? String(std.purity) : '');
-    const dateStr = typeof std.expiryDate === 'string'
-      ? std.expiryDate.split('T')[0]
-      : new Date(std.expiryDate).toISOString().split('T')[0];
-    setStdExpiry(dateStr);
-    setIsStandardFormOpen(true);
-  };
-
-  const handleCloseReagentForm = () => {
-    setIsReagentFormOpen(false);
-    setEditingReagent(null);
-    setReagentName('');
-    setReagentCas('');
-    setReagentGrade('');
-    setReagentManufacturer('');
-    setReagentQuantity('');
-    setReagentUnit('');
-    setReagentExpiry('');
-  };
-
-  const handleCloseStandardForm = () => {
-    setIsStandardFormOpen(false);
-    setEditingStandard(null);
-    setStdName('');
-    setStdLot('');
-    setStdPurity('');
-    setStdExpiry('');
-  };
-
-  const confirmDeleteReagent = async (reason: string) => {
-    if (!selectedReagentToDelete) return;
-    const success = await handleDelete(
-      'chemicalReagents',
-      selectedReagentToDelete.id,
-      selectedReagentToDelete.name,
-      () => {
-        dispatch({ type: 'DELETE_CHEMICAL_REAGENT', payload: selectedReagentToDelete.id });
-        dispatch({
-          type: 'ADD_ACTIVITY',
-          payload: {
-            id: crypto.randomUUID(),
-            type: 'Product_Updated',
-            description: `[DELETE] Reagent: "${selectedReagentToDelete.name}" by ${user?.username || 'admin'}. Reason: ${reason}`,
-            user: user?.name || 'Unknown',
-            timestamp: new Date(),
-          },
-        });
-      },
-      reason
-    );
-    if (success) {
-      setSelectedReagentToDelete(null);
-      setIsReagentDeleteDialogOpen(false);
-    }
-  };
-
-  const confirmDeleteStandard = async (reason: string) => {
-    if (!selectedStandardToDelete) return;
-    const success = await handleDelete(
-      'referenceStandards',
-      selectedStandardToDelete.id,
-      selectedStandardToDelete.name,
-      () => {
-        dispatch({ type: 'DELETE_REFERENCE_STANDARD', payload: selectedStandardToDelete.id });
-        dispatch({
-          type: 'ADD_ACTIVITY',
-          payload: {
-            id: crypto.randomUUID(),
-            type: 'Product_Updated',
-            description: `[DELETE] Reference Standard: "${selectedStandardToDelete.name}" by ${user?.username || 'admin'}. Reason: ${reason}`,
-            user: user?.name || 'Unknown',
-            timestamp: new Date(),
-          },
-        });
-      },
-      reason
-    );
-    if (success) {
-      setSelectedStandardToDelete(null);
-      setIsStandardDeleteDialogOpen(false);
-    }
-  };
-
-  const handleSaveStandard = () => {
-    if (!stdName.trim()) {
-      toast.error('Standard Name is required');
-      return;
-    }
-    if (!stdLot.trim()) {
-      toast.error('Lot Number is required');
-      return;
-    }
-    if (!stdExpiry) {
-      toast.error('Expiry Date is required');
-      return;
-    }
-    const purity = parseFloat(stdPurity);
-    const expiryDate = new Date(stdExpiry);
-    const status = expiryDate.getTime() < Date.now() ? 'Expired' : 'Active';
-
-    if (editingStandard) {
-      const updated = {
-        ...editingStandard,
-        name: stdName.trim(),
-        lotNumber: stdLot.trim(),
-        purity: isNaN(purity) ? undefined : purity,
-        expiryDate,
-        status,
-      };
-      dispatch({ type: 'UPDATE_REFERENCE_STANDARD', payload: updated as any });
-      dispatch({
-        type: 'ADD_ACTIVITY',
-        payload: {
-          id: crypto.randomUUID(),
-          type: 'Product_Updated',
-          description: `[EDIT] Reference Standard: "${updated.name}" updated by ${user?.username || 'admin'}`,
-          user: user?.name || 'Unknown',
-          timestamp: new Date(),
-        },
-      });
-      toast.success(`Standard updated: ${updated.name}`);
-    } else {
-      const newStandard = {
-        id: `std-${Math.random().toString(36).substring(2, 9)}`,
-        name: stdName.trim(),
-        lotNumber: stdLot.trim(),
-        purity: isNaN(purity) ? undefined : purity,
-        expiryDate,
-        dateReceived: new Date(),
-        storageConditions: 'Refrigerated 2-8°C',
-        status
-      };
-      dispatch({ type: 'ADD_REFERENCE_STANDARD', payload: newStandard as any });
-      toast.success(`Successfully registered standard: ${newStandard.name}`);
-    }
-
-    handleCloseStandardForm();
-  };
-
-  const handleSaveReagent = () => {
-    if (!reagentName.trim()) {
-      toast.error('Reagent Name is required');
-      return;
-    }
-    if (!reagentExpiry) {
-      toast.error('Expiry Date is required');
-      return;
-    }
-    const qty = parseFloat(reagentQuantity);
-    if (isNaN(qty) || qty < 0) {
-      toast.error('Please enter a valid net quantity (0 or greater)');
-      return;
-    }
-
-    const expiryDateObj = new Date(reagentExpiry);
-    const isExpired = expiryDateObj.getTime() < Date.now();
-    let status: 'Available' | 'Low_Stock' | 'Expired' | 'Depleted' = 'Available';
-
-    if (qty === 0) {
-      status = 'Depleted';
-    } else if (isExpired) {
-      status = 'Expired';
-    } else if (qty < 5) {
-      status = 'Low_Stock';
-    }
-
-    if (editingReagent) {
-      // UPDATE existing reagent
-      const updated = {
-        ...editingReagent,
-        name: reagentName.trim(),
-        casNumber: reagentCas.trim() || undefined,
-        grade: (reagentGrade || 'Reagent') as any,
-        manufacturer: reagentManufacturer.trim() || editingReagent.manufacturer,
-        supplier: reagentManufacturer.trim() || editingReagent.supplier,
-        quantity: qty,
-        unit: reagentUnit || editingReagent.unit,
-        expiryDate: expiryDateObj,
-        status,
-      };
-      dispatch({ type: 'UPDATE_CHEMICAL_REAGENT', payload: updated });
-      dispatch({
-        type: 'ADD_ACTIVITY',
-        payload: {
-          id: crypto.randomUUID(),
-          type: 'Product_Updated',
-          description: `[EDIT] Reagent: "${updated.name}" updated by ${user?.username || 'admin'}`,
-          user: user?.name || 'Unknown',
-          timestamp: new Date(),
-        },
-      });
-      toast.success(`Reagent updated: ${updated.name}`);
-    } else {
-      // ADD new reagent
-      const newReagent = {
-        id: `reagent-${Math.random().toString(36).substring(2, 9)}`,
-        name: reagentName.trim(),
-        casNumber: reagentCas.trim() || undefined,
-        grade: (reagentGrade || 'Reagent') as any,
-        manufacturer: reagentManufacturer.trim() || 'Merck',
-        supplier: reagentManufacturer.trim() || 'Merck',
-        batchNumber: `BAT-${Math.floor(100000 + Math.random() * 900000)}`,
-        quantity: qty,
-        unit: reagentUnit || 'bottle',
-        storageConditions: 'Room Temperature (20-25°C)',
-        expiryDate: expiryDateObj,
-        dateReceived: new Date(),
-        location: 'Lab Shelf B',
-        safetyInfo: { hazardStatements: [], precautionaryStatements: [] },
-        status
-      };
-      dispatch({ type: 'ADD_CHEMICAL_REAGENT', payload: newReagent });
-      toast.success(`Successfully registered reagent: ${newReagent.name}`);
-    }
-
-    handleCloseReagentForm();
-  };
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
 
   const gradeOptions = [
     { value: 'ACS', label: 'ACS Grade' },
@@ -448,93 +141,6 @@ export function LaboratoryPage() {
     toast.success(`Material ${material.name} ${newStatus.toLowerCase()} successfully`);
   };
 
-<<<<<<< HEAD
-  const handleSaveReagent = () => {
-    if (!newReagent.name || !newReagent.expiryDate) {
-      toast.error('Please fill in required fields (Name and Expiry Date)');
-      return;
-    }
-
-    const reagent = {
-      id: editingReagent || crypto.randomUUID(),
-      ...newReagent,
-      quantity: parseFloat(newReagent.quantity) || 0,
-      expiryDate: new Date(newReagent.expiryDate),
-      dateReceived: new Date(newReagent.dateReceived),
-      grade: reagentGrade || 'Reagent',
-      unit: reagentUnit || 'mL',
-      status: 'Available' as const,
-      safetyInfo: {
-        hazardClass: '',
-        hazardStatements: [],
-        precautionaryStatements: [],
-        sdsFile: ''
-      }
-    };
-
-    if (editingReagent) {
-      dispatch({
-        type: 'UPDATE_CHEMICAL_REAGENT',
-        payload: reagent
-      });
-      toast.success('Reagent updated successfully');
-    } else {
-      dispatch({
-        type: 'ADD_CHEMICAL_REAGENT',
-        payload: reagent
-      });
-      toast.success('Reagent added successfully');
-    }
-
-    setIsReagentFormOpen(false);
-    setEditingReagent(null);
-    setNewReagent({
-      name: '',
-      casNumber: '',
-      manufacturer: '',
-      supplier: '',
-      quantity: '',
-      expiryDate: '',
-      dateReceived: new Date().toISOString().split('T')[0],
-      location: '',
-      storageConditions: '',
-      batchNumber: ''
-    });
-    setReagentGrade('');
-    setReagentUnit('');
-  };
-
-  const handleEditReagent = (reagent: any) => {
-    setEditingReagent(reagent.id);
-    setNewReagent({
-      name: reagent.name,
-      casNumber: reagent.casNumber || '',
-      manufacturer: reagent.manufacturer,
-      supplier: reagent.supplier || '',
-      quantity: reagent.quantity.toString(),
-      expiryDate: new Date(reagent.expiryDate).toISOString().split('T')[0],
-      dateReceived: new Date(reagent.dateReceived).toISOString().split('T')[0],
-      location: reagent.location || '',
-      storageConditions: reagent.storageConditions || '',
-      batchNumber: reagent.batchNumber || ''
-    });
-    setReagentGrade(reagent.grade);
-    setReagentUnit(reagent.unit);
-    setIsReagentFormOpen(true);
-  };
-
-  const handleDeleteReagent = (id: string) => {
-    if (confirm('Are you sure you want to delete this reagent?')) {
-      dispatch({
-        type: 'DELETE_CHEMICAL_REAGENT',
-        payload: id
-      });
-      toast.success('Reagent deleted successfully');
-    }
-  };
-
-=======
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
   return (
     <div className="space-y-6">
       <Toaster position="top-center" />
@@ -544,28 +150,7 @@ export function LaboratoryPage() {
           <p className="text-slate-500">Chemical Reagents & Reference Standards Database</p>
         </div>
         <div className="flex gap-2">
-<<<<<<< HEAD
-          <Button onClick={() => {
-            setEditingReagent(null);
-            setNewReagent({
-              name: '',
-              casNumber: '',
-              manufacturer: '',
-              supplier: '',
-              quantity: '',
-              expiryDate: '',
-              dateReceived: new Date().toISOString().split('T')[0],
-              location: '',
-              storageConditions: '',
-              batchNumber: ''
-            });
-            setReagentGrade('');
-            setReagentUnit('');
-            setIsReagentFormOpen(true);
-          }} variant="outline" className="border-indigo-200 text-indigo-700">
-=======
           <Button onClick={() => setIsReagentFormOpen(true)} variant="outline" className="border-indigo-200 text-indigo-700">
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
             <Beaker className="mr-2 h-4 w-4" />
             Add Reagent
           </Button>
@@ -618,17 +203,12 @@ export function LaboratoryPage() {
                   <TableHead className="font-bold text-slate-700">Stock</TableHead>
                   <TableHead className="font-bold text-slate-700">Expiry Status</TableHead>
                   <TableHead className="font-bold text-slate-700">Status</TableHead>
-<<<<<<< HEAD
-                  <TableHead className="font-bold text-slate-700">Actions</TableHead>
-=======
-                  <TableHead className="font-bold text-slate-700 text-right">Actions</TableHead>
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredReagents.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-20 text-slate-400 italic">
+                    <TableCell colSpan={7} className="text-center py-20 text-slate-400 italic">
                       No reagents found matching search criteria.
                     </TableCell>
                   </TableRow>
@@ -664,56 +244,6 @@ export function LaboratoryPage() {
                           <Badge variant="outline" className={cn(reagentStatusColors[reagent.status])}>
                             {reagentStatusLabels[reagent.status]}
                           </Badge>
-                        </TableCell>
-<<<<<<< HEAD
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEditReagent(reagent)}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleDeleteReagent(reagent.id)}
-                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-=======
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-1">
-                            {canModify && (
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-8 w-8 text-slate-500 hover:text-indigo-600"
-                                onClick={() => handleEditReagentClick(reagent)}
-                                title="Edit Reagent"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            )}
-                            {canDelete && (
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-8 w-8 text-slate-500 hover:text-red-600"
-                                onClick={() => {
-                                  setSelectedReagentToDelete(reagent);
-                                  setIsReagentDeleteDialogOpen(true);
-                                }}
-                                title="Delete Reagent"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            )}
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
-                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -775,20 +305,12 @@ export function LaboratoryPage() {
                   <TableHead className="font-bold text-slate-700">Receipt Date</TableHead>
                   <TableHead className="font-bold text-slate-700">Expiry Date</TableHead>
                   <TableHead className="font-bold text-slate-700">Status</TableHead>
-<<<<<<< HEAD
-=======
-                  <TableHead className="font-bold text-slate-700 text-right">Actions</TableHead>
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredStandards.length === 0 ? (
                   <TableRow>
-<<<<<<< HEAD
                     <TableCell colSpan={6} className="text-center py-20 text-slate-400 italic">
-=======
-                    <TableCell colSpan={7} className="text-center py-20 text-slate-400 italic">
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
                       No reference standards recorded.
                     </TableCell>
                   </TableRow>
@@ -810,19 +332,11 @@ export function LaboratoryPage() {
                           {std.purity ? `${std.purity}%` : std.potency ? `${std.potency}%` : '-'}
                         </TableCell>
                         <TableCell>
-<<<<<<< HEAD
-                          {formatDate(std.dateReceived)}
-                        </TableCell>
-                        <TableCell>
-                          <span className={cn("text-sm transition-colors", expiryStatus.color)}>
-                            {formatDate(std.expiryDate)}
-=======
                           {new Date(std.dateReceived).toLocaleDateString('en-GB')}
                         </TableCell>
                         <TableCell>
                           <span className={cn("text-sm transition-colors", expiryStatus.color)}>
                             {typeof std.expiryDate === 'object' ? (std.expiryDate as any).toLocaleDateString('en-GB') : new Date(std.expiryDate).toLocaleDateString('en-GB')}
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
                           </span>
                         </TableCell>
                         <TableCell>
@@ -830,38 +344,6 @@ export function LaboratoryPage() {
                             {std.status === 'Active' ? 'Active' : 'Expired'}
                           </Badge>
                         </TableCell>
-<<<<<<< HEAD
-=======
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-1">
-                            {canModify && (
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-8 w-8 text-slate-500 hover:text-indigo-600"
-                                onClick={() => handleEditStandardClick(std)}
-                                title="Edit Standard"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            )}
-                            {canDelete && (
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-8 w-8 text-slate-500 hover:text-red-600"
-                                onClick={() => {
-                                  setSelectedStandardToDelete(std);
-                                  setIsStandardDeleteDialogOpen(true);
-                                }}
-                                title="Delete Standard"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
                       </TableRow>
                     );
                   })
@@ -945,14 +427,7 @@ export function LaboratoryPage() {
                       <Button
                         size="sm"
                         variant="ghost"
-<<<<<<< HEAD
                         onClick={() => toast.info('Logbook generated for this analysis session')}
-=======
-                        onClick={() => {
-                          generateAnalyticalWorksheet(material as any);
-                          toast.info('Worksheet generated successfully');
-                        }}
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
                       >
                         Print Worksheet
                       </Button>
@@ -983,48 +458,20 @@ export function LaboratoryPage() {
       </Tabs>
 
       {/* Reagent Form Dialog */}
-<<<<<<< HEAD
       <Dialog open={isReagentFormOpen} onOpenChange={setIsReagentFormOpen}>
-=======
-      <Dialog open={isReagentFormOpen} onOpenChange={(open) => { if (!open) handleCloseReagentForm(); }}>
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="text-xl font-black text-slate-900 uppercase">
-              {editingReagent ? 'Edit Reagent' : 'Register New Reagent'}
-            </DialogTitle>
+            <DialogTitle className="text-xl font-black text-slate-900 uppercase">Register New Reagent</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Reagent Name *</Label>
-<<<<<<< HEAD
-                <Input 
-                  placeholder="e.g. Acetonitrile HPLC Grade" 
-                  value={newReagent.name}
-                  onChange={(e) => setNewReagent({...newReagent, name: e.target.value})}
-=======
-                <Input
-                  placeholder="e.g. Acetonitrile HPLC Grade"
-                  value={reagentName}
-                  onChange={(e) => setReagentName(e.target.value)}
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
-                />
+                <Input placeholder="e.g. Acetonitrile HPLC Grade" />
               </div>
               <div className="space-y-2">
                 <Label>CAS Number Identification</Label>
-<<<<<<< HEAD
-                <Input 
-                  placeholder="e.g. 75-05-8" 
-                  value={newReagent.casNumber}
-                  onChange={(e) => setNewReagent({...newReagent, casNumber: e.target.value})}
-=======
-                <Input
-                  placeholder="e.g. 75-05-8"
-                  value={reagentCas}
-                  onChange={(e) => setReagentCas(e.target.value)}
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
-                />
+                <Input placeholder="e.g. 75-05-8" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -1042,37 +489,13 @@ export function LaboratoryPage() {
               </div>
               <div className="space-y-2">
                 <Label>Manufacturer / Supplier</Label>
-<<<<<<< HEAD
-                <Input 
-                  placeholder="e.g. Merck / Sigma" 
-                  value={newReagent.manufacturer}
-                  onChange={(e) => setNewReagent({...newReagent, manufacturer: e.target.value})}
-=======
-                <Input
-                  placeholder="e.g. Merck / Sigma"
-                  value={reagentManufacturer}
-                  onChange={(e) => setReagentManufacturer(e.target.value)}
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
-                />
+                <Input placeholder="e.g. Merck / Sigma" />
               </div>
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>Net Quantity</Label>
-<<<<<<< HEAD
-                <Input 
-                  type="number" 
-                  placeholder="0.00" 
-                  value={newReagent.quantity}
-                  onChange={(e) => setNewReagent({...newReagent, quantity: e.target.value})}
-=======
-                <Input
-                  type="number"
-                  placeholder="0.00"
-                  value={reagentQuantity}
-                  onChange={(e) => setReagentQuantity(e.target.value)}
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
-                />
+                <Input type="number" placeholder="0.00" />
               </div>
               <div className="space-y-2">
                 <Label>UOM</Label>
@@ -1088,111 +511,16 @@ export function LaboratoryPage() {
               </div>
               <div className="space-y-2">
                 <Label>Expiry Date *</Label>
-<<<<<<< HEAD
-                <Input 
-                  type="date" 
-                  value={newReagent.expiryDate}
-                  onChange={(e) => setNewReagent({...newReagent, expiryDate: e.target.value})}
-=======
-                <Input
-                  type="date"
-                  value={reagentExpiry}
-                  onChange={(e) => setReagentExpiry(e.target.value)}
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
-                />
+                <Input type="date" />
               </div>
             </div>
           </div>
           <div className="flex justify-end gap-3 bg-slate-50 -mx-6 -mb-6 p-6 mt-4 border-t">
-<<<<<<< HEAD
             <Button variant="outline" onClick={() => setIsReagentFormOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveReagent} className="bg-indigo-600 px-8">Save Inventory</Button>
+            <Button onClick={() => setIsReagentFormOpen(false)} className="bg-indigo-600 px-8">Save Inventory</Button>
           </div>
         </DialogContent>
       </Dialog>
-=======
-            <Button variant="outline" onClick={handleCloseReagentForm}>Cancel</Button>
-            <Button onClick={handleSaveReagent} className="bg-indigo-600 px-8">
-              {editingReagent ? 'Update Reagent' : 'Save Inventory'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Reference Standard Form Dialog */}
-      <Dialog open={isStandardFormOpen} onOpenChange={(open) => { if (!open) handleCloseStandardForm(); }}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-black text-slate-900 uppercase">
-              {editingStandard ? 'Edit Reference Standard' : 'Register Reference Standard'}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Standard Name *</Label>
-                <Input
-                  placeholder="e.g. Paracetamol Reference Standard"
-                  value={stdName}
-                  onChange={(e) => setStdName(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Lot Number *</Label>
-                <Input
-                  placeholder="e.g. LOT-12345"
-                  value={stdLot}
-                  onChange={(e) => setStdLot(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Purity/Potency (%)</Label>
-                <Input
-                  type="number"
-                  placeholder="e.g. 99.8"
-                  value={stdPurity}
-                  onChange={(e) => setStdPurity(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Expiry Date *</Label>
-                <Input
-                  type="date"
-                  value={stdExpiry}
-                  onChange={(e) => setStdExpiry(e.target.value)}
-                />
-              </div>
-            </div>
-          </div>
-          <div className="flex justify-end gap-3 bg-slate-50 -mx-6 -mb-6 p-6 mt-4 border-t">
-            <Button variant="outline" onClick={handleCloseStandardForm}>Cancel</Button>
-            <Button onClick={handleSaveStandard} className="bg-indigo-600 px-8">
-              {editingStandard ? 'Update Standard' : 'Save Standard'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Reagent Confirmation */}
-      <DeleteConfirmationDialog
-        open={isReagentDeleteDialogOpen}
-        onClose={() => setIsReagentDeleteDialogOpen(false)}
-        onConfirm={confirmDeleteReagent}
-        recordLabel={selectedReagentToDelete?.name || ''}
-        tableName="chemicalReagents"
-      />
-
-      {/* Delete Standard Confirmation */}
-      <DeleteConfirmationDialog
-        open={isStandardDeleteDialogOpen}
-        onClose={() => setIsStandardDeleteDialogOpen(false)}
-        onConfirm={confirmDeleteStandard}
-        recordLabel={selectedStandardToDelete?.name || ''}
-        tableName="referenceStandards"
-      />
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from 'react';
-import { Plus, CheckCircle2, Printer, ClipboardCheck, Activity, Thermometer, ShieldCheck, PenLine, AlertTriangle, Scale, AlertCircle, Lock, Search } from 'lucide-react';
+import { Plus, CheckCircle2, Printer, ClipboardCheck, Activity, Thermometer, ShieldCheck, PenLine, AlertTriangle, Scale, AlertCircle, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,41 +14,6 @@ import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
-// ==================== Helper: Load Company Settings ====================
-interface CompanySettings {
-  name: string;
-  address: string;
-  phone: string;
-  email: string;
-}
-
-function loadCompanySettings(): CompanySettings {
-  try {
-    const stored = localStorage.getItem('pqms_company_settings');
-    if (stored) return JSON.parse(stored);
-  } catch { /* fallback */ }
-  return {
-    name: 'National Pharmaceutical Company',
-    address: 'Khartoum, Sudan',
-    phone: '+249 123 456 789',
-    email: 'info@pharma.com',
-  };
-}
-
-<<<<<<< HEAD
-const formatDate = (date: string | Date | undefined) => {
-    if (!date) return '';
-    try {
-        const d = typeof date === 'string' ? new Date(date) : date;
-        if (isNaN(d.getTime())) return String(date);
-        return d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    } catch (e) {
-        return String(date);
-    }
-};
-
-=======
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
 export function BMRManagerPage() {
     const { state, dispatch } = useStore();
     const { canModify, canDelete, user } = useRoleAccess();
@@ -57,41 +22,17 @@ export function BMRManagerPage() {
     const [showIssueDialog, setShowIssueDialog] = useState(false);
     const [showEditDialog, setShowEditDialog] = useState(false);
     const [selectedBMR, setSelectedBMR] = useState<BatchRecord | null>(null);
-    const [mfrSearchTerm, setMfrSearchTerm] = useState('');
-    const [bmrSearchTerm, setBmrSearchTerm] = useState('');
     const [newBatch, setNewBatch] = useState<Partial<BatchRecord>>({
         mfgDate: new Date().toISOString().split('T')[0],
         status: 'Issuance'
     });
     const printRef = useRef<HTMLDivElement>(null);
-    
-    // Load company settings from Global Settings
-    const companySettings = loadCompanySettings();
 
     const handlePrint = useReactToPrint({
         contentRef: printRef,
         documentTitle: selectedBMR ? `BMR-${selectedBMR.batchNumber}` : 'BMR',
-<<<<<<< HEAD
-        onBeforeGetContent: () => {
-            return new Promise((resolve) => {
-                setTimeout(resolve, 100);
-            });
-        },
-=======
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
     });
     const [editingBMR, setEditingBMR] = useState<BatchRecord | null>(null);
-    const [bmrSearchTerm, setBmrSearchTerm] = useState('');
-
-    const filteredBMRs = useMemo(() => {
-        if (!bmrSearchTerm) return records;
-        const term = bmrSearchTerm.toLowerCase();
-        return records.filter((batch: BatchRecord) =>
-            batch.batchNumber.toLowerCase().includes(term) ||
-            batch.productName.toLowerCase().includes(term) ||
-            batch.status.toLowerCase().includes(term)
-        );
-    }, [records, bmrSearchTerm]);
 
     const handleIssueBatch = () => {
         if (!canModify) {
@@ -275,26 +216,6 @@ const handleUpdateStep = (stepNumber: number, updates: StepUpdate) => {
         });
     }, [selectedBMR, state.materialMovements, masterFormulas]);
 
-    const filteredMFRs = useMemo(() => {
-        const mfrs = Object.values(masterFormulas);
-        if (!mfrSearchTerm) return mfrs;
-        const term = mfrSearchTerm.toLowerCase();
-        return mfrs.filter((mfr: any) =>
-            mfr.mfrNumber.toLowerCase().includes(term) ||
-            mfr.productName.toLowerCase().includes(term)
-        );
-    }, [masterFormulas, mfrSearchTerm]);
-
-    const filteredBMRs = useMemo(() => {
-        if (!bmrSearchTerm) return records;
-        const term = bmrSearchTerm.toLowerCase();
-        return records.filter((batch: BatchRecord) =>
-            batch.batchNumber.toLowerCase().includes(term) ||
-            batch.productName.toLowerCase().includes(term) ||
-            batch.status.toLowerCase().includes(term)
-        );
-    }, [records, bmrSearchTerm]);
-
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex items-center justify-between border-b pb-4">
@@ -329,18 +250,8 @@ const handleUpdateStep = (stepNumber: number, updates: StepUpdate) => {
                 <Card className="bg-white border-none shadow-sm"><CardHeader className="pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Released</CardHeader><CardContent><div className="text-3xl font-black text-blue-600">{records.filter(r => r.status === 'Released').length}</div></CardContent></Card>
             </div>
 
-            <div className="relative mb-4">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input
-                    placeholder="Search BMR by batch number, product name, or status..."
-                    value={bmrSearchTerm}
-                    onChange={(e) => setBmrSearchTerm(e.target.value)}
-                    className="pl-9"
-                />
-            </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-                {filteredBMRs.map((batch: BatchRecord) => (
+                {records.map((batch: BatchRecord) => (
                     <Card key={batch.id} className="hover:shadow-xl transition-all cursor-pointer border-t-4 border-t-emerald-500 bg-white" onClick={() => setSelectedBMR(batch)}>
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <div>
@@ -398,7 +309,7 @@ const handleUpdateStep = (stepNumber: number, updates: StepUpdate) => {
                 <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto bg-slate-50 p-0 border-none rounded-none shadow-2xl">
                     {selectedBMR && (
                         <>
-                            <div ref={printRef} className="bg-white min-h-[297mm] w-full mx-auto p-12 shadow-inner print:p-0 font-serif">
+                            <div className="bg-white min-h-[297mm] w-full mx-auto p-12 shadow-inner print:p-0 font-serif">
                             {/* Professional Header - A4 Style */}
                             <div className="flex justify-between items-start border-b-4 border-double border-slate-900 pb-8 mb-8">
                                 <div className="flex gap-6 items-center">
@@ -406,9 +317,9 @@ const handleUpdateStep = (stepNumber: number, updates: StepUpdate) => {
                                         <ShieldCheck className="h-10 w-10" />
                                     </div>
                                     <div>
-                                        <h1 className="text-4xl font-black text-slate-900 tracking-tighter leading-none mb-1">{companySettings.name}</h1>
+                                        <h1 className="text-4xl font-black text-slate-900 tracking-tighter leading-none mb-1">PHARMAQMS ENTERPRISE</h1>
                                         <p className="text-[11px] font-black text-emerald-600 uppercase tracking-[0.3em] mb-1">Quality Management System | GxP COMPLIANCE</p>
-                                        <p className="text-[10px] font-bold text-slate-500 leading-tight">{companySettings.address}<br />Standard Operating Procedure: SOP-PRD-001</p>
+                                        <p className="text-[10px] font-bold text-slate-500 leading-tight">Industrial Zone, Phase 2, Pharmaceutical District<br />Cairo, Egypt | Standard Operating Procedure: SOP-PRD-001</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
@@ -429,28 +340,16 @@ const handleUpdateStep = (stepNumber: number, updates: StepUpdate) => {
                                 </div>
                                 <div>
                                     <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Manufacturing Date</Label>
-<<<<<<< HEAD
-                                    <div className="text-sm font-black text-slate-900">{formatDate(selectedBMR.mfgDate)}</div>
-                                </div>
-                                <div>
-                                    <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Expiry Date</Label>
-                                    <div className="text-sm font-black text-rose-600">{formatDate(selectedBMR.expiryDate)}</div>
-=======
                                     <div className="text-sm font-black text-slate-900">{selectedBMR.mfgDate}</div>
                                 </div>
                                 <div>
                                     <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Expiry Date</Label>
                                     <div className="text-sm font-black text-rose-600">{selectedBMR.expiryDate}</div>
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
                                 </div>
                              </div>
 
                                 <div className="flex gap-4 mb-10 pb-6 border-b border-slate-100">
-<<<<<<< HEAD
                                     <Button variant="outline" className="gap-2 font-black uppercase text-[10px] tracking-widest h-11 px-6 border-slate-200 hover:bg-slate-50 transition-all shadow-sm" onClick={handlePrint}>
-=======
-                                    <Button variant="outline" className="gap-2 font-black uppercase text-[10px] tracking-widest h-11 px-6 border-slate-200 hover:bg-slate-50 transition-all shadow-sm" onClick={() => handlePrint()}>
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
                                         <Printer className="h-4 w-4 text-slate-500" /> Print Full BMR
                                     </Button>
                                     <Button className="bg-slate-900 hover:bg-black text-white font-black uppercase text-[10px] tracking-widest h-11 px-10 shadow-lg shadow-slate-200 transition-all">
@@ -479,11 +378,7 @@ const handleUpdateStep = (stepNumber: number, updates: StepUpdate) => {
                                         </div>
                                         <div className="p-4 bg-slate-50 rounded-xl border-2 border-slate-100">
                                             <Label className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Mfg/Exp Date</Label>
-<<<<<<< HEAD
-                                            <div className="text-lg font-black text-slate-800">{formatDate(selectedBMR.mfgDate)} / {formatDate(selectedBMR.expiryDate)}</div>
-=======
                                             <div className="text-lg font-black text-slate-800">{selectedBMR.mfgDate} / {selectedBMR.expiryDate}</div>
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
                                         </div>
                                     </div>
 
@@ -1065,13 +960,8 @@ selectedBMR.stepExecutions.filter((s: BMRStepExecution) => s.phase === 'Packagin
                                     <td><strong>MFR Reference:</strong></td><td>{selectedBMR.mfrId.toUpperCase()}</td>
                                 </tr>
                                 <tr>
-<<<<<<< HEAD
-                                    <td><strong>Mfg Date:</strong></td><td>{formatDate(selectedBMR.mfgDate)}</td>
-                                    <td><strong>Expiry Date:</strong></td><td>{formatDate(selectedBMR.expiryDate)}</td>
-=======
                                     <td><strong>Mfg Date:</strong></td><td>{selectedBMR.mfgDate}</td>
                                     <td><strong>Expiry Date:</strong></td><td>{selectedBMR.expiryDate}</td>
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
                                 </tr>
                             </tbody>
                         </table>
@@ -1171,15 +1061,6 @@ selectedBMR.stepExecutions.filter((s: BMRStepExecution) => s.phase === 'Packagin
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
                             <Label className="text-xs font-bold uppercase text-slate-400">Select Production Master (MFR)</Label>
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                <Input
-                                    placeholder="Search MFR by number or name..."
-                                    value={mfrSearchTerm}
-                                    onChange={(e) => setMfrSearchTerm(e.target.value)}
-                                    className="pl-9 text-sm font-bold"
-                                />
-                            </div>
                             <select 
                                 className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-bold" 
                                 onChange={(e) => {
@@ -1194,7 +1075,7 @@ selectedBMR.stepExecutions.filter((s: BMRStepExecution) => s.phase === 'Packagin
                                 }}
                             >
                                 <option value="">CHOOSE MASTER FORMULA...</option>
-                                {filteredMFRs.map((mfr: any) => (
+                                {Object.values(masterFormulas).map((mfr: any) => (
                                     <option key={mfr.id} value={mfr.id}>{mfr.mfrNumber} | {mfr.productName}</option>
                                 ))}
                             </select>
