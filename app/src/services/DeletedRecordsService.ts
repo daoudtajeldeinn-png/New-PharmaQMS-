@@ -184,13 +184,6 @@ export async function syncTombstonesFromCloud(): Promise<void> {
     }
 
     const local = loadLocalTombstones();
-<<<<<<< HEAD
-    const localMap = new Map(local.map(t => [`${t.tableName}__${t.id}`, t]));
-
-    data.forEach((row: any) => {
-      const key = `${row.table_name}__${row.record_id}`;
-      localMap.set(key, {
-=======
 
     // Merge into a single map keyed by `${tableName}__${recordId}`
     const mergedMap = new Map<string, DeletedRecord>();
@@ -202,7 +195,6 @@ export async function syncTombstonesFromCloud(): Promise<void> {
     for (const row of data as any[]) {
       const key = `${row.table_name}__${row.record_id}`;
       mergedMap.set(key, {
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
         id: row.record_id,
         tableName: row.table_name,
         deletedAt: row.deleted_at,
@@ -211,11 +203,6 @@ export async function syncTombstonesFromCloud(): Promise<void> {
         snapshot: row.snapshot ? JSON.parse(row.snapshot) : undefined,
         recovered: row.recovered || false,
       });
-<<<<<<< HEAD
-    });
-
-    saveLocalTombstones(Array.from(localMap.values()));
-=======
     }
 
     const mergedList = Array.from(mergedMap.values());
@@ -266,7 +253,6 @@ export async function syncTombstonesFromCloud(): Promise<void> {
 
     // Save the fully merged tombstone list locally
     saveLocalTombstones(mergedList);
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
   } catch (err) {
     console.warn('DeletedRecordsService: syncTombstonesFromCloud failed:', err);
   }

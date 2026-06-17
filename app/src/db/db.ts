@@ -60,17 +60,10 @@ export class PharmaDB extends Dexie {
     constructor() {
         super('PharmaQMSDB');
 
-<<<<<<< HEAD
-        // Define schema
-        // We index by 'id' for most. 
-        this.version(1).stores({
-            products: 'id, status, name', // Index frequently queried fields
-=======
         // Define schema - all tables in ONE version to avoid overriding
         this.version(8).stores({
             // Original tables
             products: 'id, status, name',
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
             testMethods: 'id, name, status',
             testResults: 'id, batchNumber, sampleId, status, overallResult',
             capas: 'id, status',
@@ -89,23 +82,6 @@ export class PharmaDB extends Dexie {
             stabilityProtocols: 'id, protocolNumber, status, productId',
             masterFormulas: 'id, productCode, name',
             batchRecords: 'id, batchNumber, status, productId',
-<<<<<<< HEAD
-            activities: 'id, type, timestamp', // Assuming activities have IDs, if not need auto-inc '++id'
-            keyValueStore: 'key'
-        });
-
-this.version(6).stores({
-            rawMaterials: 'id, name, batchNumber, status, type, productionDate, manufacturingDate',
-            // COA Foundry reads/writes many fields (batchNumber, testResults, marketComplaintStatus, etc.).
-            // Keep indexes aligned with the UI lookup and persistence behavior.
-            coaRecords: 'id, productName, coaNumber, batchNumber, status, analysisDate, productionDate, issueDate, manufacturingDate, type',
-            ipqcChecks: 'id, stage, status, batchNumber'
-        });
-
-        this.version(7).stores({
-            materialMovements: 'id, materialId, batchId, type, timestamp',
-            reconciliationRecords: 'id, batchId, productId, percentageYield'
-=======
             activities: 'id, type, timestamp',
             keyValueStore: 'key',
             // v6 tables
@@ -115,7 +91,6 @@ this.version(6).stores({
             // v7 tables
             materialMovements: 'id, materialId, batchId, type, timestamp',
             reconciliationRecords: 'id, batchId, productId, percentageYield',
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
         });
 
     }

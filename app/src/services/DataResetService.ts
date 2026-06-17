@@ -123,22 +123,12 @@ export async function resetAllData(
             }
         }
 
-<<<<<<< HEAD
-        // ============ STAGE 3: Clear Tombstones ============
-=======
         // ============ STAGE 3: Clear Tombstones & LocalStorage QMS Keys ============
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
         try {
             const tombstoneTable = await getDeletedRecordsCloudTableName();
             if (tombstoneTable) {
                 await supabase.from(tombstoneTable).delete().neq('id', '00000000-0000-0000-0000-000000000000');
             }
-<<<<<<< HEAD
-            localStorage.removeItem('pqms_deleted_records');
-            console.log('✅ Cleared tombstones');
-        } catch (err) {
-            const errMsg = `Failed to clear tombstones: ${err}`;
-=======
             
             // Clear all database cache keys in localStorage
             const STORAGE_KEYS_TO_WIPE = [
@@ -168,7 +158,6 @@ export async function resetAllData(
             console.log('✅ Cleared tombstones & localStorage QMS keys');
         } catch (err) {
             const errMsg = `Failed to clear tombstones or localStorage: ${err}`;
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
             console.error(errMsg);
             errors.push(errMsg);
         }

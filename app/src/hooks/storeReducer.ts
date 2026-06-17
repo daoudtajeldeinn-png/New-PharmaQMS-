@@ -154,10 +154,7 @@ export type Action =
     | { type: 'SET_CHEMICAL_REAGENTS'; payload: ChemicalReagent[] }
     | { type: 'ADD_CHEMICAL_REAGENT'; payload: ChemicalReagent }
     | { type: 'UPDATE_CHEMICAL_REAGENT'; payload: ChemicalReagent }
-<<<<<<< HEAD
     | { type: 'DELETE_CHEMICAL_REAGENT'; payload: string }
-=======
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
     | { type: 'SET_REFERENCE_STANDARDS'; payload: ReferenceStandard[] }
     | { type: 'ADD_REFERENCE_STANDARD'; payload: ReferenceStandard }
     | { type: 'UPDATE_REFERENCE_STANDARD'; payload: ReferenceStandard }
@@ -285,11 +282,8 @@ export function appReducer(state: AppState, action: Action): AppState {
             return { ...state, chemicalReagents: [...state.chemicalReagents, action.payload] };
         case 'UPDATE_CHEMICAL_REAGENT':
             return { ...state, chemicalReagents: state.chemicalReagents.map((c) => c.id === action.payload.id ? action.payload : c) };
-<<<<<<< HEAD
         case 'DELETE_CHEMICAL_REAGENT':
             return { ...state, chemicalReagents: state.chemicalReagents.filter((c) => c.id !== action.payload) };
-=======
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
         case 'SET_REFERENCE_STANDARDS':
             return { ...state, referenceStandards: action.payload };
         case 'ADD_REFERENCE_STANDARD':
@@ -497,101 +491,6 @@ export function appReducer(state: AppState, action: Action): AppState {
 export function appReducerWithPersistence(state: AppState, action: Action): AppState {
     const newState = appReducer(state, action);
 
-<<<<<<< HEAD
-    switch (action.type) {
-        case 'ADD_PRODUCT': case 'UPDATE_PRODUCT':
-            db.products.put(action.payload); break;
-        case 'DELETE_PRODUCT':
-            db.products.delete(action.payload); break;
-        case 'ADD_TEST_METHOD': case 'UPDATE_TEST_METHOD':
-            db.testMethods.put(action.payload); break;
-        case 'DELETE_TEST_METHOD':
-            db.testMethods.delete(action.payload); break;
-        case 'ADD_TEST_RESULT': case 'UPDATE_TEST_RESULT':
-            db.testResults.put(action.payload); break;
-        case 'DELETE_TEST_RESULT':
-            db.testResults.delete(action.payload); break;
-        case 'ADD_EQUIPMENT': case 'UPDATE_EQUIPMENT':
-            db.equipment.put(action.payload); break;
-        case 'ADD_CAPA': case 'UPDATE_CAPA':
-            db.capas.put(action.payload); break;
-        case 'DELETE_CAPA':
-            db.capas.delete(action.payload); break;
-        case 'ADD_DEVIATION': case 'UPDATE_DEVIATION':
-            db.deviations.put(action.payload); break;
-        case 'DELETE_DEVIATION':
-            db.deviations.delete(action.payload); break;
-        case 'ADD_CHEMICAL_REAGENT': case 'UPDATE_CHEMICAL_REAGENT':
-            db.chemicalReagents.put(action.payload); break;
-        case 'ADD_REFERENCE_STANDARD': case 'UPDATE_REFERENCE_STANDARD':
-            db.referenceStandards.put(action.payload); break;
-        case 'ADD_QUALITY_SYSTEM': case 'UPDATE_QUALITY_SYSTEM':
-            db.qualitySystems.put(action.payload); break;
-        case 'ADD_TRAINING_RECORD': case 'UPDATE_TRAINING_RECORD':
-            db.trainingRecords.put(action.payload); break;
-        case 'ADD_AUDIT': case 'UPDATE_AUDIT':
-            db.audits.put(action.payload); break;
-        case 'DELETE_AUDIT':
-            db.audits.delete(action.payload); break;
-        case 'ADD_SUPPLIER': case 'UPDATE_SUPPLIER':
-            db.suppliers.put(action.payload); break;
-        case 'ADD_CHANGE_CONTROL': case 'UPDATE_CHANGE_CONTROL':
-            db.changeControls.put(action.payload); break;
-        case 'ADD_MARKET_COMPLAINT': case 'UPDATE_MARKET_COMPLAINT':
-            db.marketComplaints.put(action.payload); break;
-        case 'DELETE_MARKET_COMPLAINT':
-            db.marketComplaints.delete(action.payload); break;
-        case 'ADD_PRODUCT_RECALL': case 'UPDATE_PRODUCT_RECALL':
-            db.productRecalls.put(action.payload); break;
-        case 'DELETE_PRODUCT_RECALL':
-            db.productRecalls.delete(action.payload); break;
-        case 'ADD_MFR': case 'UPDATE_MFR':
-            db.masterFormulas.put(action.payload); break;
-        case 'DELETE_MFR':
-            db.masterFormulas.delete(action.payload); break;
-        case 'ADD_BMR': case 'UPDATE_BMR':
-            db.batchRecords.put(action.payload); break;
-        case 'DELETE_BMR':
-            db.batchRecords.delete(action.payload); break;
-        case 'ADD_RAW_MATERIAL': case 'UPDATE_RAW_MATERIAL':
-            db.rawMaterials.put(action.payload); break;
-        case 'DELETE_RAW_MATERIAL':
-            db.rawMaterials.delete(action.payload); break;
-        case 'ADD_STABILITY_PROTOCOL': case 'UPDATE_STABILITY_PROTOCOL':
-            db.stabilityProtocols.put(action.payload); break;
-        case 'DELETE_STABILITY_PROTOCOL':
-            db.stabilityProtocols.delete(action.payload); break;
-        case 'ADD_IPQC_CHECK': case 'UPDATE_IPQC_CHECK':
-            db.ipqcChecks.put(action.payload); break;
-        case 'DELETE_IPQC_CHECK':
-            db.ipqcChecks.delete(action.payload); break;
-        case 'ADD_COA_RECORD': case 'UPDATE_COA_RECORD':
-            db.coaRecords.put(action.payload); break;
-        case 'DELETE_COA_RECORD':
-            db.coaRecords.delete(action.payload); break;
-        case 'ADD_MATERIAL_MOVEMENT': case 'UPDATE_MATERIAL_MOVEMENT':
-            db.materialMovements.put(action.payload); break;
-        case 'DELETE_MATERIAL_MOVEMENT':
-            db.materialMovements.delete(action.payload); break;
-        case 'ADD_RECONCILIATION_RECORD': case 'UPDATE_RECONCILIATION_RECORD':
-            db.reconciliationRecords.put(action.payload); break;
-        case 'DELETE_RECONCILIATION_RECORD':
-            db.reconciliationRecords.delete(action.payload); break;
-        case 'ADD_ACTIVITY':
-            if ((action.payload as any).id) db.activities.put(action.payload);
-            break;
-        case 'ADD_TEST_METHOD_PDF': {
-            const { testMethodId, pdfUrl } = action.payload;
-            void testMethodId;
-            void pdfUrl;
-            // Note: Component should pass full updated TestMethod or handle separately
-            // For now, skip DB put to avoid type error; use UPDATE_TEST_METHOD in component
-            break;
-          }
-        case 'FETCH_BATCH_TESTS_FOR_COA':
-            // No direct DB change, handled in component
-            break;
-=======
     try {
         switch (action.type) {
             case 'ADD_PRODUCT': case 'UPDATE_PRODUCT':
@@ -621,6 +520,8 @@ export function appReducerWithPersistence(state: AppState, action: Action): AppS
                 db.chemicalReagents.put(action.payload); 
                 console.log('✅ Chemical Reagent saved successfully');
                 break;
+            case 'DELETE_CHEMICAL_REAGENT':
+                db.chemicalReagents.delete(action.payload); break;
             case 'ADD_REFERENCE_STANDARD': case 'UPDATE_REFERENCE_STANDARD':
                 console.log('💾 Saving Reference Standard to IndexedDB:', action.payload);
                 db.referenceStandards.put(action.payload); 
@@ -687,10 +588,12 @@ export function appReducerWithPersistence(state: AppState, action: Action): AppS
                 void pdfUrl;
                 break;
             }
+            case 'FETCH_BATCH_TESTS_FOR_COA':
+                // No direct DB change, handled in component
+                break;
         }
     } catch (error) {
         console.error('❌ Error saving to IndexedDB:', error);
->>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2
     }
 
     return newState;
