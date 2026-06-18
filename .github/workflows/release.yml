@@ -1,31 +1,31 @@
-name: Build and Release Electron App
+name: Build and Release Electron
 
 on:
   push:
     tags:
-      - 'v*' # Triggers workflow when a tag starting with 'v' is pushed (e.g., v4.2.7)
+      - 'v*'
+  workflow_dispatch:
 
 jobs:
   release:
     runs-on: windows-latest
-    permissions:
-      contents: write # Required to create releases and upload assets
 
     steps:
-      - name: Check out Git repository
+      - name: Check out git repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 20
+          cache: 'npm'
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: npm install
 
-      - name: Build and Publish Release
+      - name: Build and Publish
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DEBUG: electron-builder
-          CSC_LINK: "" # Disable code signing in CI to prevent failures without certificates
-        run: npm run electron:build -- --publish always
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: npm run electron:publish

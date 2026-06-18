@@ -14,6 +14,27 @@ import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
+// ==================== Helper: Load Company Settings ====================
+interface CompanySettings {
+  name: string;
+  address: string;
+  phone: string;
+  email: string;
+}
+
+function loadCompanySettings(): CompanySettings {
+  try {
+    const stored = localStorage.getItem('pqms_company_settings');
+    if (stored) return JSON.parse(stored);
+  } catch { /* fallback */ }
+  return {
+    name: 'National Pharmaceutical Company',
+    address: 'Khartoum, Sudan',
+    phone: '+249 123 456 789',
+    email: 'info@pharma.com',
+  };
+}
+
 export function BMRManagerPage() {
     const { state, dispatch } = useStore();
     const { canModify, canDelete, user } = useRoleAccess();
@@ -27,6 +48,9 @@ export function BMRManagerPage() {
         status: 'Issuance'
     });
     const printRef = useRef<HTMLDivElement>(null);
+    
+    // Load company settings from Global Settings
+    const companySettings = loadCompanySettings();
 
     const handlePrint = useReactToPrint({
         contentRef: printRef,
@@ -317,9 +341,9 @@ const handleUpdateStep = (stepNumber: number, updates: StepUpdate) => {
                                         <ShieldCheck className="h-10 w-10" />
                                     </div>
                                     <div>
-                                        <h1 className="text-4xl font-black text-slate-900 tracking-tighter leading-none mb-1">PHARMAQMS ENTERPRISE</h1>
+                                        <h1 className="text-4xl font-black text-slate-900 tracking-tighter leading-none mb-1">{companySettings.name}</h1>
                                         <p className="text-[11px] font-black text-emerald-600 uppercase tracking-[0.3em] mb-1">Quality Management System | GxP COMPLIANCE</p>
-                                        <p className="text-[10px] font-bold text-slate-500 leading-tight">Industrial Zone, Phase 2, Pharmaceutical District<br />Cairo, Egypt | Standard Operating Procedure: SOP-PRD-001</p>
+                                        <p className="text-[10px] font-bold text-slate-500 leading-tight">{companySettings.address}<br />Standard Operating Procedure: SOP-PRD-001</p>
                                     </div>
                                 </div>
                                 <div className="text-right">

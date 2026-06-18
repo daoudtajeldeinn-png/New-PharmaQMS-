@@ -13,6 +13,27 @@ import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { usePrintExport } from '@/hooks/usePrintExport';
 import { toast } from 'sonner';
 
+// ==================== Helper: Load Company Settings ====================
+interface CompanySettings {
+  name: string;
+  address: string;
+  phone: string;
+  email: string;
+}
+
+function loadCompanySettings(): CompanySettings {
+  try {
+    const stored = localStorage.getItem('pqms_company_settings');
+    if (stored) return JSON.parse(stored);
+  } catch { /* fallback */ }
+  return {
+    name: 'National Pharmaceutical Company',
+    address: 'Khartoum, Sudan',
+    phone: '+249 123 456 789',
+    email: 'info@pharma.com',
+  };
+}
+
 export function MFRManagerPage() {
     const { state, dispatch } = useStore();
     const { canModify, canDelete, user } = useRoleAccess();
@@ -25,6 +46,9 @@ export function MFRManagerPage() {
     });
     const { printRef, handlePrint, exportToPDF } = usePrintExport();
     const [isEditing, setIsEditing] = useState(false);
+    
+    // Load company settings from Global Settings
+    const companySettings = loadCompanySettings();
 
     const handleSaveMFR = () => {
         if (!formData.productName || !formData.mfrNumber) {
@@ -174,9 +198,9 @@ export function MFRManagerPage() {
                                         <Layers className="h-10 w-10" />
                                     </div>
                                     <div>
-                                        <h1 className="text-4xl font-black text-slate-900 tracking-tighter leading-none mb-1">PHARMAQMS ENTERPRISE</h1>
+                                        <h1 className="text-4xl font-black text-slate-900 tracking-tighter leading-none mb-1">{companySettings.name}</h1>
                                         <p className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.3em] mb-1">Quality Management System | GxP COMPLIANCE</p>
-                                        <p className="text-[10px] font-bold text-slate-500 leading-tight">Industrial Zone, Phase 2, Pharmaceutical District<br />Cairo, Egypt | Document Control: MFR-SYS-V2</p>
+                                        <p className="text-[10px] font-bold text-slate-500 leading-tight">{companySettings.address}<br />Document Control: MFR-SYS-V2</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
