@@ -1,7 +1,6 @@
 import { useState, useRef } from 'react';
 import { useStore } from '@/hooks/useStore';
-import { useRoleAccess } from '@/hooks/useRoleAccess';
-import { Download, Printer, Plus, Activity, AlertCircle, Database, ShieldCheck, Lock } from 'lucide-react';
+import { Download, Printer, Plus, Activity, AlertCircle, Database, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -18,11 +17,20 @@ const coaTypes: COAType[] = ['Finished Product', 'Raw Material', 'Water Analysis
 import { backupSystemData } from '@/services/BackupService';
 import { SignatureModal } from '@/components/security/SignatureModal';
 import type { COARecord, COAType } from '@/types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+// Load company settings from localStorage (same source as Settings page)
+function loadCompanySettings() {
+    try {
+        const stored = localStorage.getItem('pqms_company_settings');
+        if (stored) return JSON.parse(stored);
+    } catch { /* fallback */ }
+    return { name: 'National Pharmaceutical Company', address: 'Khartoum, Sudan' };
+}
 
 
 export function COAManagerPage() {
     const { state, dispatch } = useStore();
-    const { canModify, canDelete, user } = useRoleAccess();
     const records = state.coaRecords || [];
     const [activeTab, setActiveTab] = useState('overview');
     const [showForm, setShowForm] = useState(false);
@@ -30,11 +38,12 @@ export function COAManagerPage() {
     const [isEditing, setIsEditing] = useState(false);
     const [isSignatureOpen, setIsSignatureOpen] = useState(false);
     const [pendingCOA, setPendingCOA] = useState<COARecord | null>(null);
+    const companySettings = loadCompanySettings();
     const initialFormState: Partial<COARecord> = {
         testResults: [{ test: '', specification: '', result: '', status: 'Pass' }],
         type: 'Finished Product',
-        manufacturer: 'Pharma Corp',
-        address: 'Industrial Zone, Phase 2, Pharmaceutical District',
+        manufacturer: companySettings.name,
+        address: companySettings.address,
         manufacturingDate: '',
         analysisDate: '',
         status: 'Draft',
@@ -43,117 +52,10 @@ export function COAManagerPage() {
     const [formData, setFormData] = useState<Partial<COARecord>>(initialFormState);
     const printRef = useRef<HTMLDivElement>(null);
 
-    const sortFinishedProductTests = (tests: any[]): any[] => {
-        const getTestOrderScore = (testName: string): number => {
-            const name = (testName || '').toLowerCase().trim();
-            
-            // 1. Description or Appearance
-            if (name.includes('description') || name.includes('appearance') || name.includes('characters')) {
-                return 10;
-            }
-            
-            // 2. Identification
-            if (name.includes('identification') || name.includes('identity')) {
-                if (name.includes('ir') || name.includes('infra')) {
-                    return 21; // Identification A: IR
-                }
-                if (name.includes('colour') || name.includes('color') || name.includes('reaction')) {
-                    return 22; // Identification B: colour reaction
-                }
-                if (name.includes('melting')) {
-                    return 23; // Identification C: Melting Point
-                }
-                return 24; // Other Identification
-            }
-            if (name.includes('melting point') || name.includes('melting range')) {
-                return 23; // Identification C: Melting Point
-            }
-            
-            // 3. uniformity of Weight
-            if (name.includes('uniformity') || name.includes('weight') || name.includes('variation') || name.includes('average weight')) {
-                return 30;
-            }
-            
-            // 4. disintegration
-            if (name.includes('disintegration')) {
-                return 40;
-            }
-            
-            // 5. Dissolution
-            if (name.includes('dissolution')) {
-                return 50;
-            }
-            
-            // 6. Related substance
-            if (name.includes('related') || name.includes('impurity') || name.includes('impurities') || name.includes('degradation')) {
-                return 60;
-            }
-            
-            // 7. Friability
-            if (name.includes('friability')) {
-                return 70;
-            }
-            
-            // 8. thickness
-            if (name.includes('thickness')) {
-                return 80;
-            }
-            
-            // 9. Hardness
-            if (name.includes('hardness')) {
-                return 90;
-            }
-            
-            return 999; // Append any other tests at the end
-        };
-
-        return [...tests].sort((a, b) => getTestOrderScore(a.test) - getTestOrderScore(b.test));
-    };
-
-    const handlePrint = () => {
-        if (!printRef.current) return;
-        const printContent = printRef.current.innerHTML;
-        let iframe = document.getElementById('print-iframe') as HTMLIFrameElement;
-        if (!iframe) {
-            iframe = document.createElement('iframe');
-            iframe.id = 'print-iframe';
-            iframe.style.position = 'fixed';
-            iframe.style.right = '0';
-            iframe.style.bottom = '0';
-            iframe.style.width = '0';
-            iframe.style.height = '0';
-            iframe.style.border = '0';
-            document.body.appendChild(iframe);
-        }
-        const doc = iframe.contentWindow?.document || iframe.contentDocument;
-        if (!doc) return;
-        doc.open();
-        doc.write(`
-            <html>
-                <head>
-                    <title>${selectedCOA ? `COA-${selectedCOA.coaNumber}` : 'COA'}</title>
-                </head>
-                <body>
-                    <div class="print-a4-container">${printContent}</div>
-                </body>
-            </html>
-        `);
-        const head = doc.getElementsByTagName('head')[0];
-        Array.from(document.head.querySelectorAll('style, link[rel="stylesheet"]')).forEach((el) => {
-            if (el.tagName === 'LINK') {
-                const href = el.getAttribute('href');
-                if (href && (href.includes('fonts.googleapis.com') || href.includes('fonts.gstatic.com'))) {
-                    return; // Prevent offline timeout delays
-                }
-            }
-            head.appendChild(el.cloneNode(true));
-        });
-        doc.close();
-        setTimeout(() => {
-            iframe.contentWindow?.focus();
-            iframe.contentWindow?.print();
-        }, 100);
-    };
+    const handlePrint = useReactToPrint({
+        contentRef: printRef,
+        documentTitle: selectedCOA ? `COA-${selectedCOA.coaNumber}` : 'COA',
+    });
 
     const handleDownloadPDF = async () => {
         if (!printRef.current || !selectedCOA) return;
@@ -168,17 +70,12 @@ export function COAManagerPage() {
     };
 
     const handleSaveCOA = (isDraft: boolean = false) => {
-        if (!canModify) {
-            toast.error('Access Denied: Only IT Admin or QA Admin can create or modify COA records.');
-            return;
-        }
         if (!isDraft && (!formData.productName || !formData.batchNumber)) {
             toast.error('Please fill mandatory fields (Product Name & Batch ID)');
             return;
         }
 
         const coaId = isEditing ? formData.id! : Math.random().toString(36).substr(2, 9);
-        const rawTests = formData.testResults || [];
         const record: COARecord = {
             id: coaId,
             type: formData.type || 'Finished Product',
@@ -197,9 +94,9 @@ export function COAManagerPage() {
             analysisDate: formData.analysisDate || '',
             expiryDate: formData.expiryDate || '',
             issueDate: formData.issueDate || new Date().toISOString().split('T')[0],
-            manufacturer: formData.manufacturer || 'Pharma Corp',
-            address: formData.address || 'Industrial Zone, Phase 2, Pharmaceutical District',
-            testResults: formData.type === 'Finished Product' ? sortFinishedProductTests(rawTests) : rawTests,
+            manufacturer: formData.manufacturer || companySettings.name,
+            address: formData.address || companySettings.address,
+            testResults: formData.testResults || [],
             marketComplaintStatus: formData.marketComplaintStatus || 'Verified and Compliant',
             analyzedBy: formData.analyzedBy || '',
             checkedBy: formData.checkedBy || '',
@@ -278,24 +175,18 @@ export function COAManagerPage() {
                 (categoryOrder[a.category] || 99) - (categoryOrder[b.category] || 99)
             );
 
-            const mappedTests = sortedTests.map(t => ({
-                test: t.test,
-                specification: t.specification,
-                result: '',
-                status: 'Pass' as const
-            }));
-
-            const finalTests = formData.type === 'Finished Product'
-                ? sortFinishedProductTests(mappedTests)
-                : mappedTests;
-
             setFormData({
                 ...formData,
                 productName: monograph.name,
                 strength: (monograph as any).strength || '',
                 dosageForm: (monograph as any).dosageForm || '',
-                manufacturer: monograph.standard === 'In-House' ? 'In-House' : 'Pharma Corp',
-                testResults: finalTests
+                manufacturer: monograph.standard === 'In-House' ? 'In-House' : companySettings.name,
+                testResults: sortedTests.map(t => ({
+                    test: t.test,
+                    specification: t.specification,
+                    result: '',
+                    status: 'Pass'
+                }))
             });
         }
     };
@@ -338,12 +229,10 @@ export function COAManagerPage() {
                                         <Button size="icon" variant="ghost" onClick={() => { setSelectedCOA(record); setTimeout(handleDownloadPDF, 100); }}>
                                             <Download className="h-4 w-4" />
                                         </Button>
-                                        {canModify && (
-                                          <Button size="icon" variant="ghost" onClick={() => { setFormData(record); setIsEditing(true); setShowForm(true); }} className="text-indigo-600">
-                                              <Activity className="h-4 w-4" />
-                                          </Button>
-                                        )}
-                                        {canModify && record.status !== 'Approved' && record.status !== 'Released' && (
+                                        <Button size="icon" variant="ghost" onClick={() => { setFormData(record); setIsEditing(true); setShowForm(true); }} className="text-indigo-600">
+                                            <Activity className="h-4 w-4" />
+                                        </Button>
+                                        {record.status !== 'Approved' && record.status !== 'Released' && (
                                             <Button size="icon" variant="ghost" onClick={() => {
                                                 if (window.confirm(`QA AUTHORIZATION: Are you sure you want to OFFICIALLY RELEASE this COA for ${record.productName}?`)) {
                                                     dispatch({ type: 'UPDATE_COA_RECORD', payload: { ...record, status: 'Released' } });
@@ -352,23 +241,6 @@ export function COAManagerPage() {
                                             }} className="text-emerald-600" title="QA Release">
                                                 <ShieldCheck className="h-4 w-4" />
                                             </Button>
-                                        )}
-                                        {canDelete && (
-                                          <Button size="icon" variant="ghost" className="text-red-500 hover:text-red-700"
-                                            onClick={() => {
-                                              if (window.confirm(`ADMIN DELETE: Permanently remove COA ${record.coaNumber}? This removes it for ALL users.`)) {
-                                                import('@/services/DeletedRecordsService').then(({ recordDeletion }) => {
-                                                  recordDeletion('coaRecords', record.id, user?.username || 'admin', record, 'Admin deletion');
-                                                });
-                                                dispatch({ type: 'DELETE_COA_RECORD', payload: record.id });
-                                                toast.success('COA permanently deleted.');
-                                              }
-                                            }}>
-                                            <Lock className="h-4 w-4" />
-                                          </Button>
-                                        )}
-                                        {!canModify && !canDelete && (
-                                          <span className="text-[9px] text-slate-400 flex items-center gap-1"><Lock className="h-3 w-3" /> Read Only</span>
                                         )}
                                     </div>
                                 </td>
@@ -392,15 +264,9 @@ export function COAManagerPage() {
                     <Button onClick={backupSystemData} variant="outline" className="gap-2 border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100">
                         <Database className="h-4 w-4" /> Backup System
                     </Button>
-                    {canModify ? (
-                      <Button onClick={() => { setFormData(initialFormState); setShowForm(true); }} className="gap-2 bg-blue-600 shadow-lg">
-                          <Plus className="h-4 w-4" /> Issue New COA
-                      </Button>
-                    ) : (
-                      <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-lg text-slate-400 text-xs font-bold">
-                          <Lock className="h-3 w-3" /> View Only — Admin Required
-                      </div>
-                    )}
+                    <Button onClick={() => { setFormData(initialFormState); setShowForm(true); }} className="gap-2 bg-blue-600 shadow-lg">
+                        <Plus className="h-4 w-4" /> Issue New COA
+                    </Button>
                 </div>
             </div>
 
@@ -458,7 +324,34 @@ export function COAManagerPage() {
 
                         {/* Form Fields */}
                         <div className="grid grid-cols-2 col-span-2 gap-4">
-                            <div className="space-y-1"><Label>Product Name*</Label><Input value={formData.productName || ''} onChange={e => setFormData({ ...formData, productName: e.target.value })} className="border-slate-300" /></div>
+                            <div className="space-y-1">
+                                <Label>Product Name*</Label>
+                                {/* Dynamic dropdown: MFR products + raw material names + registered products */}
+                                {(() => {
+                                    const mfrNames = Object.values(state.masterFormulas || {}).map(m => m.productName);
+                                    const rmNames = (state.rawMaterials || []).map(rm => rm.name);
+                                    const productNames = (state.products || []).map(p => p.name);
+                                    const allNames = Array.from(new Set([...mfrNames, ...productNames, ...rmNames])).filter(Boolean);
+                                    return allNames.length > 0 ? (
+                                        <div className="flex gap-1">
+                                            <Select
+                                                value={allNames.includes(formData.productName || '') ? (formData.productName || '') : ''}
+                                                onValueChange={(val) => setFormData({ ...formData, productName: val })}
+                                            >
+                                                <SelectTrigger className="border-slate-300 flex-1">
+                                                    <SelectValue placeholder="Select registered product..." />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {mfrNames.length > 0 && <><SelectItem value="__mfr_header__" disabled className="text-[10px] font-bold text-slate-400 uppercase">— MFR Products —</SelectItem>{mfrNames.map(n => <SelectItem key={`mfr-${n}`} value={n}>{n}</SelectItem>)}</>}
+                                                    {productNames.length > 0 && <><SelectItem value="__prod_header__" disabled className="text-[10px] font-bold text-slate-400 uppercase">— Registered Products —</SelectItem>{productNames.map(n => <SelectItem key={`prod-${n}`} value={n}>{n}</SelectItem>)}</>}
+                                                    {rmNames.length > 0 && <><SelectItem value="__rm_header__" disabled className="text-[10px] font-bold text-slate-400 uppercase">— Raw Materials —</SelectItem>{rmNames.map(n => <SelectItem key={`rm-${n}`} value={n}>{n}</SelectItem>)}</>}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    ) : null;
+                                })()}
+                                <Input value={formData.productName || ''} onChange={e => setFormData({ ...formData, productName: e.target.value })} className="border-slate-300" placeholder="Or type product name here..." />
+                            </div>
                             <div className="space-y-1"><Label>Analysis Number</Label><Input value={formData.analysisNo || ''} onChange={e => setFormData({ ...formData, analysisNo: e.target.value })} className="border-slate-300" /></div>
                             <div className="space-y-1"><Label>Strength</Label><Input value={formData.strength || ''} onChange={e => setFormData({ ...formData, strength: e.target.value })} className="border-slate-300" /></div>
                             <div className="space-y-1"><Label>Dosage Form</Label><Input value={formData.dosageForm || ''} onChange={e => setFormData({ ...formData, dosageForm: e.target.value })} className="border-slate-300" /></div>
@@ -475,7 +368,7 @@ export function COAManagerPage() {
                             <div className="space-y-1"><Label>Trade Name (Brand)</Label><Input value={formData.brandName || ''} onChange={e => setFormData({ ...formData, brandName: e.target.value })} className="border-slate-300" /></div>
                             <div className="space-y-1"><Label>Quantity (QTY)</Label><Input value={formData.quantity || ''} onChange={e => setFormData({ ...formData, quantity: e.target.value })} className="border-slate-300" /></div>
                             <div className="space-y-1 col-span-2">
-                              <Button 
+                              <Button
                                 type="button"
                                 onClick={() => {
                                   if (!formData.batchNumber) {
@@ -487,11 +380,11 @@ export function COAManagerPage() {
                                     const batchQuery = formData.batchNumber?.trim().toLowerCase();
                                     const material = state.rawMaterials.find(m => m.batchNumber?.trim().toLowerCase() === batchQuery);
                                     if (material && material.tests && material.tests.length > 0) {
-                                      const fetchedTests = material.tests.map((t: any) => ({
-                                        test: t?.name ?? t?.test ?? t?.testName ?? '',
-                                        specification: t?.spec ?? t?.specification ?? '',
-                                        result: String(t?.result ?? t?.value ?? t?.observed ?? ''),
-                                        status: t?.status === 'Pass' ? 'Pass' : t?.status === 'Fail' ? 'Fail' : 'Pending'
+                                      const fetchedTests = material.tests.map(t => ({
+                                        test: t.name,
+                                        specification: t.spec,
+                                        result: String(t.result || ''),
+                                        status: t.status === 'Pass' ? 'Pass' : t.status === 'Fail' ? 'Fail' : 'Pending'
                                       }));
                                       setFormData({
                                         ...formData,
@@ -512,66 +405,17 @@ export function COAManagerPage() {
                                     const batchQuery = formData.batchNumber?.trim().toLowerCase();
                                     const results = state.testResults.filter(r => r.batchNumber?.trim().toLowerCase() === batchQuery);
                                     if (results.length > 0) {
-                                      // Look up product and batch details to auto-populate metadata
-                                      const prodId = results[0].productId;
-                                      const product = state.products.find(p => p.id === prodId) || 
-                                                      state.products.find(p => p.batchNumber?.trim().toLowerCase() === batchQuery);
-                                      const batchRecord = state.batchRecords.find(b => b.batchNumber?.trim().toLowerCase() === batchQuery);
-
-                                      const fetchedTests = results.flatMap(r => {
-                                        // Find the test method to get the actual specifications
-                                        const method = state.testMethods.find(m => m.id === r.testMethodId);
-                                        return r.parameters.map(p => {
-                                          const paramSpec = method?.parameters.find(ps => ps.id === p.parameterId);
-                                          let specString = '';
-                                          
-                                          if (paramSpec?.isQualitative) {
-                                            specString = paramSpec.qualitativeSpecification || 'Descriptive';
-                                          } else if (paramSpec) {
-                                            const min = paramSpec.minValue !== undefined ? paramSpec.minValue : '';
-                                            const max = paramSpec.maxValue !== undefined ? paramSpec.maxValue : '';
-                                            specString = min || max ? `${min}${min && max ? ' - ' : ''}${max} ${paramSpec.unit || ''}` : 'N/A';
-                                          }
-
-                                          return {
-                                            test: p.parameterName,
-                                            specification: specString,
-                                            result: String(p.value || ''),
-                                            status: p.result === 'Pass' ? 'Pass' : 'Fail'
-                                          };
-                                        });
-                                      });
-                                      const finalTests = formData.type === 'Finished Product'
-                                        ? sortFinishedProductTests(fetchedTests)
-                                        : fetchedTests;
-
-                                      // Determine values
-                                      const productName = product?.name || batchRecord?.productName || '';
-                                      const genericName = product?.genericName || '';
-                                      const brandName = product?.brandName || product?.name || batchRecord?.productName || '';
-                                      const dosageForm = product?.dosageForm || '';
-                                      const strength = product?.strength || '';
-                                      const manufacturingDate = batchRecord?.mfgDate || batchRecord?.manufacturingDate || product?.manufacturingDate || '';
-                                      const expiryDate = batchRecord?.expiryDate || product?.expiryDate || '';
-                                      const quantity = batchRecord?.batchSize ? `${batchRecord.batchSize} ${batchRecord.batchSizeUnit || 'kg'}` : (product?.quantity ? `${product.quantity} ${product.unit || 'units'}` : '');
-                                      const manufacturer = product?.manufacturer || 'Self Manufactured';
-                                      const address = product?.address || 'GMP Certified Production Block A';
-
+                                      const fetchedTests = results.flatMap(r => r.parameters.map(p => ({
+                                        test: p.parameterName,
+                                        specification: `${p.minValue || ''} - ${p.maxValue || ''} ${p.unit || ''}`,
+                                        result: String(p.value || ''),
+                                        status: p.result === 'Pass' ? 'Pass' : 'Fail'
+                                      })));
                                       setFormData({
                                         ...formData,
-                                        productName,
-                                        genericName,
-                                        brandName,
-                                        dosageForm,
-                                        strength,
-                                        manufacturingDate,
-                                        expiryDate,
-                                        quantity,
-                                        manufacturer,
-                                        address,
-                                        testResults: finalTests as any
+                                        testResults: fetchedTests as any
                                       });
-                                      toast.success(`Fetched ${fetchedTests.length} parameters and batch metadata from Test Results`);
+                                      toast.success(`Fetched ${fetchedTests.length} parameters from Test Results`);
                                     } else {
                                       toast.warning('No batch test results found in Laboratory Hub');
                                     }
@@ -629,12 +473,12 @@ export function COAManagerPage() {
                 <div style={{ position: 'absolute', left: '-9999px' }}>
                     <div ref={printRef} className="p-12 bg-white text-black print-a4-container" style={{ width: '210mm', minHeight: '297mm', fontFamily: 'Times New Roman, serif' }}>
                         <style>{`
-                            @media print { 
-                                @page { size: A4; margin: 15mm; } 
+                            @media print {
+                                @page { size: A4; margin: 15mm; }
                                 .print-a4-container { width: 100% !important; margin: 0 !important; padding: 0 !important; }
-                                table { width: 100%; border-collapse: collapse; page-break-inside: auto; margin-bottom: 20px; } 
-                                tr { page-break-inside: avoid; page-break-after: auto; } 
-                                thead { display: table-header-group; } 
+                                table { width: 100%; border-collapse: collapse; page-break-inside: auto; margin-bottom: 20px; }
+                                tr { page-break-inside: avoid; page-break-after: auto; }
+                                thead { display: table-header-group; }
                                 th, td { border: 1px solid black; padding: 8px; text-align: left; }
                             }
                         `}</style>
@@ -671,18 +515,7 @@ export function COAManagerPage() {
                         <h3 className="font-bold mb-2 underline uppercase">Analytical Results:</h3>
                         <table className="w-full">
                             <thead><tr className="bg-gray-100"><th>Test Parameter</th><th>Specification</th><th>Observed Result</th><th className="text-center">Inference</th></tr></thead>
-                            <tbody>
-                                {(selectedCOA.type === 'Finished Product' ? sortFinishedProductTests(selectedCOA.testResults) : selectedCOA.testResults).map((t, i) => (
-                                    <tr key={i}>
-                                        <td className="font-semibold">{t.test}</td>
-                                        <td>{t.specification}</td>
-                                        <td className="font-bold">{t.result}</td>
-                                        <td className="text-center font-bold">
-                                            {t.status === 'Pass' ? 'COMPLIES' : t.status === 'Fail' ? 'DOES NOT COMPLY' : t.status}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
+                            <tbody>{selectedCOA.testResults.map((t, i) => (<tr key={i}><td className="font-semibold">{t.test}</td><td>{t.specification}</td><td className="font-bold">{t.result}</td><td className="text-center font-bold">{t.status === 'Pass' ? 'COMPLIES' : t.status === 'Fail' ? 'DOES NOT COMPLY' : t.status}</td></tr>))}</tbody>
                         </table>
 
                         <div className="mt-6 p-4 border border-black italic text-sm">
