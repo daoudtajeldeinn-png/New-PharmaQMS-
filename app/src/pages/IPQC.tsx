@@ -38,7 +38,7 @@ import {
   FileText,
   Printer,
 } from 'lucide-react';
-import { masterFormulas } from '@/data/mfrData';
+// Dynamic product list comes from state.masterFormulas (merged static + user-added)
 import { useReactToPrint } from 'react-to-print';
 
 
@@ -299,12 +299,23 @@ export function IPQCPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <Label className="text-[10px] font-black uppercase text-slate-500">MFR Reference</Label>
-                <Select value={newCheck.productName} onValueChange={(val) => setNewCheck({ ...newCheck, productName: val })}>
-                  <SelectTrigger className="font-bold text-indigo-900"><SelectValue placeholder="Select Product..." /></SelectTrigger>
-                  <SelectContent>
-                    {Object.values(masterFormulas).map(m => <SelectItem key={m.id} value={m.productName} className="font-bold">{m.productName}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                {Object.values(state.masterFormulas || {}).length > 0 ? (
+                  <Select value={newCheck.productName} onValueChange={(val) => setNewCheck({ ...newCheck, productName: val })}>
+                    <SelectTrigger className="font-bold text-indigo-900"><SelectValue placeholder="Select Product..." /></SelectTrigger>
+                    <SelectContent>
+                      {Object.values(state.masterFormulas || {}).map(m => (
+                        <SelectItem key={m.id} value={m.productName} className="font-bold">{m.productName}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    placeholder="Enter product name..."
+                    className="font-bold text-indigo-900"
+                    value={newCheck.productName || ''}
+                    onChange={e => setNewCheck({ ...newCheck, productName: e.target.value })}
+                  />
+                )}
               </div>
               <div className="space-y-1">
                 <Label className="text-[10px] font-black uppercase text-slate-500">Stage</Label>
@@ -512,4 +523,3 @@ export function IPQCPage() {
     </div>
   );
 }
-
