@@ -597,7 +597,7 @@ export function LoginPage({ forcedLicenseLock = false }: { forcedLicenseLock?: b
           {!import.meta.env.DEV && (
             <div className="mt-12 pt-12 border-t border-white/5 text-center">
               <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-700">
-                PharmaQMS Enterprise v4.3.3 • Licensed Production Environment
+                PharmaQMS Enterprise v4.3.0 • Licensed Production Environment
               </p>
             </div>
           )}

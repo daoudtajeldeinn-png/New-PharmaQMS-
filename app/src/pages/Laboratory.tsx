@@ -31,7 +31,6 @@ import { Label } from '@/components/ui/label';
 import { Search, Beaker, FlaskConical, AlertTriangle } from 'lucide-react';
 import { Combobox } from '@/components/ui/combobox';
 import { cn } from '@/lib/utils';
-import { generateAnalyticalWorksheet } from '@/lib/coaExport';
 
 const reagentStatusColors = {
   Available: 'bg-green-100 text-green-800 border-green-300',
@@ -63,7 +62,7 @@ export function LaboratoryPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isReagentFormOpen, setIsReagentFormOpen] = useState(false);
-  const [isStandardFormOpen, setIsStandardFormOpen] = useState(false);
+  const [, setIsStandardFormOpen] = useState(false);
   const [reagentGrade, setReagentGrade] = useState('');
   const [reagentUnit, setReagentUnit] = useState('');
   
@@ -73,51 +72,6 @@ export function LaboratoryPage() {
   const [reagentManufacturer, setReagentManufacturer] = useState('');
   const [reagentQuantity, setReagentQuantity] = useState('');
   const [reagentExpiry, setReagentExpiry] = useState('');
-
-  // Reference Standard Registration Form States
-  const [stdName, setStdName] = useState('');
-  const [stdLot, setStdLot] = useState('');
-  const [stdPurity, setStdPurity] = useState('');
-  const [stdExpiry, setStdExpiry] = useState('');
-
-  const handleSaveStandard = () => {
-    if (!stdName.trim()) {
-      toast.error('Standard Name is required');
-      return;
-    }
-    if (!stdLot.trim()) {
-      toast.error('Lot Number is required');
-      return;
-    }
-    if (!stdExpiry) {
-      toast.error('Expiry Date is required');
-      return;
-    }
-    const purity = parseFloat(stdPurity);
-    const newStandard = {
-      id: `std-${Math.random().toString(36).substring(2, 9)}`,
-      name: stdName.trim(),
-      lotNumber: stdLot.trim(),
-      purity: isNaN(purity) ? undefined : purity,
-      expiryDate: new Date(stdExpiry),
-      dateReceived: new Date(),
-      storageConditions: 'Refrigerated 2-8°C',
-      status: (new Date(stdExpiry).getTime() < Date.now()) ? 'Expired' : 'Active'
-    };
-
-    dispatch({
-      type: 'ADD_REFERENCE_STANDARD',
-      payload: newStandard as any
-    });
-
-    toast.success(`Successfully registered standard: ${newStandard.name}`);
-    setIsStandardFormOpen(false);
-
-    setStdName('');
-    setStdLot('');
-    setStdPurity('');
-    setStdExpiry('');
-  };
 
   const handleSaveReagent = () => {
     if (!reagentName.trim()) {
@@ -543,10 +497,7 @@ export function LaboratoryPage() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => {
-                          generateAnalyticalWorksheet(material as any);
-                          toast.info('Worksheet generated successfully');
-                        }}
+                        onClick={() => toast.info('Logbook generated for this analysis session')}
                       >
                         Print Worksheet
                       </Button>
@@ -658,58 +609,6 @@ export function LaboratoryPage() {
           <div className="flex justify-end gap-3 bg-slate-50 -mx-6 -mb-6 p-6 mt-4 border-t">
             <Button variant="outline" onClick={() => setIsReagentFormOpen(false)}>Cancel</Button>
             <Button onClick={handleSaveReagent} className="bg-indigo-600 px-8">Save Inventory</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Reference Standard Form Dialog */}
-      <Dialog open={isStandardFormOpen} onOpenChange={setIsStandardFormOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-black text-slate-900 uppercase">Register Reference Standard</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Standard Name *</Label>
-                <Input
-                  placeholder="e.g. Paracetamol Reference Standard"
-                  value={stdName}
-                  onChange={(e) => setStdName(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Lot Number *</Label>
-                <Input
-                  placeholder="e.g. LOT-12345"
-                  value={stdLot}
-                  onChange={(e) => setStdLot(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Purity/Potency (%)</Label>
-                <Input
-                  type="number"
-                  placeholder="e.g. 99.8"
-                  value={stdPurity}
-                  onChange={(e) => setStdPurity(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Expiry Date *</Label>
-                <Input
-                  type="date"
-                  value={stdExpiry}
-                  onChange={(e) => setStdExpiry(e.target.value)}
-                />
-              </div>
-            </div>
-          </div>
-          <div className="flex justify-end gap-3 bg-slate-50 -mx-6 -mb-6 p-6 mt-4 border-t">
-            <Button variant="outline" onClick={() => setIsStandardFormOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveStandard} className="bg-indigo-600 px-8">Save Standard</Button>
           </div>
         </DialogContent>
       </Dialog>

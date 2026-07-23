@@ -86,7 +86,7 @@ export class PharmaDB extends Dexie {
             keyValueStore: 'key',
             // v6 tables
             rawMaterials: 'id, name, batchNumber, status, type, productionDate, manufacturingDate',
-            coaRecords: 'id, productName, coaNumber, batchNumber, status, analysisDate, productionDate, issueDate, manufacturingDate, type',
+            coaRecords: 'id, productName, coaNumber, analysisNo, batchNumber, status, analysisDate, issueDate, manufacturingDate, expiryDate, type',
             ipqcChecks: 'id, stage, status, batchNumber',
             // v7 tables
             materialMovements: 'id, materialId, batchId, type, timestamp',

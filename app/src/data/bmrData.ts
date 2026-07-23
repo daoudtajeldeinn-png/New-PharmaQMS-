@@ -12,6 +12,7 @@ export interface BMRStepExecution {
     plannedDuration?: string;
     startedAt?: string;
     completedAt?: string;
+    analysisDate?: string;
     operatorSignature?: string;
     supervisorSignature?: string;
     qaSignature?: string;
@@ -40,6 +41,12 @@ export interface BatchRecord {
     status: 'Issuance' | 'Manufacturing' | 'Quarantine' | 'Released' | 'Rejected';
     issuanceDate: string;
     issuedBy: string;
+    lineClearance?: {
+        areaFree: boolean;
+        calibrationValid: boolean;
+        rmAvailability: boolean;
+        qaReleased: boolean;
+    };
     stepExecutions: BMRStepExecution[];
     materialVerifications?: MaterialVerification[];
     ingredients?: BatchIngredient[];

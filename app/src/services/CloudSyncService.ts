@@ -50,15 +50,16 @@ function pickNewerRecord(
     return getRecordTimestamp(remote) >= getRecordTimestamp(local) ? remote : local;
 }
 
-function serializeForSupabase(item: Record<string, unknown>): Record<string, unknown> {
+function serializeForSupabase(item: Record<string, unknown>, tableName?: string): Record<string, unknown> {
     const cleanItem = { ...item };
-    
+
     // Remove local-only soft delete flags to prevent Supabase schema errors
     delete cleanItem.deleted_at;
     delete cleanItem.deleted_by;
     delete cleanItem.deletion_reason;
     delete cleanItem.is_deleted;
-    
+
+    // Normalize duplicate keys that differ only in case
     const keys = Object.keys(cleanItem);
     for (const key of keys) {
         if (key !== key.toLowerCase()) {
@@ -69,6 +70,7 @@ function serializeForSupabase(item: Record<string, unknown>): Record<string, unk
         }
     }
 
+    // Serialize Date objects to ISO strings
     for (const key in cleanItem) {
         const dateKeys = ['date', 'time', 'timestamp', 'at', 'expiry', 'next', 'schedule', 'created', 'updated', 'lastLogin'];
         const isDateKey = dateKeys.some((dk) => key.toLowerCase().includes(dk));
@@ -76,6 +78,34 @@ function serializeForSupabase(item: Record<string, unknown>): Record<string, unk
             cleanItem[key] = (cleanItem[key] as Date).toISOString();
         }
     }
+
+    // Filter out batchNumber for chemicalReagents table (not in Supabase schema)
+    if (tableName === 'chemicalReagents' && 'batchNumber' in cleanItem) {
+        delete cleanItem.batchNumber;
+    }
+
+    // Fix activities 400 error (reserved words or missing columns in Supabase)
+    if (tableName === 'activities') {
+        const allowedColumns = ['id', 'type', 'description', 'user', 'user_id', 'timestamp', 'created_at', 'related_id', 'relatedId'];
+        for (const k of Object.keys(cleanItem)) {
+            if (!allowedColumns.includes(k)) {
+                delete cleanItem[k];
+            }
+        }
+        if ('timestamp' in cleanItem && !('created_at' in cleanItem)) {
+            const ts = cleanItem.timestamp;
+            cleanItem.created_at = ts instanceof Date ? ts.toISOString() : ts;
+            delete cleanItem.timestamp;
+        }
+        if ('relatedId' in cleanItem) {
+            cleanItem.related_id = cleanItem.relatedId;
+            delete cleanItem.relatedId;
+        }
+        if (!cleanItem.user_id && cleanItem.user) {
+            cleanItem.user_id = String(cleanItem.user);
+        }
+    }
+
     return cleanItem;
 }
 
@@ -166,7 +196,7 @@ export async function syncAllTables() {
             }
 
             const allLocalData: Record<string, unknown>[] = await (db as any)[tableName].toArray();
-            // Filter out any records that are soft-deleted locally (safety net — they should already be physically deleted)
+            // Filter out any records that are soft-deleted locally or tombstoned
             const localData = allLocalData.filter((item) => {
                 if (item.deleted_at) return false;
                 if (deletedIds.size > 0 && deletedIds.has(String(item.id))) return false;
@@ -176,7 +206,7 @@ export async function syncAllTables() {
             const pushedIds = new Set(localData.map((item) => String(item.id)));
 
             if (localData.length > 0) {
-                const dataToPush = localData.map((item) => serializeForSupabase(item));
+                const dataToPush = localData.map((item) => serializeForSupabase(item, tableName));
 
                 const { error: pushError } = await supabase
                     .from(tableName)
