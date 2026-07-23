@@ -1,0 +1,170 @@
+/* premium-override.css - PharmaQMS Premium Theme */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    /* Override Base Colors with Slate/Blue Premium Palette */
+    --background: 210 40% 98%; /* Slate 50 #f8fafc */
+    --foreground: 222 47% 11%; /* Slate 900 #0f172a */
+    
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    
+    /* Vibrant Blue for Primary Actions */
+    --primary: 221 83% 53%; /* Blue 600 #2563eb */
+    --primary-foreground: 210 40% 98%;
+    
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222 47% 11%;
+    
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222 47% 11%;
+    
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221 83% 53%;
+    
+    --radius: 0.75rem; /* Rounded Corners for Cards */
+}
+
+/* Global Aesthetics */
+body, html {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    background-color: #f8fafc !important; /* Ensure background is slate-50 */
+}
+
+/* Sidebar Upgrade - Dark Gradient with Proper Text Colors */
+aside, .sidebar, [class*="sidebar"] {
+    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%) !important;
+    border-right: 1px solid rgba(255,255,255,0.05) !important;
+}
+
+/* FIXED: Text Colors in Sidebar - Now Visible! */
+aside *, .sidebar *, [class*="sidebar"] * {
+    color: rgba(255, 255, 255, 0.9) !important;
+    border-color: rgba(255,255,255,0.1) !important;
+}
+
+/* Sidebar Links and Interactive Elements */
+aside a, .sidebar a, [class*="sidebar"] a,
+aside button, .sidebar button, [class*="sidebar"] button {
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+aside a:hover, .sidebar a:hover, [class*="sidebar"] a:hover,
+aside button:hover, .sidebar button:hover, [class*="sidebar"] button:hover {
+    color: rgba(255, 255, 255, 1) !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Sidebar Active/Selected Items */
+aside .active, .sidebar .active, [class*="sidebar"] .active,
+aside [aria-current="page"], .sidebar [aria-current="page"], [class*="sidebar"] [aria-current="page"] {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    color: #ffffff !important;
+}
+
+/* Cards - Glassmorphism & Depth */
+.card, [class*="card"], .bg-white, .bg-card {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+    border: 1px solid rgba(226, 232, 240, 0.8) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover, [class*="card"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Buttons - Gradients */
+button.bg-primary, .btn-primary {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+    box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+    transition: all 0.3s ease;
+}
+
+button.bg-primary:hover, .btn-primary:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 8px rgba(37, 99, 235, 0.3);
+}
+
+/* Headers - FIXED: Better visibility */
+h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.025em;
+    color: #1e293b !important;
+    font-weight: 600 !important;
+}
+
+/* Sidebar Headers - Override for visibility */
+aside h1, aside h2, aside h3, aside h4, aside h5, aside h6,
+.sidebar h1, .sidebar h2, .sidebar h3, .sidebar h4, .sidebar h5, .sidebar h6,
+[class*="sidebar"] h1, [class*="sidebar"] h2, [class*="sidebar"] h3, 
+[class*="sidebar"] h4, [class*="sidebar"] h5, [class*="sidebar"] h6 {
+    color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Inputs */
+input, select, textarea {
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 0.5rem !important;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+    outline: none !important;
+}
+
+/* Tables */
+table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    width: 100%;
+}
+
+th {
+    background-color: #f1f5f9 !important;
+    color: #475569 !important;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    font-size: 0.75rem !important;
+    letter-spacing: 0.05em;
+    padding: 1rem !important;
+}
+
+td {
+    padding: 1rem !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    color: #334155 !important;
+}
+
+tr:hover td {
+    background-color: #f8fafc !important;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: transparent; 
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1; 
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8; 
+}

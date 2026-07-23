@@ -379,6 +379,44 @@ export function TestResultForm({
 
       <Card>
         <CardHeader>
+          <CardTitle>مرفقات الاختبار (PDF/Images)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4">
+            <Input 
+              type="file" 
+              accept=".pdf,.png,.jpg,.jpeg"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  // Alert if file is too large (> 2MB)
+                  if (file.size > 2 * 1024 * 1024) {
+                     alert("File size should be less than 2MB for local storage.");
+                     return;
+                  }
+                  const reader = new FileReader();
+                  reader.onload = (event) => {
+                    const base64 = event.target?.result as string;
+                    setFormData(prev => ({
+                      ...prev,
+                      attachments: [...(prev.attachments || []), base64]
+                    }));
+                  };
+                  reader.readAsDataURL(file);
+                }
+              }}
+            />
+            {formData.attachments && formData.attachments.length > 0 && (
+              <Badge variant="secondary">
+                {formData.attachments.length} ملف مرفق
+              </Badge>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>ملاحظات</CardTitle>
         </CardHeader>
         <CardContent>

@@ -1,5 +1,10 @@
+<<<<<<< HEAD
+.vercel
+.env*.local
+=======
 node_modules/
 dist/
 .env
 *.log
 .DS_Store
+>>>>>>> a408499b0cc2463f1cffe1b7685f97485d7809f2

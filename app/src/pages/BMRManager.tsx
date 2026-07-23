@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from 'react';
-import { Plus, CheckCircle2, Printer, ClipboardCheck, Activity, Thermometer, ShieldCheck, PenLine, AlertTriangle, Scale, AlertCircle, Lock, Search, X } from 'lucide-react';
+import { Plus, CheckCircle2, Printer, ClipboardCheck, Activity, Thermometer, ShieldCheck, PenLine, AlertTriangle, Scale, AlertCircle, Lock } from 'lucide-react';
 import { DataTableActions } from '@/components/ui/data-table-actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,14 +34,6 @@ export function BMRManagerPage() {
         documentTitle: selectedBMR ? `BMR-${selectedBMR.batchNumber}` : 'BMR',
     });
     const [editingBMR, setEditingBMR] = useState<BatchRecord | null>(null);
-    const [searchQuery, setSearchQuery] = useState('');
-
-    const filteredRecords = useMemo(() =>
-        records.filter(r =>
-            r.batchNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            r.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            r.status.toLowerCase().includes(searchQuery.toLowerCase())
-        ), [records, searchQuery]);
 
     const handleIssueBatch = () => {
         if (!canModify) {
@@ -260,41 +252,8 @@ const handleUpdateStep = (stepNumber: number, updates: StepUpdate) => {
                 <Card className="bg-white border-none shadow-sm"><CardHeader className="pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Released</CardHeader><CardContent><div className="text-3xl font-black text-blue-600">{records.filter(r => r.status === 'Released').length}</div></CardContent></Card>
             </div>
 
-            {/* ── Search & Filter Bar ── */}
-            <div className="flex items-center gap-3 mt-6">
-                <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    <Input
-                        placeholder="Search by batch number, product, or status…"
-                        value={searchQuery}
-                        onChange={e => setSearchQuery(e.target.value)}
-                        className="pl-9 pr-9 bg-white border-slate-200 shadow-sm"
-                    />
-                    {searchQuery && (
-                        <button
-                            onClick={() => setSearchQuery('')}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                        >
-                            <X className="h-4 w-4" />
-                        </button>
-                    )}
-                </div>
-                {searchQuery && (
-                    <span className="text-xs font-bold text-slate-500">
-                        {filteredRecords.length} of {records.length} batch{records.length !== 1 ? 'es' : ''}
-                    </span>
-                )}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
-                {filteredRecords.length === 0 && searchQuery ? (
-                    <div className="col-span-3 flex flex-col items-center justify-center py-16 text-slate-400">
-                        <Search className="h-10 w-10 mb-3 opacity-30" />
-                        <p className="font-bold text-sm">No batches match <span className="text-emerald-600">"{searchQuery}"</span></p>
-                        <button onClick={() => setSearchQuery('')} className="mt-2 text-xs text-emerald-600 hover:underline font-bold">Clear search</button>
-                    </div>
-                ) : null}
-                {filteredRecords.map((batch: BatchRecord) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+                {records.map((batch: BatchRecord) => (
                     <Card key={batch.id} className="hover:shadow-xl transition-all cursor-pointer border-t-4 border-t-emerald-500 bg-white" onClick={() => setSelectedBMR(batch)}>
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <div>

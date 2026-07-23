@@ -1,0 +1,10 @@
+npm warn cli npm v11.8.0 does not support Node.js v20.12.0. This version of npm supports the following node versions: `^20.17.0 || >=22.9.0`. You can find the latest version at https://nodejs.org/.
+
+> my-app@1.0.0 build
+> tsc -b && vite build
+
+src/components/layout/Sidebar.tsx(33,10): error TS2305: Module '"@/services/BackupService"' has no exported member 'backupSessionData'.
+src/pages/BMRManager.tsx(33,12): error TS6133: 'showEditDialog' is declared but its value is never read.
+src/pages/BMRManager.tsx(87,11): error TS6133: 'handleUpdateBatchMetadata' is declared but its value is never read.
+src/pages/COAManager.tsx(17,10): error TS2305: Module '"@/services/BackupService"' has no exported member 'backupSessionData'.
+src/pages/MFRManager.tsx(14,1): error TS6133: 'useRef' is declared but its value is never read.

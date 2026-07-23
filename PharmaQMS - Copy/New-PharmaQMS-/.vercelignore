@@ -1,0 +1,9 @@
+node_modules
+dist
+dist-electron
+New-PharmaQMS-
+*.zip
+*.rar
+*.bat
+app/node_modules
+app/dist

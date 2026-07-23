@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Plus, Layout, Layers, ClipboardList, Printer, ShieldCheck, Thermometer, Droplets, Box } from 'lucide-react';
+import { Plus, Layout, Layers, ClipboardList, Printer, ShieldCheck, Thermometer, Droplets, Box, Lock } from 'lucide-react';
+import { DataTableActions } from '@/components/ui/data-table-actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -156,10 +157,14 @@ export function MFRManagerPage() {
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex justify-end gap-1">
-                                            <Button size="icon" variant="ghost" title="Edit Formula" className="text-blue-600 hover:text-blue-700" onClick={(e) => { e.stopPropagation(); handleEditMFR(mfr); }}><Layers className="h-4 w-4" /></Button>
-                                            <Button size="icon" variant="ghost" title="Issue New BMR" className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50" onClick={(e: React.MouseEvent) => { e.stopPropagation(); toast.info('Navigating to BMR Issuance...'); }}><Plus className="h-4 w-4" /></Button>
-                                            <Button size="icon" variant="ghost" title="Print MFR" onClick={(e) => { e.stopPropagation(); setSelectedMFR(mfr); setTimeout(handlePrint, 500); }}><Printer className="h-4 w-4" /></Button>
-                                            <Button size="icon" variant="ghost" title="Delete MFR" className="text-red-500" onClick={(e) => { e.stopPropagation(); handleDeleteMFR(mfr.id); }}><Plus className="h-4 w-4 rotate-45" /></Button>
+                                            <DataTableActions
+                                                item={mfr}
+                                                onEdit={(item) => { handleEditMFR(item); }}
+                                                onDelete={(id) => { handleDeleteMFR(id); }}
+                                                extraActions={[
+                                                    { label: 'Print MFR', icon: <Printer className="mr-2 h-4 w-4" />, onClick: (item) => { setSelectedMFR(item); setTimeout(handlePrint, 500); } }
+                                                ]}
+                                            />
                                         </div>
                                     </td>
                                 </tr>
