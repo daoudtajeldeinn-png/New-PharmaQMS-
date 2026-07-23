@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Plus, Layout, Layers, ClipboardList, Printer, ShieldCheck, Thermometer, Droplets, Box, Lock } from 'lucide-react';
-import { DataTableActions } from '@/components/ui/data-table-actions';
+import { Plus, Layout, Layers, ClipboardList, Printer, ShieldCheck, Thermometer, Droplets, Box } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,13 +9,34 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { type MasterFormula } from '@/data/mfrData';
 import { g1Monographs } from '@/data/g1Data';
 import { useStore } from '@/hooks/useStore';
-import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { usePrintExport } from '@/hooks/usePrintExport';
 import { toast } from 'sonner';
 
+// ==================== Helper: Load Company Settings ====================
+interface CompanySettings {
+  name: string;
+  address: string;
+  city?: string;
+  country?: string;
+  phone?: string;
+  email?: string;
+  documentControl?: string;
+}
+
+function loadCompanySettings(): CompanySettings {
+  try {
+    const stored = localStorage.getItem('pqms_company_settings');
+    if (stored) return JSON.parse(stored);
+  } catch { /* fallback */ }
+  return {
+    name: 'National Pharmaceutical Company',
+    address: 'Khartoum, Sudan',
+    documentControl: 'MFR-SYS-V2',
+  };
+}
+
 export function MFRManagerPage() {
     const { state, dispatch } = useStore();
-    const { canModify, canDelete, user } = useRoleAccess();
     const formulas = Object.values(state.masterFormulas);
     const [showForm, setShowForm] = useState(false);
     const [selectedMFR, setSelectedMFR] = useState<MasterFormula | null>(null);
@@ -26,6 +46,9 @@ export function MFRManagerPage() {
     });
     const { printRef, handlePrint, exportToPDF } = usePrintExport();
     const [isEditing, setIsEditing] = useState(false);
+
+    // Load company settings from Global Settings page
+    const companySettings = loadCompanySettings();
 
     const handleSaveMFR = () => {
         if (!formData.productName || !formData.mfrNumber) {
@@ -57,17 +80,9 @@ export function MFRManagerPage() {
     };
 
     const handleDeleteMFR = (id: string) => {
-        if (!canDelete) {
-            toast.error('Access Denied: Only IT Admin or QA Admin can delete Master Formula Records.');
-            return;
-        }
-        if (confirm('ADMIN ACTION: Permanently delete this Master Formula for ALL users?')) {
-            import('@/services/DeletedRecordsService').then(({ recordDeletion }) => {
-                const snap = Object.values(state.masterFormulas).find((m: any) => m.id === id);
-                recordDeletion('masterFormulas', id, user?.username || 'admin', snap, 'Admin deletion');
-            });
+        if (confirm('Are you sure you want to delete this Master Formula?')) {
             dispatch({ type: 'DELETE_MFR', payload: id });
-            toast.success('MFR permanently deleted for all users.');
+            toast.success('MFR deleted successfully');
         }
     };
 
@@ -99,15 +114,9 @@ export function MFRManagerPage() {
                     </h1>
                     <p className="text-slate-500">Managing Manufacturing Master Templates & Bill of Materials</p>
                 </div>
-                {canModify ? (
-                  <Button onClick={() => { setFormData({ ingredients: [], processSteps: [] }); setIsEditing(false); setShowForm(true); }} className="bg-indigo-600">
-                      <Plus className="h-4 w-4 mr-2" /> Create New MFR
-                  </Button>
-                ) : (
-                  <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-lg text-slate-400 text-xs font-bold">
-                      <Lock className="h-3 w-3" /> View Only — Admin Required
-                  </div>
-                )}
+                <Button onClick={() => { setFormData({ ingredients: [], processSteps: [] }); setIsEditing(false); setShowForm(true); }} className="bg-indigo-600">
+                    <Plus className="h-4 w-4 mr-2" /> Create New MFR
+                </Button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -147,14 +156,10 @@ export function MFRManagerPage() {
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex justify-end gap-1">
-                                            <DataTableActions
-                                                item={mfr}
-                                                onEdit={(item) => { handleEditMFR(item); }}
-                                                onDelete={(id) => { handleDeleteMFR(id); }}
-                                                extraActions={[
-                                                    { label: 'Print MFR', icon: <Printer className="mr-2 h-4 w-4" />, onClick: (item) => { setSelectedMFR(item); setTimeout(handlePrint, 500); } }
-                                                ]}
-                                            />
+                                            <Button size="icon" variant="ghost" title="Edit Formula" className="text-blue-600 hover:text-blue-700" onClick={(e) => { e.stopPropagation(); handleEditMFR(mfr); }}><Layers className="h-4 w-4" /></Button>
+                                            <Button size="icon" variant="ghost" title="Issue New BMR" className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50" onClick={(e: React.MouseEvent) => { e.stopPropagation(); toast.info('Navigating to BMR Issuance...'); }}><Plus className="h-4 w-4" /></Button>
+                                            <Button size="icon" variant="ghost" title="Print MFR" onClick={(e) => { e.stopPropagation(); setSelectedMFR(mfr); setTimeout(handlePrint, 500); }}><Printer className="h-4 w-4" /></Button>
+                                            <Button size="icon" variant="ghost" title="Delete MFR" className="text-red-500" onClick={(e) => { e.stopPropagation(); handleDeleteMFR(mfr.id); }}><Plus className="h-4 w-4 rotate-45" /></Button>
                                         </div>
                                     </td>
                                 </tr>
@@ -169,16 +174,21 @@ export function MFRManagerPage() {
                 <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto bg-slate-50 p-0 border-none rounded-none shadow-2xl">
                     {selectedMFR && (
                         <div className="bg-white min-h-[297mm] w-full mx-auto p-12 shadow-inner print:p-0 font-serif">
-                            {/* Professional Header - A4 Style */}
+                            {/* Professional Header - A4 Style — company data from Global Settings */}
                             <div className="flex justify-between items-start border-b-4 border-double border-slate-900 pb-8 mb-8">
                                 <div className="flex gap-6 items-center">
                                     <div className="bg-slate-900 p-5 rounded-xl text-white shadow-lg">
                                         <Layers className="h-10 w-10" />
                                     </div>
                                     <div>
-                                        <h1 className="text-4xl font-black text-slate-900 tracking-tighter leading-none mb-1">PHARMAQMS ENTERPRISE</h1>
+                                        <h1 className="text-4xl font-black text-slate-900 tracking-tighter leading-none mb-1">{companySettings.name.toUpperCase()}</h1>
                                         <p className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.3em] mb-1">Quality Management System | GxP COMPLIANCE</p>
-                                        <p className="text-[10px] font-bold text-slate-500 leading-tight">Industrial Zone, Phase 2, Pharmaceutical District<br />Cairo, Egypt | Document Control: MFR-SYS-V2</p>
+                                        <p className="text-[10px] font-bold text-slate-500 leading-tight">
+                                            {companySettings.address}
+                                            {companySettings.city ? `, ${companySettings.city}` : ''}
+                                            {companySettings.country ? `, ${companySettings.country}` : ''}
+                                            {' | '}Document Control: {companySettings.documentControl || 'MFR-SYS-V2'}
+                                        </p>
                                     </div>
                                 </div>
                                 <div className="text-right">
@@ -440,13 +450,14 @@ export function MFRManagerPage() {
                     <DialogFooter className="bg-slate-50 -mx-6 -mb-6 p-4 mt-6 border-t"><Button onClick={handleSaveMFR} className="bg-indigo-600 px-8">Create Master Record</Button></DialogFooter>
                 </DialogContent>
             </Dialog>
-{/* Hidden Professional Printer Engine */}
+
+            {/* Hidden Professional Printer Engine */}
             {selectedMFR && (
                 <div style={{ position: 'absolute', left: '-9999px' }}>
                     <div ref={printRef} className="p-12 bg-white text-black" style={{ width: '210mm', minHeight: '297mm', fontFamily: 'serif' }}>
                         <style>{`
-                            @media print { 
-                                @page { size: A4; margin: 10mm; } 
+                            @media print {
+                                @page { size: A4; margin: 10mm; }
                                 .mfr-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
                                 .mfr-table th, .mfr-table td { border: 1px solid black; padding: 6px; text-align: left; font-size: 10pt; }
                                 .mfr-header { text-align: center; border-bottom: 3px double black; margin-bottom: 20px; padding-bottom: 10px; }
@@ -454,8 +465,9 @@ export function MFRManagerPage() {
                             }
                         `}</style>
                         <div className="mfr-header">
-                            <h1 className="text-3xl font-bold uppercase">Master Formula Record</h1>
-                            <p className="text-sm font-bold mt-1">Quality Management System - Pharmacy Division</p>
+                            <h1 className="text-3xl font-bold uppercase">{companySettings.name}</h1>
+                            <p className="text-sm font-bold mt-1">Master Formula Record — Quality Management System</p>
+                            <p className="text-xs mt-1">{companySettings.address}{companySettings.city ? `, ${companySettings.city}` : ''}</p>
                         </div>
 
                         <table className="mfr-table">
