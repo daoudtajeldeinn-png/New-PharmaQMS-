@@ -70,21 +70,30 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         db.masterFormulas.toArray(),
       ]);
 
-      // Convert MFR array to Record object (filtering out soft deleted ones)
+      // MFR Source of Truth: Use mfrData.ts as the source of truth
+      // This ensures step numbers and process definitions are always correct
       const mfrRecord: Record<string, any> = {};
+      
+      // First, load all MFRs from the source file (mfrData.ts)
+      Object.values(initialState.masterFormulas).forEach(mfr => {
+        mfrRecord[mfr.id] = mfr;
+      });
+      
+      // Then merge with DB data - DB data only ADDS new fields, never overwrites source
       dbMFRs.forEach(mfr => {
-        if (!mfr.deleted_at) {
+        if (!mfr.deleted_at && mfrRecord[mfr.id]) {
+          // Merge: keep source file steps, but allow DB to add execution data
+          mfrRecord[mfr.id] = {
+            ...mfrRecord[mfr.id],  // Source file wins for structure
+            ...mfr,                // DB adds execution/override data
+            id: mfrRecord[mfr.id].id, // Ensure ID from source
+            processSteps: mfrRecord[mfr.id].processSteps, // Source file wins for steps
+          };
+        } else if (!mfr.deleted_at) {
+          // Allow new MFRs created in DB that aren't in source file
           mfrRecord[mfr.id] = mfr;
         }
       });
-
-      // MIGRATION: Ensure all initial sample MFRs are in the database
-      const missingMFRs = Object.values(initialState.masterFormulas).filter(m => !mfrRecord[m.id]);
-      if (missingMFRs.length > 0) {
-        console.log(`Migrating ${missingMFRs.length} sample MFRs to database...`);
-        await db.masterFormulas.bulkPut(missingMFRs);
-        missingMFRs.forEach(m => { mfrRecord[m.id] = m; });
-      }
 
       // MIGRATION: Ensure all initial sample BMRs are in the database
       const bmrIds = new Set(batchRecords.map(b => b.id));

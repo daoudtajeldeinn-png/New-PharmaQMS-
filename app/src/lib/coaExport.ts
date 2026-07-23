@@ -264,14 +264,16 @@ export async function generateAnalyticalWorksheet(material: RawMaterial): Promis
     format: 'a4'
   });
 
+  const companySettings = loadCompanySettings();
+
   doc.setLineWidth(0.5);
   doc.rect(5, 5, 200, 287);
 
   doc.setFont('times', 'bold');
   doc.setFontSize(18);
-  doc.text('ANALYTICAL WORKSHEET', 105, 20, { align: 'center' });
+  doc.text(companySettings.name, 105, 20, { align: 'center' });
   doc.setFontSize(10);
-  doc.text('QUALITY CONTROL LABORATORY', 105, 26, { align: 'center' });
+  doc.text(companySettings.address, 105, 26, { align: 'center' });
   doc.line(20, 30, 190, 30);
 
   doc.setFontSize(11);

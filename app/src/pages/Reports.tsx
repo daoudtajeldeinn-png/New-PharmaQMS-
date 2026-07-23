@@ -33,11 +33,7 @@ import {
   Share2,
   FileSpreadsheet,
   FileBarChart,
-  Loader2,
-  Beaker,
-  FlaskConical,
-  LineChart as LineChartIcon,
-  Building2,
+  Loader2
 } from 'lucide-react';
 import {
   BarChart,
@@ -179,56 +175,6 @@ export function ReportsPage() {
         t.trainingType,
         t.status
       ]);
-    } else if (templateId === 'reagent-inventory') {
-      title = 'Chemical Reagent Inventory Report';
-      headers = ['ID', 'Name', 'CAS Number', 'Grade', 'Batch #', 'Stock', 'Unit', 'Status', 'Expiry'];
-      rows = state.chemicalReagents.map(r => [
-        r.id,
-        r.name,
-        r.casNumber || '-',
-        r.grade,
-        r.batchNumber,
-        r.quantity,
-        r.unit,
-        r.status,
-        new Date(r.expiryDate).toLocaleDateString()
-      ]);
-    } else if (templateId === 'reference-standards') {
-      title = 'Reference Standards Registry Report';
-      headers = ['ID', 'Name', 'Lot Number', 'Purity (%)', 'Expiry Date', 'Storage', 'Status'];
-      rows = state.referenceStandards.map(s => [
-        s.id,
-        s.name,
-        s.lotNumber,
-        s.purity ? `${s.purity}%` : '-',
-        new Date(s.expiryDate).toLocaleDateString(),
-        s.storageConditions,
-        s.status
-      ]);
-    } else if (templateId === 'stability-summary') {
-      title = 'Stability Studies Summary Report';
-      headers = ['ID', 'Protocol #', 'Product', 'Batch', 'Type', 'Initiation Date', 'Status'];
-      rows = state.stabilityProtocols.map(p => [
-        p.id,
-        p.protocolNumber,
-        p.productName,
-        p.batchNumber,
-        p.studyType,
-        new Date(p.initiationDate).toLocaleDateString(),
-        p.status
-      ]);
-    } else if (templateId === 'supplier-audit') {
-      title = 'Supplier Qualification & Audit Report';
-      headers = ['ID', 'Name', 'Type', 'Contact', 'Email', 'Qualification Status', 'Status'];
-      rows = state.suppliers.map(s => [
-        s.id,
-        s.name,
-        s.type,
-        s.contactPerson,
-        s.email,
-        s.qualificationStatus,
-        s.status
-      ]);
     }
 
     setPreviewTitle(title);
@@ -259,18 +205,6 @@ export function ReportsPage() {
     } else if (templateId === 'training-report') {
       csvContent = 'ID,Employee Name,Department,Training Title,Type,Status\n' + 
         state.trainingRecords.map(t => `"${t.id}","${t.employeeName}","${t.department}","${t.trainingTitle}","${t.trainingType}","${t.status}"`).join('\n');
-    } else if (templateId === 'reagent-inventory') {
-      csvContent = 'ID,Name,CAS Number,Grade,Batch #,Stock,Unit,Status,Expiry\n' + 
-        state.chemicalReagents.map(r => `"${r.id}","${r.name}","${r.casNumber || '-'}","${r.grade}","${r.batchNumber}","${r.quantity}","${r.unit}","${r.status}","${new Date(r.expiryDate).toLocaleDateString()}"`).join('\n');
-    } else if (templateId === 'reference-standards') {
-      csvContent = 'ID,Name,Lot Number,Purity (%),Expiry Date,Storage,Status\n' + 
-        state.referenceStandards.map(s => `"${s.id}","${s.name}","${s.lotNumber}","${s.purity || '-'}","${new Date(s.expiryDate).toLocaleDateString()}","${s.storageConditions}","${s.status}"`).join('\n');
-    } else if (templateId === 'stability-summary') {
-      csvContent = 'ID,Protocol #,Product,Batch,Type,Initiation Date,Status\n' + 
-        state.stabilityProtocols.map(p => `"${p.id}","${p.protocolNumber}","${p.productName}","${p.batchNumber}","${p.studyType}","${new Date(p.initiationDate).toLocaleDateString()}","${p.status}"`).join('\n');
-    } else if (templateId === 'supplier-audit') {
-      csvContent = 'ID,Name,Type,Contact,Email,Qualification Status,Status\n' + 
-        state.suppliers.map(s => `"${s.id}","${s.name}","${s.type}","${s.contactPerson}","${s.email}","${s.qualificationStatus}","${s.status}"`).join('\n');
     }
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -309,17 +243,13 @@ export function ReportsPage() {
     // Save actual full QMS state backup as JSON file
     const qmsBackup = {
       exportedAt: new Date().toISOString(),
-      version: 'PharmaQMS v4.3.3',
+      version: 'PharmaQMS v25.2.2026',
       products: state.products,
       testResults: state.testResults,
       capas: state.capas,
       deviations: state.deviations,
       equipment: state.equipment,
       trainingRecords: state.trainingRecords,
-      chemicalReagents: state.chemicalReagents,
-      referenceStandards: state.referenceStandards,
-      stabilityProtocols: state.stabilityProtocols,
-      suppliers: state.suppliers,
     };
 
     const blob = new Blob([JSON.stringify(qmsBackup, null, 2)], { type: 'application/json' });
@@ -386,10 +316,6 @@ export function ReportsPage() {
     { id: 'deviation-report', name: 'Non-Conformity Log', icon: PieChart, description: 'Detailed analysis of process deviations by severity/type.' },
     { id: 'equipment-report', name: 'Asset Compliance', icon: FileSpreadsheet, description: 'Maintenance and calibration schedules for lab equipment.' },
     { id: 'training-report', name: 'Competency Matrix', icon: FileBarChart, description: 'Personnel training logs and certification status.' },
-    { id: 'reagent-inventory', name: 'Reagent Database', icon: Beaker, description: 'Chemical reagent inventory, expiry tracking, and stock status report.' },
-    { id: 'reference-standards', name: 'Reference Standards', icon: FlaskConical, description: 'Reference standard registry with purity and lot traceability.' },
-    { id: 'stability-summary', name: 'Stability Studies', icon: LineChartIcon, description: 'Stability protocol status and trend analysis report.' },
-    { id: 'supplier-audit', name: 'Supplier Qualification', icon: Building2, description: 'Qualified supplier list with audit history and status.' },
   ];
 
   return (

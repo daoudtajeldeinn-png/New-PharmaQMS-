@@ -36,6 +36,7 @@ export class SoftDeleteService {
         deletion_reason: reason
       };
 
+
       // 4. Save soft-delete snapshot temporarily for tombstone
       // (so recovery can restore from snapshot if needed)
       await table.put(updatedRecord);
@@ -55,6 +56,7 @@ export class SoftDeleteService {
       } catch (cloudErr) {
         console.warn('SoftDeleteService: Supabase delete failed:', cloudErr);
       }
+
 
       return { success: true };
     } catch (err: any) {
