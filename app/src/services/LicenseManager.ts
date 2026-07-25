@@ -1,12 +1,22 @@
 /**
- * License Manager Utility
- * Handles encryption and decryption of application license keys with obfuscation.
- * This version is hardware-locked to the customer's machine.
+ * License Manager — PharmaQMS Enterprise
+ * Handles trial period, activation keys, and hardware locking.
+ *
+ * TRIAL FLOW:
+ *   Day 0–19  → Free trial, full access, no credentials needed
+ *   Day 20–29 → Free trial + warning banner (X days remaining)
+ *   Day 30+   → Trial expired → activation required
  */
 
-// Simple obfuscation salt - This remains consistent between generator and client
 const SECRET_SALT = 'PHARMA_QC_2024_SECURE';
+const TRIAL_DAYS  = 30;
+const WARN_AFTER  = 20; // show warning starting day 20
 
+// ── localStorage keys ────────────────────────────────────────
+const KEY_INSTALL   = 'pqms_install_date';
+const KEY_LICENSE   = 'pqms_enterprise_license';
+
+// ── Types ────────────────────────────────────────────────────
 export interface LicenseStatus {
     isValid: boolean;
     expiryDate: Date | null;
@@ -14,96 +24,87 @@ export interface LicenseStatus {
     message: string;
 }
 
-/**
- * Retrieves the unique Hardware ID from the Electron process
- */
-export const getMachineId = (): string => {
-    // In Electron, we passed the ID via additionalArguments
-    const args = (window as any).process?.argv || [];
-    const machineIdArg = args.find((arg: string) => arg.startsWith('--machine-id='));
-    if (machineIdArg) {
-        return machineIdArg.split('=')[1];
-    }
+export interface TrialStatus {
+    isInTrial: boolean;       // true if within 30-day free period
+    trialExpired: boolean;    // true if >30 days with no valid license
+    daysUsed: number;         // how many days since install
+    daysRemaining: number;    // days left in trial
+    showWarning: boolean;     // true from day 20 onward
+}
 
-    // Fallback for development/testing if not in Electron
-    return 'DEV-ENVIRONMENT-ID';
+// ── Machine ID ───────────────────────────────────────────────
+export const getMachineId = (): string => {
+    const args = (window as any).process?.argv || [];
+    const arg  = args.find((a: string) => a.startsWith('--machine-id='));
+    if (arg) return arg.split('=')[1];
+    return 'DEV-ENVIRONMENT-ID'; // web / vercel fallback
 };
 
-/**
- * Decrypts a license string and validates it against the hardware ID
- * @param key The license key string
- * @returns LicenseStatus object
- */
+// ── Trial Status ─────────────────────────────────────────────
+export const getTrialStatus = (): TrialStatus => {
+    // Record install date on very first launch
+    let installDate = localStorage.getItem(KEY_INSTALL);
+    if (!installDate) {
+        installDate = new Date().toISOString();
+        localStorage.setItem(KEY_INSTALL, installDate);
+    }
+
+    const install       = new Date(installDate);
+    const now           = new Date();
+    const msPerDay      = 1000 * 60 * 60 * 24;
+    const daysUsed      = Math.floor((now.getTime() - install.getTime()) / msPerDay);
+    const daysRemaining = Math.max(0, TRIAL_DAYS - daysUsed);
+
+    return {
+        isInTrial:    daysUsed < TRIAL_DAYS,
+        trialExpired: daysUsed >= TRIAL_DAYS,
+        daysUsed,
+        daysRemaining,
+        showWarning:  daysUsed >= WARN_AFTER && daysUsed < TRIAL_DAYS,
+    };
+};
+
+// ── License Key Validation ───────────────────────────────────
 export const validateLicenseKey = (key: string | null): LicenseStatus => {
     if (!key) {
         return { isValid: false, expiryDate: null, daysRemaining: 0, message: 'No license key found.' };
     }
-
     try {
         const currentMachineId = getMachineId();
-
-        // 1. Clean the key (remove dashes and spaces)
         const cleanKey = key.replace(/[-\s]/g, '').toLowerCase();
 
-        // 2. Convert HEX back to the intermediate obfuscated string
-        // Note: We use a helper to decode hex to string safely
         const hexToString = (hex: string) => {
             let str = '';
-            for (let i = 0; i < hex.length; i += 2) {
+            for (let i = 0; i < hex.length; i += 2)
                 str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
-            }
             return str;
         };
 
         const reversed = hexToString(cleanKey);
-
-        // 3. Continue original de-obfuscation: Reverse -> Base64 -> Raw
-        const b64 = reversed.split('').reverse().join('');
-        const raw = atob(b64);
-
-        // Raw format: MACHINE_ID:TIMESTAMP:SALT
+        const b64      = reversed.split('').reverse().join('');
+        const raw      = atob(b64);
         const [machineId, timestampStr, salt] = raw.split(':');
 
-        if (salt !== SECRET_SALT) {
+        if (salt !== SECRET_SALT)
             throw new Error('Invalid salt');
-        }
 
-        if (machineId !== currentMachineId) {
+        if (machineId !== currentMachineId)
             return { isValid: false, expiryDate: null, daysRemaining: 0, message: 'License is locked to another device.' };
-        }
 
-        const expiryTimestamp = parseInt(timestampStr);
-        const expiryDate = new Date(expiryTimestamp);
-        const now = new Date();
-
-        const diffMs = expiryDate.getTime() - now.getTime();
+        const expiryDate   = new Date(parseInt(timestampStr));
+        const now          = new Date();
+        const diffMs       = expiryDate.getTime() - now.getTime();
         const daysRemaining = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 
-        if (diffMs <= 0) {
+        if (diffMs <= 0)
             return { isValid: false, expiryDate, daysRemaining: 0, message: 'License has expired.' };
-        }
 
-        return {
-            isValid: true,
-            expiryDate,
-            daysRemaining,
-            message: `License valid for ${daysRemaining} days.`
-        };
-    } catch (e) {
+        return { isValid: true, expiryDate, daysRemaining, message: `License valid for ${daysRemaining} days.` };
+    } catch {
         return { isValid: false, expiryDate: null, daysRemaining: 0, message: 'Invalid license integrity.' };
     }
 };
 
-/**
- * Saves a license key to local storage
- */
-export const setLicenseKey = (key: string) => {
-    localStorage.setItem('pqms_enterprise_license', key);
-};
-
-/**
- * Retrieves the current license key from local storage
- */
-export const getStoredLicenseKey = (): string | null => {
-    return localStorage.getItem('pqms_enterprise_license');
-};
+// ── Storage helpers ──────────────────────────────────────────
+export const setLicenseKey      = (key: string) => localStorage.setItem(KEY_LICENSE, key);
+export const getStoredLicenseKey = (): string | null => localStorage.getItem(KEY_LICENSE);
