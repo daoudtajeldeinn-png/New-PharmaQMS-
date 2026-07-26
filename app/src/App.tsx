@@ -77,12 +77,6 @@ function PWAInstallPrompt() {
   if (!showInstall) return null;
 
   return (
-    <>
-      {(trial.showWarning || trial.trialExpired) && !status.isValid && (
-        <div className="fixed top-0 left-0 right-0 z-[9999] bg-amber-500 text-slate-900 text-center py-2 px-4 text-[11px] font-black flex items-center justify-center gap-2">
-          ⚠ Free Trial: {trial.daysRemaining} day{trial.daysRemaining !== 1 ? \'s\' : \'\' } remaining — Go to Settings → License to activate
-        </div>
-      )}
     <div className="fixed bottom-4 right-4 w-96 z-50 bg-white dark:bg-slate-800 rounded-lg shadow-lg border p-4">
       <div className="flex items-start gap-3">
         <div className="p-2 bg-blue-100 rounded-lg">
@@ -113,7 +107,6 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useSecurity();
   const { status } = useLicense();
   const isDev = import.meta.env.DEV;
-  const trial = getTrialStatus();
 
   if (isLoading) {
     return (
@@ -123,6 +116,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
+  const trial = getTrialStatus();
   if (!status.isValid && !isDev && trial.trialExpired) {
     return <LoginPage forcedLicenseLock />;
   }
@@ -167,6 +161,7 @@ function AppLayout() {
     return () => clearTimeout(timer);
   }, [user?.id, status.isValid, reloadFromDB]);
 
+  const trial = getTrialStatus();
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <Sidebar />

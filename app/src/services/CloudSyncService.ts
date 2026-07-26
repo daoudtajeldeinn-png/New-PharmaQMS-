@@ -36,7 +36,7 @@ function getRecordTimestamp(item: Record<string, unknown>): number {
         item.updatedAt ??
         item.updated_at ??
         item.createdAt ??
-        item.timestamp ??
+        item.created_at ??
         item.deleted_at;
     if (!ts) return 0;
     const n = new Date(ts as string | Date).getTime();
@@ -86,16 +86,15 @@ function serializeForSupabase(item: Record<string, unknown>, tableName?: string)
 
     // Fix activities 400 error (reserved words or missing columns in Supabase)
     if (tableName === 'activities') {
-            const allowedColumns = ['id', 'type', 'description', 'user', 'user_id', 'timestamp', 'related_id'];
-            cleanItem = Object.fromEntries(
-                Object.entries(item).filter(([key]) => allowedColumns.includes(key))
-            );
-            // Map timestamp field
-            if ('timestamp' in item) {
-                const ts = (item as any).timestamp;
-                cleanItem.timestamp = ts instanceof Date ? ts.toISOString() : ts;
+        const allowedColumns = ['id', 'type', 'description', 'user', 'user_id', 'timestamp', 'related_id'];
+        for (const k of Object.keys(cleanItem)) {
+            if (!allowedColumns.includes(k)) {
+                delete cleanItem[k];
             }
         }
+        if ('timestamp' in cleanItem) {
+            const ts = cleanItem.timestamp;
+            cleanItem.timestamp = ts instanceof Date ? ts.toISOString() : ts;
         }
         if ('relatedId' in cleanItem) {
             cleanItem.related_id = cleanItem.relatedId;
