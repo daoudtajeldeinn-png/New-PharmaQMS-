@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { Shield, Lock, Eye, EyeOff, Key, Fingerprint, KeyRound, ShieldAlert, Copy, Check } from 'lucide-react';
 import { useLicense } from './LicenseProvider';
 import { getMachineId, getStoredLicenseKey, setLicenseKey, validateLicenseKey } from '@/services/LicenseManager';
+import { getTrialStatus } from '@/services/LicenseManager';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -80,6 +81,15 @@ const DEFAULT_USERS: User[] = [
     permissions: ['products.read', 'testing.read', 'reports.read'],
     password: 'password',
   },
+  {
+    id: '6',
+    username: 'visitor',
+    name: 'Visitor',
+    role: 'viewer',
+    department: 'General',
+    permissions: ['products.read', 'testing.read', 'reports.read'],
+    password: 'visitor',
+  },
 ];
 
 // ==================== Role Permissions Map ====================
@@ -155,6 +165,18 @@ export function SecurityProvider({ children }: { children: ReactNode }) {
       }
     } else {
       console.log('SecurityProvider: No session found.');
+      const { isInTrial } = getTrialStatus();
+      if (isInTrial) {
+        const visitorUser = DEFAULT_USERS.find(u => u.username === 'visitor');
+        if (visitorUser) {
+          const exp = new Date();
+          exp.setHours(exp.getHours() + 8);
+          const sess = { ...visitorUser, lastLogin: new Date(), sessionExpiry: exp };
+          setUser(sess);
+          localStorage.setItem('currentUser', JSON.stringify(sess));
+          localStorage.setItem('sessionExpiry', exp.toISOString());
+        }
+      }
     }
     setIsLoading(false);
     console.log('SecurityProvider: Loading set to false.');
