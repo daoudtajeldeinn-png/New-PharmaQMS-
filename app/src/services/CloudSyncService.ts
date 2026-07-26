@@ -36,7 +36,7 @@ function getRecordTimestamp(item: Record<string, unknown>): number {
         item.updatedAt ??
         item.updated_at ??
         item.createdAt ??
-        item.created_at ??
+        item.timestamp ??
         item.deleted_at;
     if (!ts) return 0;
     const n = new Date(ts as string | Date).getTime();
@@ -96,11 +96,6 @@ function serializeForSupabase(item: Record<string, unknown>, tableName?: string)
                 cleanItem.timestamp = ts instanceof Date ? ts.toISOString() : ts;
             }
         }
-        }
-        if ('timestamp' in cleanItem && !('created_at' in cleanItem)) {
-            const ts = cleanItem.timestamp;
-            cleanItem.created_at = ts instanceof Date ? ts.toISOString() : ts;
-            delete cleanItem.timestamp;
         }
         if ('relatedId' in cleanItem) {
             cleanItem.related_id = cleanItem.relatedId;
