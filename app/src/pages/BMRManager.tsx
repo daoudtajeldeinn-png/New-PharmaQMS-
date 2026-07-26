@@ -23,7 +23,7 @@ function loadCompanySettings(): CompanySettings {
         const stored = localStorage.getItem('pqms_company_settings');
         if (stored) return JSON.parse(stored);
     } catch {}
-    return { name: 'PHARMAQMS ENTERPRISE', address: 'Industrial Zone, Phase 2\nCairo, Egypt', phone: '', email: '' };
+    return { name: 'PHARMAQMS ENTERPRISE', address: '{company.address}', phone: '', email: '' };
 }
 
 export function BMRManagerPage() {
