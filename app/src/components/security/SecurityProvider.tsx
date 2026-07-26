@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, type ReactNode }
 import { supabase } from '@/lib/supabaseClient';
 import { Shield, Lock, Eye, EyeOff, Key, Fingerprint, KeyRound, ShieldAlert, Copy, Check } from 'lucide-react';
 import { useLicense } from './LicenseProvider';
-import { getMachineId, getStoredLicenseKey, setLicenseKey, validateLicenseKey, getTrialStatus } from '@/services/LicenseManager';
+import { getMachineId, getStoredLicenseKey, setLicenseKey, validateLicenseKey } from '@/services/LicenseManager';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -481,8 +481,7 @@ export function LoginPage({ forcedLicenseLock = false }: { forcedLicenseLock?: b
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useSecurity();
-  const { activate, status } = useLicense();
-  const trial = getTrialStatus();
+  const { activate, status, trial } = useLicense();
 
   const [showActivation, setShowActivation] = useState(forcedLicenseLock);
   const [activationKey, setActivationKey] = useState('');

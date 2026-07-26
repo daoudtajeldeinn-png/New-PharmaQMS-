@@ -1,9 +1,10 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { ShieldCheck } from 'lucide-react';
-import { validateLicenseKey, getStoredLicenseKey, setLicenseKey, type LicenseStatus } from '@/services/LicenseManager';
+import { validateLicenseKey, getStoredLicenseKey, setLicenseKey, getTrialStatus, type LicenseStatus, type TrialStatus } from '@/services/LicenseManager';
 
 interface LicenseContextType {
     status: LicenseStatus;
+    trial: TrialStatus;
     activate: (key: string) => boolean;
 }
 
@@ -11,6 +12,7 @@ const LicenseContext = createContext<LicenseContextType | null>(null);
 
 export function LicenseProvider({ children }: { children: ReactNode }) {
     const [status, setStatus] = useState<LicenseStatus>(validateLicenseKey(getStoredLicenseKey()));
+    const [trial, setTrial] = useState<TrialStatus>(getTrialStatus());
 
     // Re-validate daily
     useEffect(() => {
@@ -34,7 +36,7 @@ export function LicenseProvider({ children }: { children: ReactNode }) {
     const isDev = import.meta.env.DEV;
 
     return (
-        <LicenseContext.Provider value={{ status, activate }}>
+        <LicenseContext.Provider value={{ status, trial, activate }}>
             {children}
             {/* Subtle license badge/indicator */}
             <div className="fixed bottom-4 right-4 z-50 pointer-events-none opacity-20 hover:opacity-100 transition-opacity">
