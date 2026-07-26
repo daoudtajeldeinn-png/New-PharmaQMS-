@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, type ReactNode }
 import { supabase } from '@/lib/supabaseClient';
 import { Shield, Lock, Eye, EyeOff, Key, Fingerprint, KeyRound, ShieldAlert, Copy, Check } from 'lucide-react';
 import { useLicense } from './LicenseProvider';
-import { getMachineId } from '@/services/LicenseManager';
+import { getMachineId, getStoredLicenseKey, setLicenseKey, validateLicenseKey, getTrialStatus } from '@/services/LicenseManager';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -482,6 +482,7 @@ export function LoginPage({ forcedLicenseLock = false }: { forcedLicenseLock?: b
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useSecurity();
   const { activate, status } = useLicense();
+  const trial = getTrialStatus();
 
   const [showActivation, setShowActivation] = useState(forcedLicenseLock);
   const [activationKey, setActivationKey] = useState('');
@@ -575,6 +576,34 @@ export function LoginPage({ forcedLicenseLock = false }: { forcedLicenseLock?: b
         <div className="p-12 lg:p-16 flex flex-col justify-center">
           <div className="mb-10 flex flex-col items-center lg:items-start">
             <h1 className="text-3xl font-black text-white tracking-tighter uppercase mb-6">Access Portal</h1>
+          {/* ── Trial Status Banner ── */}
+          {trial.trialExpired && !status.isValid && !import.meta.env.DEV && (
+            <div className="w-full mb-6 px-4 py-3 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-start gap-3">
+              <span className="text-red-400 flex-shrink-0">🔒</span>
+              <div>
+                <p className="text-[11px] font-black text-red-400 uppercase tracking-widest">Free Trial Expired</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">Your 30-day free trial has ended. Please activate your license to continue.</p>
+              </div>
+            </div>
+          )}
+          {trial.showWarning && !status.isValid && (
+            <div className="w-full mb-6 px-4 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3">
+              <span className="text-amber-400 flex-shrink-0">⚠</span>
+              <div>
+                <p className="text-[11px] font-black text-amber-400 uppercase tracking-widest">
+                  Free Trial Ending — {trial.daysRemaining} Day{trial.daysRemaining !== 1 ? 's' : ''} Remaining
+                </p>
+                <p className="text-[10px] text-slate-400 mt-0.5">Activate your license before the trial expires to avoid interruption.</p>
+              </div>
+            </div>
+          )}
+          {trial.isInTrial && !trial.showWarning && (
+            <div className="w-full mb-4 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-2">
+              <span className="text-emerald-400 text-xs">✓</span>
+              <p className="text-[10px] font-bold text-emerald-400">Free Trial Active — {trial.daysRemaining} days remaining</p>
+            </div>
+          )}
+
             {(!forcedLicenseLock || status.isValid) && (
               <div className="flex p-1 bg-white/5 rounded-2xl w-full max-w-[300px] mb-8 border border-white/10">
                 <button
@@ -644,7 +673,7 @@ export function LoginPage({ forcedLicenseLock = false }: { forcedLicenseLock?: b
               <Button
                 type="submit"
                 className="w-full h-14 bg-indigo-600 hover:bg-slate-900 font-black uppercase tracking-widest text-xs rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-3 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={isLoading || (!status.isValid && !import.meta.env.DEV)}
+                disabled={isLoading || (!status.isValid && !import.meta.env.DEV && trial.trialExpired)}
               >
                 {isLoading ? (
                   <>
@@ -654,7 +683,7 @@ export function LoginPage({ forcedLicenseLock = false }: { forcedLicenseLock?: b
                 ) : (
                   <>
                     <Key className="h-4 w-4" />
-                    {(!status.isValid && !import.meta.env.DEV) ? 'System Locked: Activation Required' : 'Initialize Session'}
+                    {(!status.isValid && !import.meta.env.DEV && trial.trialExpired) ? 'System Locked: Activation Required' : 'Initialize Session'}
                   </>
                 )}
               </Button>
