@@ -369,7 +369,7 @@ const handleUpdateStep = (stepNumber: number, updates: StepUpdate) => {
                                     <div>
                                         <h1 className="text-4xl font-black text-slate-900 tracking-tighter leading-none mb-1">{company.name.toUpperCase()}</h1>
                                         <p className="text-[11px] font-black text-emerald-600 uppercase tracking-[0.3em] mb-1">Quality Management System | GxP COMPLIANCE</p>
-                                        <p className="text-[10px] font-bold text-slate-500 leading-tight">{company.address.split("\n").map((line, i) => <span key={i}>{line}{i < company.address.split("\n").length - 1 && <br />}</span>)}</p>
+                                        <p className="text-[10px] font-bold text-slate-500 leading-tight">{company.address.split("\n").map((line, i) => <span key={i}>{line}{i < company.address.split("\n").length - 1 && <br />}</span>)}>{line}{i < company.address.split("\n").length - 1 && <br />}</span>)}</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
