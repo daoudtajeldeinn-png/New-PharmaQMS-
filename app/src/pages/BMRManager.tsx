@@ -15,9 +15,21 @@ import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
+
+// ── Company Settings ─────────────────────────────────────────
+interface CompanySettings { name: string; address: string; phone: string; email: string; }
+function loadCompanySettings(): CompanySettings {
+    try {
+        const stored = localStorage.getItem('pqms_company_settings');
+        if (stored) return JSON.parse(stored);
+    } catch {}
+    return { name: 'PHARMAQMS ENTERPRISE', address: 'Industrial Zone, Phase 2\nCairo, Egypt', phone: '', email: '' };
+}
+
 export function BMRManagerPage() {
     const { state, dispatch } = useStore();
     const { canModify, canDelete, user } = useRoleAccess();
+    const company = loadCompanySettings();
     const records = state.batchRecords;
     const masterFormulas = state.masterFormulas;
     const [showIssueDialog, setShowIssueDialog] = useState(false);
@@ -355,7 +367,7 @@ const handleUpdateStep = (stepNumber: number, updates: StepUpdate) => {
                                         <ShieldCheck className="h-10 w-10" />
                                     </div>
                                     <div>
-                                        <h1 className="text-4xl font-black text-slate-900 tracking-tighter leading-none mb-1">PHARMAQMS ENTERPRISE</h1>
+                                        <h1 className="text-4xl font-black text-slate-900 tracking-tighter leading-none mb-1">{company.name.toUpperCase()}</h1>
                                         <p className="text-[11px] font-black text-emerald-600 uppercase tracking-[0.3em] mb-1">Quality Management System | GxP COMPLIANCE</p>
                                         <p className="text-[10px] font-bold text-slate-500 leading-tight">Industrial Zone, Phase 2, Pharmaceutical District<br />Cairo, Egypt | Standard Operating Procedure: SOP-PRD-001</p>
                                     </div>
