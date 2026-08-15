@@ -384,7 +384,7 @@ export function LaboratoryPage() {
               <TableBody>
                 {filteredReagents.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-20 text-slate-400 italic">
+                    <TableCell colSpan={8} className="text-center py-20 text-slate-400 italic">
                       No reagents found matching search criteria.
                     </TableCell>
                   </TableRow>
@@ -507,7 +507,7 @@ export function LaboratoryPage() {
               <TableBody>
                 {filteredStandards.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-20 text-slate-400 italic">
+                    <TableCell colSpan={7} className="text-center py-20 text-slate-400 italic">
                       No reference standards recorded.
                     </TableCell>
                   </TableRow>
