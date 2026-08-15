@@ -107,7 +107,8 @@ app.whenReady().then(() => {
   
   // Check for updates automatically
   if (!isDev) {
-    autoUpdater.checkForUpdatesAndNotify();
+    // autoUpdater disabled  no GitHub releases configured yet
+  // autoUpdater.checkForUpdatesAndNotify();
   }
 });
 
