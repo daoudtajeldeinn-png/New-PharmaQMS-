@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useStore } from '@/hooks/useStore';
 import { toast, Toaster } from 'sonner';
 import {
@@ -59,8 +60,23 @@ const gradeLabels: Record<string, string> = {
 
 export function LaboratoryPage() {
   const { state, dispatch } = useStore();
+  const location = useLocation();
+  const navigate = useNavigate();
   const now = useMemo(() => Date.now(), []);
   const [activeTab, setActiveTab] = useState('reagents');
+
+  // Sync tab with URL
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.includes('/standards')) setActiveTab('standards');
+    else if (path.includes('/lab_operation') || path.includes('/operations')) setActiveTab('lab_operation');
+    else if (path.includes('/reagents') || path.endsWith('/lab')) setActiveTab('reagents');
+  }, [location.pathname]);
+
+  const handleTabChange = (val: string) => {
+    setActiveTab(val);
+    navigate(`/lab/${val}`);
+  };
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isReagentFormOpen, setIsReagentFormOpen] = useState(false);
@@ -336,7 +352,7 @@ export function LaboratoryPage() {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="grid w-full grid-cols-3 bg-slate-100 p-1">
           <TabsTrigger value="reagents">Chemical Reagents</TabsTrigger>
           <TabsTrigger value="standards">Reference Standards</TabsTrigger>
