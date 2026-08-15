@@ -158,6 +158,7 @@ export type Action =
     | { type: 'SET_REFERENCE_STANDARDS'; payload: ReferenceStandard[] }
     | { type: 'ADD_REFERENCE_STANDARD'; payload: ReferenceStandard }
     | { type: 'UPDATE_REFERENCE_STANDARD'; payload: ReferenceStandard }
+    | { type: 'DELETE_REFERENCE_STANDARD'; payload: string }
     | { type: 'SET_QUALITY_SYSTEMS'; payload: QualitySystem[] }
     | { type: 'ADD_QUALITY_SYSTEM'; payload: QualitySystem }
     | { type: 'UPDATE_QUALITY_SYSTEM'; payload: QualitySystem }
@@ -290,6 +291,8 @@ export function appReducer(state: AppState, action: Action): AppState {
             return { ...state, referenceStandards: [...state.referenceStandards, action.payload] };
         case 'UPDATE_REFERENCE_STANDARD':
             return { ...state, referenceStandards: state.referenceStandards.map((r) => r.id === action.payload.id ? action.payload : r) };
+        case 'DELETE_REFERENCE_STANDARD':
+            return { ...state, referenceStandards: state.referenceStandards.filter((r) => r.id !== action.payload) };
         case 'SET_QUALITY_SYSTEMS':
             return { ...state, qualitySystems: action.payload };
         case 'ADD_QUALITY_SYSTEM':
@@ -527,6 +530,8 @@ export function appReducerWithPersistence(state: AppState, action: Action): AppS
                 db.referenceStandards.put(action.payload); 
                 console.log('✅ Reference Standard saved successfully');
                 break;
+            case 'DELETE_REFERENCE_STANDARD':
+                db.referenceStandards.delete(action.payload); break;
             case 'ADD_QUALITY_SYSTEM': case 'UPDATE_QUALITY_SYSTEM':
                 db.qualitySystems.put(action.payload); break;
             case 'ADD_TRAINING_RECORD': case 'UPDATE_TRAINING_RECORD':
