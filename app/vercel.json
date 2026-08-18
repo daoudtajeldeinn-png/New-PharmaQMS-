@@ -6,7 +6,7 @@
   "devCommand": "npm run dev",
   "headers": [
     {
-      "source": "/sw.js",
+      "source": "/(index.html|sw.js|registerSW.js|manifest.json|manifest.webmanifest)",
       "headers": [
         {
           "key": "Cache-Control",
