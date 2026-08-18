@@ -28,7 +28,9 @@ export default defineConfig({
   plugins: [
     react(),
     ...(!isElectronBuild ? [VitePWA({
-      registerType: 'autoUpdate',
+      // Keep the current session stable and let the app show a clear update action.
+      // This avoids silently replacing code while a user is working in a QMS workflow.
+      registerType: 'prompt',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg', 'manifest.json'],
       manifest: {
         name: 'نظام الجودة الشاملة للأدوية',
@@ -86,6 +88,7 @@ export default defineConfig({
         ]
       },
       workbox: {
+        cleanupOutdatedCaches: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,json,webmanifest}'],
         maximumFileSizeToCacheInBytes: 5000000,
         runtimeCaching: [

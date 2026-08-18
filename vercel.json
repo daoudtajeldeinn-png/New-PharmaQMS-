@@ -5,6 +5,21 @@
     "VITE_SUPABASE_URL": "https://xxlxfhlliojkplrcvukc.supabase.co",
     "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bHhmaGxsaW9qa3BscmN2dWtjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2Mzc4NzYsImV4cCI6MjA4NTIxMzg3Nn0.Cvvlo_9WfpfdfiFn4ytF_xSViJE0ouimzypbznoUFFE"
   },
+  "headers": [
+    {
+      "source": "/(index.html|sw.js|registerSW.js|manifest.json|manifest.webmanifest)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        },
+        {
+          "key": "Service-Worker-Allowed",
+          "value": "/"
+        }
+      ]
+    }
+  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
