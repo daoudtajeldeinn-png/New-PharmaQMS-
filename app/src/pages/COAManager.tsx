@@ -1,7 +1,9 @@
+import { toDateStr } from '../utils/dateUtil';
+import { sortFinishedProductTests } from '../utils/coaSort';
 import { useState, useRef } from 'react';
 import { useStore } from '@/hooks/useStore';
 import { useRoleAccess } from '@/hooks/useRoleAccess';
-import { Download, Printer, Plus, Activity, AlertCircle, Database, ShieldCheck, Lock, Upload, FileText } from 'lucide-react';
+import { Download, Printer, Plus, Activity, AlertCircle, Database, ShieldCheck, Lock, Upload } from 'lucide-react';
 import { DataTableActions } from '@/components/ui/data-table-actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,7 +12,6 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useReactToPrint } from 'react-to-print';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { g1Monographs } from '@/data/g1Data';
@@ -50,73 +51,6 @@ export function COAManagerPage() {
         if (!file) return;
         console.log(`[COA Foundry] Processing PDF/Document attachment: ${file.name} (${file.size} bytes)`);
         toast.success(`PDF Lab Report "${file.name}" uploaded successfully for auto-test verification.`);
-    };
-
-    const sortFinishedProductTests = (tests: any[]): any[] => {
-        const getTestOrderScore = (testName: string): number => {
-            const name = (testName || '').toLowerCase().trim();
-            
-            // 1. Description or Appearance
-            if (name.includes('description') || name.includes('appearance') || name.includes('characters')) {
-                return 10;
-            }
-            
-            // 2. Identification
-            if (name.includes('identification') || name.includes('identity')) {
-                if (name.includes('ir') || name.includes('infra')) {
-                    return 21; // Identification A: IR
-                }
-                if (name.includes('colour') || name.includes('color') || name.includes('reaction')) {
-                    return 22; // Identification B: colour reaction
-                }
-                if (name.includes('melting')) {
-                    return 23; // Identification C: Melting Point
-                }
-                return 24; // Other Identification
-            }
-            if (name.includes('melting point') || name.includes('melting range')) {
-                return 23; // Identification C: Melting Point
-            }
-            
-            // 3. uniformity of Weight
-            if (name.includes('uniformity') || name.includes('weight') || name.includes('variation') || name.includes('average weight')) {
-                return 30;
-            }
-            
-            // 4. disintegration
-            if (name.includes('disintegration')) {
-                return 40;
-            }
-            
-            // 5. Dissolution
-            if (name.includes('dissolution')) {
-                return 50;
-            }
-            
-            // 6. Related substance
-            if (name.includes('related') || name.includes('impurity') || name.includes('impurities') || name.includes('degradation')) {
-                return 60;
-            }
-            
-            // 7. Friability
-            if (name.includes('friability')) {
-                return 70;
-            }
-            
-            // 8. thickness
-            if (name.includes('thickness')) {
-                return 80;
-            }
-            
-            // 9. Hardness
-            if (name.includes('hardness')) {
-                return 90;
-            }
-            
-            return 999; // Append any other tests at the end
-        };
-
-        return [...tests].sort((a, b) => getTestOrderScore(a.test) - getTestOrderScore(b.test));
     };
 
     const handlePrint = () => {
@@ -560,8 +494,8 @@ export function COAManagerPage() {
                                           const brandName = product?.brandName || product?.name || batchRecord?.productName || '';
                                           const dosageForm = product?.dosageForm || '';
                                           const strength = product?.strength || '';
-                                          const manufacturingDate = batchRecord?.mfgDate || batchRecord?.manufacturingDate || product?.manufacturingDate || '';
-                                          const expiryDate = batchRecord?.expiryDate || product?.expiryDate || '';
+                                          const manufacturingDate = toDateStr(batchRecord?.mfgDate ?? product?.manufacturingDate);
+                                          const expiryDate = toDateStr(batchRecord?.expiryDate ?? product?.expiryDate);
                                           const quantity = batchRecord?.batchSize ? `${batchRecord.batchSize} ${batchRecord.batchSizeUnit || 'kg'}` : (product?.quantity ? `${product.quantity} ${product.unit || 'units'}` : '');
                                           const manufacturer = product?.manufacturer || 'Self Manufactured';
                                           const address = product?.address || 'GMP Certified Production Block A';
