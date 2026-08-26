@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useSecurity } from '@/components/security/SecurityProvider';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { toast } from 'sonner';
 
 export interface ExtraAction<T> {
@@ -43,6 +44,7 @@ export function DataTableActions<T extends { id: string }>({
   extraActions = [],
 }: DataTableActionsProps<T>) {
   const { user } = useSecurity();
+  const { isAdminRole } = useRoleAccess();
 
   void dispatch;
 
@@ -72,7 +74,7 @@ export function DataTableActions<T extends { id: string }>({
             View
           </DropdownMenuItem>
         )}
-        {(user?.role === 'admin' || user?.role === 'it_admin' || user?.role === 'qa_admin') && onEdit && (
+        {isAdminRole && onEdit && (
           <DropdownMenuItem 
             onClick={() => onEdit(item)}
             className="text-blue-600 focus:text-blue-600"
@@ -91,7 +93,7 @@ export function DataTableActions<T extends { id: string }>({
             {action.label}
           </DropdownMenuItem>
         ))}
-        {onDelete && (user?.role === 'admin' || user?.role === 'it_admin' || user?.role === 'qa_admin') && (
+        {onDelete && isAdminRole && (
           <DropdownMenuItem 
             onClick={handleDelete}
             className="text-red-600 focus:text-red-600"

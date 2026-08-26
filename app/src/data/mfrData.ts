@@ -42,6 +42,8 @@ export interface MasterFormula {
     preparedBy?: string;
     checkedBy?: string;
     approvedBy?: string;
+    /** Soft-delete tombstone set by SoftDeleteService */
+    deleted_at?: string;
 }
 
 export const masterFormulas: Record<string, MasterFormula> = {

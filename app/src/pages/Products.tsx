@@ -18,7 +18,7 @@ import type { PharmaceuticalProduct } from '@/types';
 export function Products() {
   const { state, dispatch } = useStore();
   const { user } = useSecurity();
-  const { canDelete, handleDelete, isDeleting } = useDelete();
+  const { canDelete, handleDelete, isDeleting: _isDeleting } = useDelete();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<PharmaceuticalProduct | null>(null);

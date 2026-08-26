@@ -32,6 +32,7 @@ import { cn } from '@/lib/utils';
 import { useSecurity } from '@/components/security/SecurityProvider';
 import { toast } from 'sonner';
 import { useDelete } from '@/hooks/useDelete';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { DeleteConfirmationDialog } from '@/components/security/DeleteConfirmationDialog';
 
 const auditTypeLabels: Record<string, string> = {
@@ -73,6 +74,7 @@ const findingCategoryColors: Record<string, string> = {
 export function AuditsPage() {
   const { state, dispatch } = useStore();
   const { user } = useSecurity();
+  const { isAdminRole } = useRoleAccess();
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -346,7 +348,7 @@ export function AuditsPage() {
                           <CheckCircle className="h-4 w-4" />
                         </Button>
                       )}
-                      {(user?.role === 'admin' || user?.role === 'it_admin' || user?.role === 'qa_admin') && (
+                      {isAdminRole && (
                         <Button
                           variant="ghost"
                           size="icon"

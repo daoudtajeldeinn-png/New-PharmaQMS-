@@ -66,7 +66,7 @@ const RESTORE_ACTION_MAP: Record<string, string> = {
 };
 
 export function DataRecoveryConsole() {
-  const { canRecover, isAdminRole, user } = useRoleAccess();
+  const { canRecover: _canRecover, isAdminRole, user } = useRoleAccess();
   const { dispatch } = useStore();
   const [deletedRecords, setDeletedRecords] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');

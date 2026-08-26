@@ -21,8 +21,8 @@ const ADMIN_ROLES = new Set(['it_admin', 'qa_admin', 'admin']);
 export function useRoleAccess() {
   const { user } = useSecurity();
 
-  const username = user?.username?.toLowerCase();
-  const isAdminRole = !!(user && (username === 'admin' || username === 'qa_admin'));
+  const username = user?.username?.toLowerCase() ?? '';
+  const isAdminRole = !!(user && ADMIN_ROLES.has(username));
 
   /** Create / edit records */
   const canModify = isAdminRole;
