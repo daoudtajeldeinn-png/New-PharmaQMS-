@@ -33,6 +33,8 @@ import { Search, Beaker, FlaskConical, AlertTriangle, MoreHorizontal, Edit, Tras
 import { Combobox } from '@/components/ui/combobox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useSecurity } from '@/components/security/SecurityProvider';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
+import { DeleteConfirmationDialog } from '@/components/security/DeleteConfirmationDialog';
 import { cn } from '@/lib/utils';
 
 const reagentStatusColors = {
@@ -85,6 +87,8 @@ export function LaboratoryPage() {
   const [editingStandardId, setEditingStandardId] = useState<string | null>(null);
   const { user } = useSecurity();
   const currentUserName = user?.name || 'System User';
+  const { canDelete } = useRoleAccess();
+  const [pendingDelete, setPendingDelete] = useState<{ kind: 'reagent' | 'standard'; id: string; name: string } | null>(null);
   const [reagentGrade, setReagentGrade] = useState('');
   const [reagentUnit, setReagentUnit] = useState('');
   
@@ -138,7 +142,7 @@ export function LaboratoryPage() {
       const existing = state.chemicalReagents.find(r => r.id === editingReagentId);
       if (existing) {
         dispatch({ type: 'UPDATE_CHEMICAL_REAGENT', payload: { ...existing, ...baseReagent } });
-        dispatch({ type: 'ADD_ACTIVITY', payload: { id: `act-${Date.now()}`, type: 'update', user: currentUserName, timestamp: new Date(), details: `Updated Reagent: ${baseReagent.name}` } });
+        dispatch({ type: 'ADD_ACTIVITY', payload: { id: `act-${Date.now()}`, type: 'update', user: currentUserName, timestamp: new Date(), description: `Updated Reagent: ${baseReagent.name}` } });
         toast.success(`Successfully updated reagent: ${baseReagent.name}`);
       }
     } else {
@@ -152,7 +156,7 @@ export function LaboratoryPage() {
         safetyInfo: { hazardStatements: [], precautionaryStatements: [] },
       };
       dispatch({ type: 'ADD_CHEMICAL_REAGENT', payload: newReagent as any });
-      dispatch({ type: 'ADD_ACTIVITY', payload: { id: `act-${Date.now()}`, type: 'create', user: currentUserName, timestamp: new Date(), details: `Registered Reagent: ${baseReagent.name}` } });
+      dispatch({ type: 'ADD_ACTIVITY', payload: { id: `act-${Date.now()}`, type: 'create', user: currentUserName, timestamp: new Date(), description: `Registered Reagent: ${baseReagent.name}` } });
       toast.success(`Successfully registered reagent: ${baseReagent.name}`);
     }
 
@@ -181,11 +185,11 @@ export function LaboratoryPage() {
   };
 
   const handleDeleteReagent = (id: string, name: string) => {
-    if (window.confirm(`Are you sure you want to delete the reagent "${name}"?`)) {
-      dispatch({ type: 'DELETE_CHEMICAL_REAGENT', payload: id });
-      dispatch({ type: 'ADD_ACTIVITY', payload: { id: `act-${Date.now()}`, type: 'delete', user: currentUserName, timestamp: new Date(), details: `Deleted Reagent: ${name}` } });
-      toast.success(`Deleted reagent: ${name}`);
+    if (!canDelete) {
+      toast.error('Access Denied: Only IT Admin or QA Admin can delete records.');
+      return;
     }
+    setPendingDelete({ kind: 'reagent', id, name });
   };
 
   // Standard Form States
@@ -205,11 +209,34 @@ export function LaboratoryPage() {
   };
 
   const handleDeleteStandard = (id: string, name: string) => {
-    if (window.confirm(`Are you sure you want to delete the standard "${name}"?`)) {
-      dispatch({ type: 'DELETE_REFERENCE_STANDARD', payload: id });
-      dispatch({ type: 'ADD_ACTIVITY', payload: { id: `act-${Date.now()}`, type: 'delete', user: currentUserName, timestamp: new Date(), details: `Deleted Standard: ${name}` } });
-      toast.success(`Deleted reference standard: ${name}`);
+    if (!canDelete) {
+      toast.error('Access Denied: Only IT Admin or QA Admin can delete records.');
+      return;
     }
+    setPendingDelete({ kind: 'standard', id, name });
+  };
+
+  const handleConfirmedDelete = (reason: string) => {
+    if (!pendingDelete) return;
+    const { kind, id, name } = pendingDelete;
+    const now = new Date().toISOString();
+
+    if (kind === 'reagent') {
+      const target = state.chemicalReagents.find((r) => r.id === id);
+      if (target) {
+        dispatch({ type: 'UPDATE_CHEMICAL_REAGENT', payload: { ...target, deletedAt: now, deletedBy: currentUserName, deleteReason: reason } });
+        dispatch({ type: 'ADD_ACTIVITY', payload: { id: `act-${Date.now()}`, type: 'delete', user: currentUserName, timestamp: new Date(), description: `[DELETE] Reagent: "${name}" by ${currentUserName}. Reason: ${reason}` } });
+        toast.success(`Reagent "${name}" archived (recoverable).`);
+      }
+    } else {
+      const target = state.referenceStandards.find((s) => s.id === id);
+      if (target) {
+        dispatch({ type: 'UPDATE_REFERENCE_STANDARD', payload: { ...target, deletedAt: now, deletedBy: currentUserName, deleteReason: reason } });
+        dispatch({ type: 'ADD_ACTIVITY', payload: { id: `act-${Date.now()}`, type: 'delete', user: currentUserName, timestamp: new Date(), description: `[DELETE] Standard: "${name}" by ${currentUserName}. Reason: ${reason}` } });
+        toast.success(`Standard "${name}" archived (recoverable).`);
+      }
+    }
+    setPendingDelete(null);
   };
 
   const handleSaveStandard = () => {
@@ -233,7 +260,7 @@ export function LaboratoryPage() {
       const existing = state.referenceStandards.find(r => r.id === editingStandardId);
       if (existing) {
         dispatch({ type: 'UPDATE_REFERENCE_STANDARD', payload: { ...existing, ...baseStd } });
-        dispatch({ type: 'ADD_ACTIVITY', payload: { id: `act-${Date.now()}`, type: 'update', user: currentUserName, timestamp: new Date(), details: `Updated Standard: ${baseStd.name}` } });
+        dispatch({ type: 'ADD_ACTIVITY', payload: { id: `act-${Date.now()}`, type: 'update', user: currentUserName, timestamp: new Date(), description: `Updated Standard: ${baseStd.name}` } });
         toast.success(`Updated standard: ${baseStd.name}`);
       }
     } else {
@@ -245,7 +272,7 @@ export function LaboratoryPage() {
         location: 'Standard Fridge 1',
       };
       dispatch({ type: 'ADD_REFERENCE_STANDARD', payload: newStd as any });
-      dispatch({ type: 'ADD_ACTIVITY', payload: { id: `act-${Date.now()}`, type: 'create', user: currentUserName, timestamp: new Date(), details: `Registered Standard: ${baseStd.name}` } });
+      dispatch({ type: 'ADD_ACTIVITY', payload: { id: `act-${Date.now()}`, type: 'create', user: currentUserName, timestamp: new Date(), description: `Registered Standard: ${baseStd.name}` } });
       toast.success(`Registered standard: ${baseStd.name}`);
     }
 
@@ -275,6 +302,7 @@ export function LaboratoryPage() {
   ];
 
   const filteredReagents = state.chemicalReagents.filter((reagent) => {
+    if (reagent.deletedAt) return false;
     const matchesSearch =
       reagent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       reagent.casNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -286,6 +314,7 @@ export function LaboratoryPage() {
   });
 
   const filteredStandards = state.referenceStandards.filter((std) => {
+    if (std.deletedAt) return false;
     const matchesSearch =
       std.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       std.lotNumber.toLowerCase().includes(searchTerm.toLowerCase());
@@ -850,6 +879,15 @@ export function LaboratoryPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* ── Soft-delete confirmation dialog ── */}
+      <DeleteConfirmationDialog
+        open={pendingDelete !== null}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={handleConfirmedDelete}
+        recordLabel={pendingDelete?.name ?? ''}
+        tableName={pendingDelete?.kind === 'reagent' ? 'chemicalReagents' : 'referenceStandards'}
+      />
     </div>
   );
 }

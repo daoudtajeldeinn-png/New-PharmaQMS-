@@ -24,7 +24,7 @@ import { cn } from '@/lib/utils';
 interface ProductTableProps {
   products: PharmaceuticalProduct[];
   onEdit: (product: PharmaceuticalProduct) => void;
-  onDelete: (product: PharmaceuticalProduct) => void;
+  onDelete?: (product: PharmaceuticalProduct) => void;
   onView: (product: PharmaceuticalProduct) => void;
   onTest: (product: PharmaceuticalProduct) => void;
 }

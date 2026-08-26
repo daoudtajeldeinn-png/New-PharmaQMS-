@@ -9,6 +9,8 @@ const isElectronBuild = process.env.ELECTRON === 'true'
 export default defineConfig({
   base: './',
   build: {
+    sourcemap: false,
+    minify: false,
     // Increase warning limit and add manual chunking for large node_modules
     chunkSizeWarningLimit: 1000, // kB
     rollupOptions: {

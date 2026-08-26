@@ -284,7 +284,7 @@ export function appReducer(state: AppState, action: Action): AppState {
         case 'UPDATE_CHEMICAL_REAGENT':
             return { ...state, chemicalReagents: state.chemicalReagents.map((c) => c.id === action.payload.id ? action.payload : c) };
         case 'DELETE_CHEMICAL_REAGENT':
-            return { ...state, chemicalReagents: state.chemicalReagents.filter((c) => c.id !== action.payload) };
+            return { ...state, chemicalReagents: state.chemicalReagents.map((r) => r.id === action.payload ? { ...r, deletedAt: new Date().toISOString() } : r) };
         case 'SET_REFERENCE_STANDARDS':
             return { ...state, referenceStandards: action.payload };
         case 'ADD_REFERENCE_STANDARD':
@@ -292,7 +292,7 @@ export function appReducer(state: AppState, action: Action): AppState {
         case 'UPDATE_REFERENCE_STANDARD':
             return { ...state, referenceStandards: state.referenceStandards.map((r) => r.id === action.payload.id ? action.payload : r) };
         case 'DELETE_REFERENCE_STANDARD':
-            return { ...state, referenceStandards: state.referenceStandards.filter((r) => r.id !== action.payload) };
+            return { ...state, referenceStandards: state.referenceStandards.map((s) => s.id === action.payload ? { ...s, deletedAt: new Date().toISOString() } : s) };
         case 'SET_QUALITY_SYSTEMS':
             return { ...state, qualitySystems: action.payload };
         case 'ADD_QUALITY_SYSTEM':

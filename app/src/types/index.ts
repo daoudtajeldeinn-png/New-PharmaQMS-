@@ -17,6 +17,7 @@ export interface PharmaceuticalProduct {
   quantity: number;
   unit: string;
   storageConditions: StorageCondition;
+  address?: string;
   registrationNumber?: string;
   pharmacopeiaStandard: PharmacopeiaStandard;
   status: ProductStatus;
@@ -211,6 +212,7 @@ export interface Phase2Investigation {
 // ==================== CAPA ====================
 export interface CAPA {
   id: string;
+  capaNumber?: string;
   title: string;
   description: string;
   source: CAPASource;
@@ -350,6 +352,9 @@ export interface ChemicalReagent {
   dateReceived: Date;
   location: string;
   safetyInfo: SafetyInfo;
+  deletedAt?: string;
+  deletedBy?: string;
+  deleteReason?: string;
   status: ReagentStatus;
 }
 
@@ -364,6 +369,9 @@ export interface ReferenceStandard {
   storageConditions: string;
   certificateOfAnalysis?: string;
   status: 'Active' | 'Expired' | 'Depleted';
+  deletedAt?: string;
+  deletedBy?: string;
+  deleteReason?: string;
 }
 
 export type ReagentGrade = 'ACS' | 'Reagent' | 'Pharmaceutical' | 'HPLC' | 'GC' | 'Spectrophotometric' | 'Other';
@@ -523,6 +531,7 @@ export interface DashboardStats {
 export interface Activity {
   id: string;
   type: ActivityType;
+  details?: string;
   description: string;
   user: string;
   timestamp: Date;
@@ -530,6 +539,10 @@ export interface Activity {
 }
 
 export type ActivityType =
+  | 'create'
+  | 'update'
+  | 'delete'
+  | 'Material_Updated'
   | 'Product_Created'
   | 'Product_Updated'
   | 'Test_Completed'
