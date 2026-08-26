@@ -17,6 +17,7 @@ export interface PharmaceuticalProduct {
   quantity: number;
   unit: string;
   storageConditions: StorageCondition;
+  address?: string;
   registrationNumber?: string;
   pharmacopeiaStandard: PharmacopeiaStandard;
   status: ProductStatus;
