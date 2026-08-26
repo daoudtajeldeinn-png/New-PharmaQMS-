@@ -14,6 +14,7 @@ export default defineConfig({
     // Increase warning limit and add manual chunking for large node_modules
     chunkSizeWarningLimit: 1000, // kB
     rollupOptions: {
+      external: isElectronBuild ? ["virtual:pwa-register/react"] : [],
       output: {
         // Create a separate chunk per top-level npm package to avoid circular
         // vendor groupings and make caching more granular.
@@ -132,6 +133,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      ...(isElectronBuild ? { 'virtual:pwa-register/react': path.resolve(__dirname, './src/pwa-stub.ts') } : {}),
     },
   },
   server: {
