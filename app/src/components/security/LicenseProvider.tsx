@@ -12,7 +12,7 @@ const LicenseContext = createContext<LicenseContextType | null>(null);
 
 export function LicenseProvider({ children }: { children: ReactNode }) {
     const [status, setStatus] = useState<LicenseStatus>(validateLicenseKey(getStoredLicenseKey()));
-    const [trial, setTrial] = useState<TrialStatus>(getTrialStatus());
+    const [trial, _setTrial] = useState<TrialStatus>(getTrialStatus());
 
     // Re-validate daily
     useEffect(() => {

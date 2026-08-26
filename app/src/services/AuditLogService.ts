@@ -45,14 +45,14 @@ export class AuditLogService {
       };
 
       const localActivity = {
+        // Spread logEntry first so our typed fields below take precedence
+        ...logEntry,
         id,
         type: activityMap[actionType] || 'Product_Updated',
         description: `[${actionType}] ${tableName} (ID: ${recordId}) - ${recordDescription} ${reason ? `Reason: ${reason}` : ''}`,
         user: `${userName} (${userRole})`,
         timestamp: new Date(timestamp),
         relatedId: recordId,
-        // Include full metadata
-        ...logEntry
       };
       await db.activities.put(localActivity as any);
     } catch (err) {

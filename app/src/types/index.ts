@@ -212,6 +212,7 @@ export interface Phase2Investigation {
 // ==================== CAPA ====================
 export interface CAPA {
   id: string;
+  capaNumber?: string;
   title: string;
   description: string;
   source: CAPASource;

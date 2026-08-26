@@ -31,6 +31,7 @@ import type { ProductRecall, RecallUpdate } from '@/types';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useSecurity } from '@/components/security/SecurityProvider';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 
 const classificationColors = {
     Class_I: 'bg-red-600 text-white border-red-700',
@@ -63,6 +64,7 @@ export function RecallsPage() {
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
     const [newUpdate, setNewUpdate] = useState('');
     const { user } = useSecurity();
+    const { isAdminRole } = useRoleAccess();
 
     const handleCloseRecall = (recall: ProductRecall) => {
         dispatch({
@@ -342,7 +344,7 @@ export function RecallsPage() {
                                                 </Button>
                                             )}
 
-                                            {(user?.role === 'admin' || user?.role === 'it_admin' || user?.role === 'qa_admin') && (
+                                            {isAdminRole && (
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"

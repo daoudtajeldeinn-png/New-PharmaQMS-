@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import { useStore } from '@/hooks/useStore';
 import { useDelete } from '@/hooks/useDelete';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { DeleteConfirmationDialog } from '@/components/security/DeleteConfirmationDialog';
 import { TestMethodForm } from '@/components/testing/TestMethodForm';
 import { TestResultForm } from '@/components/testing/TestResultForm';
@@ -76,6 +77,7 @@ export function Testing() {
   };
 
   const { user } = useSecurity();
+  const { isAdminRole } = useRoleAccess();
   const { canDelete, handleDelete } = useDelete();
   const [isResultDeleteDialogOpen, setIsResultDeleteDialogOpen] = useState(false);
   const [selectedResultToDelete, setSelectedResultToDelete] = useState<TestResult | null>(null);
@@ -510,7 +512,7 @@ export function Testing() {
                                 <CheckCircle className="h-4 w-4" />
                               </Button>
                             )}
-                            {(user?.role === 'admin' || user?.role === 'it_admin' || user?.role === 'qa_admin') && (
+                            {isAdminRole && (
                               <Button
                                 variant="ghost"
                                 size="icon"

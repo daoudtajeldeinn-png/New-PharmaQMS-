@@ -31,6 +31,7 @@ import type { MarketComplaint } from '@/types';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useSecurity } from '@/components/security/SecurityProvider';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 
 const severityColors = {
     Critical: 'bg-red-100 text-red-800 border-red-300',
@@ -49,6 +50,7 @@ const statusColors = {
 export function MarketComplaintsPage() {
     const { state, dispatch } = useStore();
     const { user } = useSecurity();
+    const { isAdminRole } = useRoleAccess();
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -273,7 +275,7 @@ export function MarketComplaintsPage() {
                                                     <CheckCircle className="h-4 w-4" />
                                                 </Button>
                                             )}
-                                            {(user?.role === 'admin' || user?.role === 'it_admin' || user?.role === 'qa_admin') && (
+                                            {isAdminRole && (
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"

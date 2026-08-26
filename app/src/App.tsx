@@ -199,7 +199,7 @@ function AppLayout() {
     return () => clearTimeout(timer);
   }, [user?.id, status.isValid, reloadFromDB]);
 
-  const trial = getTrialStatus();
+  void getTrialStatus(); // kept for side-effect potential; remove when trial UI is wired
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <Sidebar />

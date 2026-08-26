@@ -50,13 +50,14 @@ export interface DeleteResult {
 
 /**
  * Writes an audit log entry to both Dexie and Supabase activities table.
+ * @internal - reserved for direct-delete flows; call via deleteRecord for gated access
  */
-async function writeAuditLog(
+async function _writeAuditLog(
   user: User,
   action: 'DELETE' | 'RECOVER',
   tableName: string,
   recordId: string,
-  recordLabel: string
+  _recordLabel: string
 ) {
   const entry = {
     id: crypto.randomUUID(),
