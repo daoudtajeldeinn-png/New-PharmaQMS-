@@ -163,9 +163,9 @@ const [materialForm, setMaterialForm] = useState({
     }
 
     // Determine department based on user selection or role
-    const currentDept = materialForm.type === 'Microbiology' ? 'Microbiology' : 'QC';
+    const currentDept = 'QC';
 
-    const tests = PHARMACOPEIA_TESTS[materialForm.type === 'Microbiology' ? 'API' : materialForm.type]?.map(test => ({
+    const tests = PHARMACOPEIA_TESTS[materialForm.type]?.map(test => ({
       ...test,
       id: Math.random().toString(36).substr(2, 9),
       result: undefined,
@@ -1160,6 +1160,7 @@ const [materialForm, setMaterialForm] = useState({
 
       <DeleteConfirmationDialog
         open={isDeleteDialogOpen}
+          tableName="rawMaterials"
         onClose={() => setIsDeleteDialogOpen(false)}
         onConfirm={confirmDeleteMaterial}
         recordLabel={selectedMaterial?.name || ''}
@@ -1167,6 +1168,7 @@ const [materialForm, setMaterialForm] = useState({
 
       <DeleteConfirmationDialog
         open={isDeleteMovementOpen}
+          tableName="materialMovements"
         onClose={() => setIsDeleteMovementOpen(false)}
         onConfirm={confirmDeleteMovement}
         recordLabel={selectedMovement ? `${selectedMovement.type} movement of ${selectedMovement.quantity} ${selectedMovement.unit}` : ''}
