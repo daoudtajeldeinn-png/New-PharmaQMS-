@@ -128,16 +128,16 @@ app.whenReady().then(() => {
 // IPC Listeners for manual update control
 ipcMain.on('check-for-update', () => {
   if (!isDev) {
-    autoUpdater.checkForUpdates();
+//     autoUpdater.checkForUpdates();
   } else {
     mainWindow.webContents.send('update-not-available');
   }
 });
 
 ipcMain.on('quit-and-install', () => {
-  autoUpdater.quitAndInstall(false, true);
+//   autoUpdater.quitAndInstall(false, true);
 });
-
+// 
 autoUpdater.on('update-available', () => {
   if (mainWindow) {
     mainWindow.webContents.send('update-available');
@@ -148,13 +148,13 @@ autoUpdater.on('update-available', () => {
     message: 'A new version of PharmaQMS Enterprise is available. Downloading now...'
   });
 });
-
+// 
 autoUpdater.on('update-not-available', () => {
   if (mainWindow) {
     mainWindow.webContents.send('update-not-available');
   }
 });
-
+// 
 autoUpdater.on('update-downloaded', () => {
   if (mainWindow) {
     mainWindow.webContents.send('update-downloaded');
@@ -166,11 +166,11 @@ autoUpdater.on('update-downloaded', () => {
     buttons: ['Restart Now', 'Later']
   }).then((result) => {
     if (result.response === 0) {
-      autoUpdater.quitAndInstall(false, true);
+//       autoUpdater.quitAndInstall(false, true);
     }
   });
 });
-
+// 
 autoUpdater.on('error', (err) => {
   console.error('Error in auto-updater: ', err);
   if (mainWindow) {
