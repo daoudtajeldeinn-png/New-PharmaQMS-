@@ -351,6 +351,9 @@ export interface ChemicalReagent {
   dateReceived: Date;
   location: string;
   safetyInfo: SafetyInfo;
+  deletedAt?: string;
+  deletedBy?: string;
+  deleteReason?: string;
   status: ReagentStatus;
 }
 
@@ -365,6 +368,9 @@ export interface ReferenceStandard {
   storageConditions: string;
   certificateOfAnalysis?: string;
   status: 'Active' | 'Expired' | 'Depleted';
+  deletedAt?: string;
+  deletedBy?: string;
+  deleteReason?: string;
 }
 
 export type ReagentGrade = 'ACS' | 'Reagent' | 'Pharmaceutical' | 'HPLC' | 'GC' | 'Spectrophotometric' | 'Other';
