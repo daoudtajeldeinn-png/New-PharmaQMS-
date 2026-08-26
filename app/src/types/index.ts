@@ -524,6 +524,7 @@ export interface DashboardStats {
 export interface Activity {
   id: string;
   type: ActivityType;
+  details?: string;
   description: string;
   user: string;
   timestamp: Date;
@@ -531,6 +532,10 @@ export interface Activity {
 }
 
 export type ActivityType =
+  | 'create'
+  | 'update'
+  | 'delete'
+  | 'Material_Updated'
   | 'Product_Created'
   | 'Product_Updated'
   | 'Test_Completed'

@@ -138,7 +138,7 @@ export function LaboratoryPage() {
       const existing = state.chemicalReagents.find(r => r.id === editingReagentId);
       if (existing) {
         dispatch({ type: 'UPDATE_CHEMICAL_REAGENT', payload: { ...existing, ...baseReagent } });
-        dispatch({ type: 'ADD_ACTIVITY', payload: { id: `act-${Date.now()}`, type: 'update', user: currentUserName, timestamp: new Date(), details: `Updated Reagent: ${baseReagent.name}` } });
+        dispatch({ type: 'ADD_ACTIVITY', payload: { id: `act-${Date.now()}`, type: 'update', user: currentUserName, timestamp: new Date(), description: `Updated Reagent: ${baseReagent.name}` } });
         toast.success(`Successfully updated reagent: ${baseReagent.name}`);
       }
     } else {
@@ -152,7 +152,7 @@ export function LaboratoryPage() {
         safetyInfo: { hazardStatements: [], precautionaryStatements: [] },
       };
       dispatch({ type: 'ADD_CHEMICAL_REAGENT', payload: newReagent as any });
-      dispatch({ type: 'ADD_ACTIVITY', payload: { id: `act-${Date.now()}`, type: 'create', user: currentUserName, timestamp: new Date(), details: `Registered Reagent: ${baseReagent.name}` } });
+      dispatch({ type: 'ADD_ACTIVITY', payload: { id: `act-${Date.now()}`, type: 'create', user: currentUserName, timestamp: new Date(), description: `Registered Reagent: ${baseReagent.name}` } });
       toast.success(`Successfully registered reagent: ${baseReagent.name}`);
     }
 
@@ -183,7 +183,7 @@ export function LaboratoryPage() {
   const handleDeleteReagent = (id: string, name: string) => {
     if (window.confirm(`Are you sure you want to delete the reagent "${name}"?`)) {
       dispatch({ type: 'DELETE_CHEMICAL_REAGENT', payload: id });
-      dispatch({ type: 'ADD_ACTIVITY', payload: { id: `act-${Date.now()}`, type: 'delete', user: currentUserName, timestamp: new Date(), details: `Deleted Reagent: ${name}` } });
+      dispatch({ type: 'ADD_ACTIVITY', payload: { id: `act-${Date.now()}`, type: 'delete', user: currentUserName, timestamp: new Date(), description: `Deleted Reagent: ${name}` } });
       toast.success(`Deleted reagent: ${name}`);
     }
   };
@@ -207,7 +207,7 @@ export function LaboratoryPage() {
   const handleDeleteStandard = (id: string, name: string) => {
     if (window.confirm(`Are you sure you want to delete the standard "${name}"?`)) {
       dispatch({ type: 'DELETE_REFERENCE_STANDARD', payload: id });
-      dispatch({ type: 'ADD_ACTIVITY', payload: { id: `act-${Date.now()}`, type: 'delete', user: currentUserName, timestamp: new Date(), details: `Deleted Standard: ${name}` } });
+      dispatch({ type: 'ADD_ACTIVITY', payload: { id: `act-${Date.now()}`, type: 'delete', user: currentUserName, timestamp: new Date(), description: `Deleted Standard: ${name}` } });
       toast.success(`Deleted reference standard: ${name}`);
     }
   };
@@ -233,7 +233,7 @@ export function LaboratoryPage() {
       const existing = state.referenceStandards.find(r => r.id === editingStandardId);
       if (existing) {
         dispatch({ type: 'UPDATE_REFERENCE_STANDARD', payload: { ...existing, ...baseStd } });
-        dispatch({ type: 'ADD_ACTIVITY', payload: { id: `act-${Date.now()}`, type: 'update', user: currentUserName, timestamp: new Date(), details: `Updated Standard: ${baseStd.name}` } });
+        dispatch({ type: 'ADD_ACTIVITY', payload: { id: `act-${Date.now()}`, type: 'update', user: currentUserName, timestamp: new Date(), description: `Updated Standard: ${baseStd.name}` } });
         toast.success(`Updated standard: ${baseStd.name}`);
       }
     } else {
@@ -245,7 +245,7 @@ export function LaboratoryPage() {
         location: 'Standard Fridge 1',
       };
       dispatch({ type: 'ADD_REFERENCE_STANDARD', payload: newStd as any });
-      dispatch({ type: 'ADD_ACTIVITY', payload: { id: `act-${Date.now()}`, type: 'create', user: currentUserName, timestamp: new Date(), details: `Registered Standard: ${baseStd.name}` } });
+      dispatch({ type: 'ADD_ACTIVITY', payload: { id: `act-${Date.now()}`, type: 'create', user: currentUserName, timestamp: new Date(), description: `Registered Standard: ${baseStd.name}` } });
       toast.success(`Registered standard: ${baseStd.name}`);
     }
 
