@@ -36,13 +36,13 @@ interface StorageInfo {
 
 // ==================== Current Version ====================
 const CURRENT_VERSION: AppVersion = {
-  version: '1.0.0',
-  buildNumber: '20240204.1',
-  releaseDate: '2024-02-04',
+  version: '4.3.3',
+  buildNumber: '20260827.1',
+  releaseDate: '2026-08-27',
   changes: [
-    'Initial system launch',
-    'PWA support for Mobile & Desktop',
-    'Enterprise-grade security & RBAC',
+    'Audit trail & data governance (Part 11)',
+    'Enterprise RBAC & license management',
+    'Offline PWA support for Mobile & Desktop',
     'Global Maintenance & Update Hub',
   ],
   isMandatory: false,
