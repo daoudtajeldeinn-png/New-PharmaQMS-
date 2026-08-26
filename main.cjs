@@ -7,6 +7,19 @@ const { autoUpdater } = require('electron-updater');
 // Determine if we are in development
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
+// ── Global crash guard ────────────────────────────────────────────────────────
+// Prevent any unhandled error from silently closing the app.
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  try {
+    dialog.showErrorBox('Unexpected Error', `${err.message}\n\n${err.stack}`);
+  } catch (_) {}
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled Rejection:', reason);
+});
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Load environment variables only in development
 if (isDev) {
   try {

@@ -9,7 +9,7 @@
   "engines": {
     "node": ">=20.0.0"
   },
-  "main": "app/main.cjs",
+  "main": "main.cjs",
   "scripts": {
     "dev": "cross-env NODE_ENV=development concurrently \"cd app && npm run dev\" \"wait-on tcp:localhost:5173 && electron .\" --kill-others --success first",
     "electron:dev": "cross-env NODE_ENV=development concurrently \"cd app && npm run dev\" \"wait-on tcp:localhost:5173 && electron .\" --kill-others --success first",
