@@ -22,6 +22,10 @@
   },
   "build": {
     "appId": "com.pharmaqms.enterprise",
+    "asar": true,
+    "asarUnpack": [],
+    "electronUpdaterCompatibility": ">=2.16",
+    "artifactBuildStarted": null,
     "productName": "PharmaQMS Enterprise",
     "copyright": "Copyright © 2026",
     "directories": {
