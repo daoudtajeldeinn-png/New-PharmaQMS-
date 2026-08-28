@@ -33,6 +33,7 @@
     },
     "win": {
       "target": "nsis",
+      "signAndEditExecutable": false,
       "icon": "app/public/icons/icon-512x512.png"
     },
     "nsis": {
