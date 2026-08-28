@@ -120,8 +120,13 @@ export function DataRecoveryConsole() {
   // Filter records
   const filtered = deletedRecords.filter((r) => {
     const snap = r.snapshot || {};
-    const label = (snap.name || snap.title || snap.coaNumber || snap.batchNumber || r.id || '').toLowerCase();
-    const matchesSearch = label.includes(searchQuery.toLowerCase()) || r.id.toLowerCase().includes(searchQuery.toLowerCase());
+    let label = snap.name || snap.title || snap.coaNumber || snap.batchNumber || r.id || '';
+    // Ensure label is a string before calling toLowerCase
+    if (typeof label === 'object' && label !== null) {
+      label = JSON.stringify(label);
+    }
+    label = String(label).toLowerCase();
+    const matchesSearch = label.includes(searchQuery.toLowerCase()) || String(r.id).toLowerCase().includes(searchQuery.toLowerCase());
     const matchesTable = selectedTable === 'all' || r.tableName === selectedTable;
     return matchesSearch && matchesTable;
   });
@@ -331,13 +336,13 @@ export function DataRecoveryConsole() {
                 <div className="space-y-2 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <Badge className="bg-slate-100 text-slate-800 border-none font-bold text-[10px] rounded-lg">
-                      {TABLE_LABELS[record.tableName] || record.tableName}
+                      {String(TABLE_LABELS[record.tableName] || record.tableName)}
                     </Badge>
                     <Badge className="bg-red-50 text-red-700 border-none font-bold text-[10px] rounded-lg">
                       Soft-Deleted
                     </Badge>
                     <span className="text-[10px] font-mono text-slate-400">
-                      ID: {record.id}
+                      ID: {String(record.id)}
                     </span>
                   </div>
 
@@ -346,14 +351,14 @@ export function DataRecoveryConsole() {
                   </h3>
 
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                    <span>Deleted By: <strong className="text-slate-600">{record.deletedBy || 'Unknown'}</strong></span>
+                    <span>Deleted By: <strong className="text-slate-600">{String(record.deletedBy || 'Unknown')}</strong></span>
                     <span>•</span>
                     <span>Date: <strong className="text-slate-600">{new Date(record.deletedAt).toLocaleString()}</strong></span>
                     {record.reason && (
                       <>
                         <span>•</span>
                         <span className="text-amber-600 bg-amber-50 px-2 py-0.5 rounded font-medium normal-case">
-                          Reason: {record.reason}
+                          Reason: {String(record.reason)}
                         </span>
                       </>
                     )}
