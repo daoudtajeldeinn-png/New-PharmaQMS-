@@ -151,7 +151,7 @@ export function COAManagerPage() {
         };
 
         // COA Foundry Console Verification
-        console.log(`[COA Foundry] Target Verification Record #${record.coaNumber} (${record.productName}):`, JSON.stringify(record, null, 2));
+        console.log(`[COA Foundry] Target Verification Record #${String(record.coaNumber)} (${String(record.productName)}):`, JSON.stringify(record, null, 2));
 
         if (isDraft) {
             saveToStore(record);
@@ -172,7 +172,7 @@ export function COAManagerPage() {
                 type: 'ADD_ACTIVITY', payload: {
                     id: Math.random().toString(36).substr(2, 9),
                     type: 'Document_Approved',
-                    description: `New COA issued: ${record.coaNumber} for ${record.productName}`,
+                    description: `New COA issued: ${String(record.coaNumber)} for ${String(record.productName)}`,
                     user: 'QA Department',
                     timestamp: new Date(),
                     relatedId: record.id
@@ -268,13 +268,13 @@ export function COAManagerPage() {
                     {data.length === 0 ? <tr><td colSpan={6} className="p-4 text-center text-slate-500">No records found</td></tr> :
                         data.map((record) => (
                             <tr key={record.id} className="hover:bg-slate-50 transition-colors">
-                                <td className="px-4 py-3 font-medium text-blue-600">{record.coaNumber}</td>
-                                <td className="px-4 py-3 font-medium">{record.productName}</td>
-                                <td className="px-4 py-3 font-mono text-xs">{record.batchNumber}</td>
-                                <td className="px-4 py-3"><Badge variant="outline">{record.type}</Badge></td>
+                                <td className="px-4 py-3 font-medium text-blue-600">{String(record.coaNumber)}</td>
+                                <td className="px-4 py-3 font-medium">{String(record.productName)}</td>
+                                <td className="px-4 py-3 font-mono text-xs">{String(record.batchNumber)}</td>
+                                <td className="px-4 py-3"><Badge variant="outline">{String(record.type)}</Badge></td>
                                 <td className="px-4 py-3">
                                     <Badge variant={record.status === 'Approved' || record.status === 'Released' ? 'default' : 'secondary'}>
-                                        {record.status}
+                                        {String(record.status)}
                                     </Badge>
                                 </td>
                                 <td className="px-4 py-3">
@@ -283,7 +283,7 @@ export function COAManagerPage() {
                                             item={record}
                                             onEdit={(r) => { setFormData(r); setIsEditing(true); setShowForm(true); }}
                                             onDelete={(id) => {
-                                                if (window.confirm(`ADMIN DELETE: Permanently remove COA ${record.coaNumber}? This removes it for ALL users.`)) {
+                                                if (window.confirm(`ADMIN DELETE: Permanently remove COA ${String(record.coaNumber)}? This removes it for ALL users.`)) {
                                                     import('@/services/DeletedRecordsService').then(({ recordDeletion }) => {
                                                         recordDeletion('coaRecords', id, user?.username || 'admin', record, 'Admin deletion');
                                                     });
