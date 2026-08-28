@@ -225,7 +225,12 @@ export function DataRecoveryConsole() {
 
   const getRecordLabel = (r: any) => {
     const snap = r.snapshot || {};
-    return snap.name || snap.title || snap.coaNumber || snap.batchNumber || r.id;
+    const label = snap.name || snap.title || snap.coaNumber || snap.batchNumber || r.id;
+    // Ensure we return a string, not an object
+    if (typeof label === 'object' && label !== null) {
+      return JSON.stringify(label);
+    }
+    return String(label || 'Unknown Record');
   };
 
   return (

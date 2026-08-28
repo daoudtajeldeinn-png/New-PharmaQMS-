@@ -1,0 +1,6 @@
+tree b2fdd73d652eac26231f46d3f50e93cf1ff389a6
+parent 3d1b97c1a226e9e37c6e0480f7e76fe320c4a1ec
+author Daoud Tajeldeinn Ahmed <daoudtajeldeinn@gmail.com> 1778132289 +0200
+committer Daoud Tajeldeinn Ahmed <daoudtajeldeinn@gmail.com> 1778132289 +0200
+
+chore: configure electron-updater for github releases
