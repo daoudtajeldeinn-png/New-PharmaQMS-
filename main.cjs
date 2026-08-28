@@ -3,6 +3,8 @@ const path = require('path');
 const fs = require('fs');
 const { execSync } = require('child_process');
 const { autoUpdater } = require('electron-updater');
+autoUpdater.autoDownload = false;
+autoUpdater.autoInstallOnAppQuit = false;
 
 // Determine if we are in development
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;

@@ -123,6 +123,10 @@ function createWindow() {
   }
 }
 
+app.disableHardwareAcceleration();
+app.commandLine.appendSwitch("disable-gpu");
+app.commandLine.appendSwitch("disable-gpu-compositing");
+app.commandLine.appendSwitch("disable-software-rasterizer");
 app.whenReady().then(() => {
   createWindow();
   

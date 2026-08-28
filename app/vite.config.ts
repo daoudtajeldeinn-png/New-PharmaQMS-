@@ -11,13 +11,9 @@ export default defineConfig({
   build: {
     sourcemap: false,
     minify: false,
-    // Increase warning limit and add manual chunking for large node_modules
     chunkSizeWarningLimit: 1000, // kB
     rollupOptions: {
-      external: isElectronBuild ? ["virtual:pwa-register/react"] : [],
       output: {
-        // Create a separate chunk per top-level npm package to avoid circular
-        // vendor groupings and make caching more granular.
         manualChunks(id) {
           const m = id.match(/node_modules\/(?:@[^\/]+\/[^\/]+|[^\/]+)/)
           if (m) {
@@ -27,12 +23,11 @@ export default defineConfig({
           }
         }
       }
-    }  },
+    }
+  },
   plugins: [
     react(),
     ...(!isElectronBuild ? [VitePWA({
-      // Keep the current session stable and let the app show a clear update action.
-      // This avoids silently replacing code while a user is working in a QMS workflow.
       registerType: 'prompt',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg', 'manifest.json'],
       manifest: {
@@ -48,46 +43,14 @@ export default defineConfig({
         lang: 'ar',
         dir: 'rtl',
         icons: [
-          {
-            src: '/icons/icon-72x72.png',
-            sizes: '72x72',
-            type: 'image/png'
-          },
-          {
-            src: '/icons/icon-96x96.png',
-            sizes: '96x96',
-            type: 'image/png'
-          },
-          {
-            src: '/icons/icon-128x128.png',
-            sizes: '128x128',
-            type: 'image/png'
-          },
-          {
-            src: '/icons/icon-144x144.png',
-            sizes: '144x144',
-            type: 'image/png'
-          },
-          {
-            src: '/icons/icon-152x152.png',
-            sizes: '152x152',
-            type: 'image/png'
-          },
-          {
-            src: '/icons/icon-192x192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: '/icons/icon-384x384.png',
-            sizes: '384x384',
-            type: 'image/png'
-          },
-          {
-            src: '/icons/icon-512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
-          }
+          { src: '/icons/icon-72x72.png', sizes: '72x72', type: 'image/png' },
+          { src: '/icons/icon-96x96.png', sizes: '96x96', type: 'image/png' },
+          { src: '/icons/icon-128x128.png', sizes: '128x128', type: 'image/png' },
+          { src: '/icons/icon-144x144.png', sizes: '144x144', type: 'image/png' },
+          { src: '/icons/icon-152x152.png', sizes: '152x152', type: 'image/png' },
+          { src: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/icons/icon-384x384.png', sizes: '384x384', type: 'image/png' },
+          { src: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png' }
         ]
       },
       workbox: {
@@ -100,13 +63,8 @@ export default defineConfig({
             handler: 'CacheFirst',
             options: {
               cacheName: 'google-fonts-cache',
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // 365 days
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
+              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] }
             }
           },
           {
@@ -114,34 +72,28 @@ export default defineConfig({
             handler: 'CacheFirst',
             options: {
               cacheName: 'gstatic-fonts-cache',
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // 365 days
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
+              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] }
             }
           }
         ]
       },
-      devOptions: {
-        enabled: false
-      }
+      devOptions: { enabled: false }
     })] : []),
   ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      ...(isElectronBuild ? { 'virtual:pwa-register/react': path.resolve(__dirname, './src/pwa-stub.ts') } : {}),
+      ...(isElectronBuild ? {
+        "./components/PWAUpdatePrompt": path.resolve(__dirname, "./src/components/PWAUpdatePrompt.electron.tsx"),
+        "@/components/PWAUpdatePrompt": path.resolve(__dirname, "./src/components/PWAUpdatePrompt.electron.tsx"),
+      } : {}),
     },
   },
   server: {
     host: '0.0.0.0',
     port: 5173,
-    hmr: {
-      port: 5173
-    },
+    hmr: { port: 5173 },
     open: true,
   },
 });
