@@ -157,3 +157,33 @@ COMMENT ON COLUMN user_activity_logs.new_values IS 'New state of record after mo
 COMMENT ON COLUMN user_activity_logs.reason IS 'User-provided reason for critical actions (recommended required for DELETE/RECOVER/HARD_DELETE).';
 COMMENT ON VIEW deleted_records_summary IS 'Aggregated view of active (non-recovered) tombstones from deletedRecords for admin recovery UI.';
 
+
+-- =====================================================
+-- 5) AUDIT IMMUTABILITY TRIGGER
+-- 21 CFR Part 11 §11.10(e) — Audit trail must be
+-- protected against modification and deletion.
+-- This trigger blocks any UPDATE or DELETE on
+-- user_activity_logs at the database level.
+-- =====================================================
+CREATE OR REPLACE FUNCTION prevent_audit_mutation()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  RAISE EXCEPTION
+    'AUDIT INTEGRITY VIOLATION: Updates and deletions on user_activity_logs are prohibited under 21 CFR Part 11 §11.10(e). Record ID: %', OLD.id;
+  RETURN NULL;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_prevent_audit_mutation ON user_activity_logs;
+CREATE TRIGGER trg_prevent_audit_mutation
+  BEFORE UPDATE OR DELETE
+  ON user_activity_logs
+  FOR EACH ROW
+  EXECUTE FUNCTION prevent_audit_mutation();
+
+-- Verify trigger exists
+-- SELECT trigger_name, event_manipulation, action_statement
+-- FROM information_schema.triggers
+-- WHERE event_object_table = 'user_activity_logs';
