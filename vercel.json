@@ -1,6 +1,9 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
+  "buildCommand": "cd app && npm install && npm run build",
+  "outputDirectory": "app/dist",
+  "framework": "vite",
+  "installCommand": "cd app && npm install",
+  "devCommand": "cd app && npm run dev",
   "env": {
     "VITE_SUPABASE_URL": "https://xxlxfhlliojkplrcvukc.supabase.co",
     "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bHhmaGxsaW9qa3BscmN2dWtjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2Mzc4NzYsImV4cCI6MjA4NTIxMzg3Nn0.Cvvlo_9WfpfdfiFn4ytF_xSViJE0ouimzypbznoUFFE"

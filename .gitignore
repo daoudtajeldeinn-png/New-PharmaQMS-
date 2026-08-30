@@ -1,8 +1,11 @@
-node_modules/  
-dist/  
-dist-electron/  
-build/  
-.vercel/  
+node_modules/
+dist/
+dist-electron/
+build/
+.vercel/
 dist-electron-github-backup/
 .vercel
 .git-rewrite/
+.env
+.env.local
+.env*.local

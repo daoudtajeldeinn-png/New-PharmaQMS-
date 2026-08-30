@@ -1,37 +1,37 @@
 /**
  * useRoleAccess.ts
- * 
+ *
  * Central hook that provides role-based permission checks for:
  *   - canModify: user can create/edit data
  *   - canDelete: user can delete data
  *   - canRecover: user can restore soft-deleted records
- *   - isAdminRole: true for 'it_admin' and 'qa_admin'
+ *   - isAdminRole: true for 'admin' and 'qc_manager'
  *   - currentUser: the logged-in user object
  *
- * Only IT Admin (role: 'it_admin') and QA Admin (role: 'qa_admin')
+ * Only Admin (role: 'admin') and QC Manager (role: 'qc_manager')
  * have delete and modify privileges.
  * All other roles are READ-ONLY for persistent data.
  */
-
 import { useSecurity } from '@/components/security/SecurityProvider';
 
 // Roles that are permitted to modify and delete data
-const ADMIN_ROLES = new Set(['it_admin', 'qa_admin', 'admin']);
+// NOTE: must match role values defined in SecurityProvider.tsx User type
+const ADMIN_ROLES = new Set(['admin', 'qc_manager', 'manager']);
 
 export function useRoleAccess() {
   const { user } = useSecurity();
 
-  const username = user?.username?.toLowerCase() ?? '';
-  const isAdminRole = !!(user && ADMIN_ROLES.has(username));
+  // FIX: check user.role (not user.username) against the allowed roles set
+  const isAdminRole = !!(user && ADMIN_ROLES.has(user.role));
 
   /** Create / edit records */
   const canModify = isAdminRole;
 
   /** Delete records (hard or soft delete) */
-  const canDelete = isAdminRole;
+  const canDelete = !!(user && user.role === 'admin');
 
   /** Recover / restore soft-deleted records */
-  const canRecover = isAdminRole;
+  const canRecover = !!(user && (user.role === 'admin' || user.role === 'qc_manager'));
 
   /** Check a specific permission string (legacy compatibility) */
   const hasPermission = (perm: string): boolean => {
