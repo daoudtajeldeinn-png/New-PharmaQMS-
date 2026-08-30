@@ -5,3 +5,6 @@ build/
 .vercel/  
 dist-electron-github-backup/
 .vercel
+.env
+.env.local
+.env*.local
