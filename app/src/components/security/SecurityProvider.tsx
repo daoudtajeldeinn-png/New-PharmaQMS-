@@ -317,7 +317,7 @@ export function SecurityProvider({ children }: { children: ReactNode }) {
     await new Promise((resolve) => setTimeout(resolve, 500));
     const foundUser = allUsers.find((u) => u.username === username);
 
-    if (foundUser && (password === foundUser.password || password === 'password')) {
+    if (foundUser && password === foundUser.password) {
       const sessionExpiry = new Date();
       sessionExpiry.setHours(sessionExpiry.getHours() + 8);
 
