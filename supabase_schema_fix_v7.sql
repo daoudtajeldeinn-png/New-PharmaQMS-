@@ -7,3 +7,10 @@ ADD COLUMN IF NOT EXISTS "deleteReason" text,
 ADD COLUMN IF NOT EXISTS "is_deleted" boolean DEFAULT false,
 ADD COLUMN IF NOT EXISTS "deleted_by" text,
 ADD COLUMN IF NOT EXISTS "deleted_at" timestamptz;
+
+-- Fix v7.1: Add camelCase soft-delete columns expected by CloudSyncService
+-- Error resolved: PGRST204 'deletedAt' column not found in schema cache
+ALTER TABLE "chemicalReagents"
+ADD COLUMN IF NOT EXISTS "deletedAt" timestamptz,
+ADD COLUMN IF NOT EXISTS "deletedBy" text,
+ADD COLUMN IF NOT EXISTS "isDeleted" boolean DEFAULT false;
