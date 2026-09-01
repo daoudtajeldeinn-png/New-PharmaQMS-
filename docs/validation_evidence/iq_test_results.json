@@ -1,0 +1,66 @@
+[
+  {
+    "testId": "IQ-001-01",
+    "test": "Application directory exists",
+    "expected": "Directory exists",
+    "actual": "Directory exists",
+    "status": "PASS",
+    "timestamp": "2026-09-01T11:02:38.889Z"
+  },
+  {
+    "testId": "IQ-001-02",
+    "test": "package.json file present",
+    "expected": "File exists",
+    "actual": "File exists",
+    "status": "PASS",
+    "timestamp": "2026-09-01T11:02:38.890Z"
+  },
+  {
+    "testId": "IQ-001-03",
+    "test": "Dependencies installed",
+    "expected": "node_modules exists",
+    "actual": "Dependencies installed",
+    "status": "PASS",
+    "timestamp": "2026-09-01T11:02:38.890Z"
+  },
+  {
+    "testId": "IQ-001-04",
+    "test": "App package.json exists",
+    "expected": "File exists",
+    "actual": "File exists",
+    "status": "PASS",
+    "timestamp": "2026-09-01T11:02:38.890Z"
+  },
+  {
+    "testId": "IQ-001-05",
+    "test": "Vercel config exists and valid",
+    "expected": "Valid JSON configuration",
+    "actual": "Valid configuration",
+    "status": "PASS",
+    "timestamp": "2026-09-01T11:02:38.892Z"
+  },
+  {
+    "testId": "IQ-002-01",
+    "test": ".gitignore properly configured",
+    "expected": "Proper exclusions",
+    "actual": "Properly configured",
+    "status": "PASS",
+    "timestamp": "2026-09-01T11:02:38.893Z"
+  },
+  {
+    "testId": "IQ-002-02",
+    "test": "English translation files present",
+    "expected": "English translation file exists",
+    "actual": "English translation present",
+    "status": "PASS",
+    "timestamp": "2026-09-01T11:02:38.894Z"
+  },
+  {
+    "testId": "IQ-002-03",
+    "test": "MFA service implemented",
+    "expected": "MFA methods present",
+    "actual": "MFA implemented",
+    "status": "PASS",
+    "timestamp": "2026-09-01T11:02:38.894Z"
+  }
+]
