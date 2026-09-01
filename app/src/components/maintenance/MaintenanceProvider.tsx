@@ -36,7 +36,7 @@ interface StorageInfo {
 
 // ==================== Current Version ====================
 const CURRENT_VERSION: AppVersion = {
-  version: '4.3.4',
+  version: '4.3.5',
   buildNumber: '20260827.1',
   releaseDate: '2026-08-27',
   changes: [
