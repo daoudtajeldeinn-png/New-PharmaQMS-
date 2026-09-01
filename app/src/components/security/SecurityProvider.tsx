@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Shield, Lock, Eye, EyeOff, Key, Fingerprint, KeyRound, ShieldAlert, Copy, Check } from 'lucide-react';
+import { Shield, Lock, Eye, EyeOff, Key, Fingerprint, KeyRound, ShieldAlert, Copy, Check, Smartphone } from 'lucide-react';
 import { useLicense } from './LicenseProvider';
 import { getMachineId, getTrialStatus } from '@/services/LicenseManager';
+import { mfaService } from '@/services/MFAService';
+import { MFAChallenge } from './MFAChallenge';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,7 +28,7 @@ interface SecurityContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (username: string, password: string) => Promise<boolean>;
+  login: (username: string, password: string, isTrial?: boolean) => Promise<boolean>;
   logout: () => void;
   hasPermission: (permission: string) => boolean;
   checkSession: () => boolean;
@@ -34,6 +36,13 @@ interface SecurityContextType {
   addUser: (user: Omit<User, 'id'>) => void;
   updateUser: (user: User) => void;
   deleteUser: (userId: string) => void;
+  // MFA Methods
+  enrollMFA: () => Promise<{ qrCode: string; secret: string } | null>;
+  verifyMFAEnrollment: (code: string) => Promise<boolean>;
+  completeMFAChallenge: (code: string) => Promise<boolean>;
+  requiresMFAChallenge: boolean;
+  mfaStatus: { enrolled: boolean; factors: string[] };
+  checkMFAStatus: () => Promise<void>;
 }
 
 // ==================== Default Users ====================
@@ -135,6 +144,11 @@ export function SecurityProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [allUsers, setAllUsers] = useState<User[]>(loadUsers);
+  
+  // MFA State
+  const [mfaStatus, setMfaStatus] = useState<{ enrolled: boolean; factors: string[] }>({ enrolled: false, factors: [] });
+  const [mfaRequired, setMfaRequired] = useState(false);
+  const [pendingMFAChallenge, setPendingMFAChallenge] = useState<{ challengeId: string; userId: string } | null>(null);
 
   // ── 1. Restore session on mount + listen for Supabase auth state changes ──
   useEffect(() => {
@@ -264,7 +278,7 @@ export function SecurityProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // ==================== Login ====================
-  const login = async (username: string, password: string): Promise<boolean> => {
+  const login = async (username: string, password: string, isTrialPeriod: boolean = false): Promise<boolean> => {
     try {
       const emailToUse = username.includes('@') ? username : `${username}@pharma.corp`;
 
@@ -281,6 +295,110 @@ export function SecurityProvider({ children }: { children: ReactNode }) {
           .single();
 
         const role = profile?.role || 'viewer';
+        
+        // Check if this role requires MFA
+        const requiresMFA = mfaService.requiresMFA(role);
+        
+        // Check MFA enrollment status
+        const mfaStatus = await mfaService.checkMFAStatus(authData.user.id);
+        setMfaStatus(mfaStatus);
+        
+        // Skip MFA during trial period if isTrialPeriod flag is set
+        if (isTrialPeriod) {
+          console.log('Trial period active - MFA skipped for trial user');
+          toast.info('Trial period active. MFA enrollment recommended but not required.');
+          
+          // Proceed with normal login without MFA
+          const sessionExpiry = new Date();
+          sessionExpiry.setHours(sessionExpiry.getHours() + 8);
+
+          const cloudUser: User = {
+            id: authData.user.id,
+            username,
+            name: profile?.full_name || username,
+            role: role as any,
+            department: profile?.department || 'General',
+            permissions: ROLE_PERMISSIONS[role] || ['products.read'],
+            lastLogin: new Date(),
+            sessionExpiry,
+          };
+
+          setUser(cloudUser);
+          localStorage.setItem('currentUser', JSON.stringify(cloudUser));
+          localStorage.setItem('sessionExpiry', sessionExpiry.toISOString());
+
+          await logAudit(authData.user.id, 'LOGIN', 'System', {
+            message: 'Cloud authentication successful (trial - MFA skipped)',
+            username,
+            mfaCompleted: false,
+            trialPeriod: true,
+          });
+
+          toast.success(`Welcome back, ${cloudUser.name}! (Trial Mode)`);
+          return true;
+        }
+        
+        // Skip MFA during trial period, but still allow enrollment
+        if (isTrialActive) {
+          console.log('Trial period active - MFA skipped for trial user');
+          toast.info('Trial period active. MFA enrollment recommended but not required.');
+          
+          // Proceed with normal login without MFA
+          const sessionExpiry = new Date();
+          sessionExpiry.setHours(sessionExpiry.getHours() + 8);
+
+          const cloudUser: User = {
+            id: authData.user.id,
+            username,
+            name: profile?.full_name || username,
+            role: role as any,
+            department: profile?.department || 'General',
+            permissions: ROLE_PERMISSIONS[role] || ['products.read'],
+            lastLogin: new Date(),
+            sessionExpiry,
+          };
+
+          setUser(cloudUser);
+          localStorage.setItem('currentUser', JSON.stringify(cloudUser));
+          localStorage.setItem('sessionExpiry', sessionExpiry.toISOString());
+
+          await logAudit(authData.user.id, 'LOGIN', 'System', {
+            message: 'Cloud authentication successful (trial - MFA skipped)',
+            username,
+            mfaCompleted: false,
+            trialPeriod: true,
+          });
+
+          toast.success(`Welcome back, ${cloudUser.name}! (Trial Mode)`);
+          return true;
+        }
+        
+        // If MFA is required and user is enrolled, trigger MFA challenge
+        if (requiresMFA && mfaStatus.enrolled && mfaStatus.factors.length > 0) {
+          setMfaRequired(true);
+          setPendingMFAChallenge({
+            challengeId: mfaStatus.factors[0], // Use first factor for now
+            userId: authData.user.id
+          });
+          
+          // Store partial user data for MFA completion
+          const partialUser: User = {
+            id: authData.user.id,
+            username,
+            name: profile?.full_name || username,
+            role: role as any,
+            department: profile?.department || 'General',
+            permissions: ROLE_PERMISSIONS[role] || ['products.read'],
+            lastLogin: new Date(),
+          };
+          
+          localStorage.setItem('pendingUser', JSON.stringify(partialUser));
+          
+          toast.info('MFA verification required. Please enter your authenticator code.');
+          return false; // Login incomplete, MFA required
+        }
+        
+        // Proceed with normal login for non-MFA users or unenrolled admin users
         const sessionExpiry = new Date();
         sessionExpiry.setHours(sessionExpiry.getHours() + 8);
 
@@ -302,6 +420,7 @@ export function SecurityProvider({ children }: { children: ReactNode }) {
         await logAudit(authData.user.id, 'LOGIN', 'System', {
           message: 'Cloud authentication successful',
           username,
+          mfaCompleted: false,
         });
 
         toast.success(`Welcome back, ${cloudUser.name}!`);
@@ -378,6 +497,121 @@ export function SecurityProvider({ children }: { children: ReactNode }) {
     if (!user) return false;
     if (!user.sessionExpiry) return false;
     return new Date(user.sessionExpiry) > new Date();
+  };
+
+  // ==================== MFA Methods ====================
+  const checkMFAStatus = async () => {
+    if (!user) return;
+    const status = await mfaService.checkMFAStatus(user.id);
+    setMfaStatus(status);
+  };
+
+  const enrollMFA = async () => {
+    if (!user) return null;
+    try {
+      const enrollment = await mfaService.enrollTOTP(user.id);
+      return {
+        qrCode: enrollment.qrCode,
+        secret: enrollment.secret,
+      };
+    } catch (error) {
+      console.error('MFA enrollment failed:', error);
+      toast.error('Failed to enroll in MFA. Please try again.');
+      return null;
+    }
+  };
+
+  const verifyMFAEnrollment = async (code: string): Promise<boolean> => {
+    if (!user) return false;
+    try {
+      // First get the TOTP factors
+      const factors = await mfaService.checkMFAStatus(user.id);
+      if (factors.factors.length === 0) {
+        toast.error('No MFA factors found. Please enroll first.');
+        return false;
+      }
+
+      const verified = await mfaService.verifyTOTPEnrollment(factors.factors[0], code);
+      if (verified) {
+        await checkMFAStatus();
+        toast.success('MFA enrollment verified successfully!');
+        return true;
+      } else {
+        toast.error('Invalid MFA code. Please try again.');
+        return false;
+      }
+    } catch (error) {
+      console.error('MFA verification failed:', error);
+      toast.error('MFA verification failed. Please try again.');
+      return false;
+    }
+  };
+
+  const completeMFAChallenge = async (code: string): Promise<boolean> => {
+    if (!pendingMFAChallenge) return false;
+    
+    try {
+      // First create a challenge
+      const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({
+        factorId: pendingMFAChallenge.challengeId,
+      });
+
+      if (challengeError || !challengeData) {
+        console.error('MFA challenge creation failed:', challengeError);
+        toast.error('Failed to create MFA challenge');
+        return false;
+      }
+
+      // Then verify with the code
+      const { data, error } = await supabase.auth.mfa.verify({
+        factorId: pendingMFAChallenge.challengeId,
+        challengeId: challengeData.id,
+        code,
+      });
+
+      if (error) {
+        console.error('MFA challenge verification failed:', error);
+        toast.error('Invalid MFA code. Please try again.');
+        return false;
+      }
+
+      if (data) {
+        // Get pending user data
+        const pendingUserStr = localStorage.getItem('pendingUser');
+        if (pendingUserStr) {
+          const pendingUser: User = JSON.parse(pendingUserStr);
+          const sessionExpiry = new Date();
+          sessionExpiry.setHours(sessionExpiry.getHours() + 8);
+          
+          const completedUser = {
+            ...pendingUser,
+            sessionExpiry,
+          };
+
+          setUser(completedUser);
+          localStorage.setItem('currentUser', JSON.stringify(completedUser));
+          localStorage.setItem('sessionExpiry', sessionExpiry.toISOString());
+          localStorage.removeItem('pendingUser');
+
+          await logAudit(completedUser.id, 'LOGIN', 'System', {
+            message: 'Cloud authentication with MFA successful',
+            username: completedUser.username,
+            mfaCompleted: true,
+          });
+
+          setMfaRequired(false);
+          setPendingMFAChallenge(null);
+          toast.success(`Welcome back, ${completedUser.name}!`);
+          return true;
+        }
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('MFA challenge completion failed:', error);
+      toast.error('MFA verification failed. Please try again.');
+      return false;
+    }
   };
 
   // ==================== User Management (with cloud sync) ====================
@@ -459,6 +693,13 @@ export function SecurityProvider({ children }: { children: ReactNode }) {
         addUser,
         updateUser,
         deleteUser,
+        // MFA methods
+        enrollMFA,
+        verifyMFAEnrollment,
+        requiresMFAChallenge: mfaRequired,
+        mfaStatus,
+        checkMFAStatus,
+        completeMFAChallenge,
       }}
     >
       {children}
@@ -475,7 +716,7 @@ export function useSecurity() {
 
 // ==================== Login Component ====================
 export function LoginPage({ forcedLicenseLock = false }: { forcedLicenseLock?: boolean }) {
-  const { login } = useSecurity();
+  const { login, requiresMFAChallenge } = useSecurity();
   const { activate, status } = useLicense();
   const trialStatus = getTrialStatus();
   
@@ -496,6 +737,9 @@ export function LoginPage({ forcedLicenseLock = false }: { forcedLicenseLock?: b
   const [activationKey, setActivationKey] = useState('');
   const [copied, setCopied] = useState(false);
   const mid = getMachineId();
+  
+  // MFA Challenge State
+  const [showMFAChallenge, setShowMFAChallenge] = useState(false);
 
   const handleCopyId = () => {
     navigator.clipboard.writeText(mid);
@@ -516,13 +760,25 @@ export function LoginPage({ forcedLicenseLock = false }: { forcedLicenseLock?: b
     setError('');
     setIsLoading(true);
     try {
-      const success = await login(username, password);
-      if (!success) setError('Integration Error: Security credentials invalid or expired.');
+      const success = await login(username, password, isTrialActive);
+      if (success) {
+        // Login successful
+      } else if (requiresMFAChallenge) {
+        // MFA required, show challenge dialog
+        setShowMFAChallenge(true);
+      } else {
+        setError('Integration Error: Security credentials invalid or expired.');
+      }
     } catch {
       setError('System Integrity Fault: Authentication service unreachable.');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleMFAComplete = () => {
+    setShowMFAChallenge(false);
+    // Login is already completed by the MFA challenge
   };
 
   const handleActivate = () => {
@@ -751,6 +1007,13 @@ export function LoginPage({ forcedLicenseLock = false }: { forcedLicenseLock?: b
           )}
         </div>
       </div>
+
+      {/* MFA Challenge Dialog */}
+      <MFAChallenge 
+        isOpen={showMFAChallenge}
+        onClose={() => setShowMFAChallenge(false)}
+        onSuccess={handleMFAComplete}
+      />
     </div>
   );
 }

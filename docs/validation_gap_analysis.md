@@ -61,7 +61,7 @@ PharmaQMS Enterprise is an Electron + React + TypeScript desktop application wit
 | GAP-05 | No automated tests | High | Vitest suite covering audit immutability, fail-closed, soft-delete | ✅ CLOSED |
 | GAP-06 | No CI enforcement | High | GitHub Actions workflow on push/PR | ✅ CLOSED |
 | GAP-07 | E-signatures not verified against auth provider | High | Real `supabase.auth.signInWithPassword` verification enforced in licensed mode; trial mode disclosed | ✅ CLOSED |
-| GAP-08 | No MFA | High | Add TOTP/WebAuthn for admin/approver roles | ⏳ OPEN |
+| GAP-08 | No MFA | High | TOTP MFA implemented via Supabase Auth; enforced for admin/qc_manager/manager roles; trial mode exempt; MFA_IMPLEMENTATION.md documented | ✅ CLOSED |
 | GAP-09 | No formal IQ/OQ/PQ execution | High | Execute validation protocol PQMS-VAL-002; retain evidence | ⏳ OPEN |
 | GAP-10 | No documented retention schedules | Medium | Define per-record-class retention; automate archival | ⏳ OPEN |
 | GAP-11 | No disaster-recovery runbook | Medium | PQMS-DR-001 runbook created; covers backup, restore, RTO/RPO, quarterly test schedule | ✅ CLOSED |
