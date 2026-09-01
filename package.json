@@ -1,7 +1,7 @@
 {
   "name": "pharmaqms",
   "private": true,
-  "version": "4.3.5",
+  "version": "4.3.6",
   "description": "Enterprise Pharmaceutical Quality Management System",
   "author": "Dr. Daoud Tajeldeinn",
   "repository": "https://github.com/daoudtajeldeinn-png/New-PharmaQMS-",
@@ -27,7 +27,7 @@
     "electronUpdaterCompatibility": ">=2.16",
     "artifactBuildStarted": null,
     "productName": "PharmaQMS Enterprise",
-    "copyright": "Copyright © 2026",
+    "copyright": "Copyright \u00a9 2026",
     "directories": {
       "output": "dist-electron"
     },
@@ -37,11 +37,12 @@
       "icon": "app/public/icons/icon-512x512.png"
     },
     "nsis": {
-      "oneClick": true,
+      "oneClick": false,
       "allowToChangeInstallationDirectory": false,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "PharmaQMS Enterprise"
+      "shortcutName": "PharmaQMS Enterprise",
+      "deleteAppDataOnUninstall": false
     },
     "files": [
       "main.cjs",
