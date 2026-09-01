@@ -622,10 +622,10 @@ export function COAManagerPage() {
                             )}
                             <div className="flex justify-between border-b border-dotted pb-1"><strong>Strength:</strong> <span>{selectedCOA.strength}</span></div>
                             <div className="flex justify-between border-b border-dotted pb-1"><strong>Dosage Form:</strong> <span>{selectedCOA.dosageForm}</span></div>
-                            <div className="flex justify-between border-b border-dotted pb-1"><strong>Manufacturing Date:</strong> <span>{selectedCOA.manufacturingDate}</span></div>
-                            <div className="flex justify-between border-b border-dotted pb-1"><strong>Analysis Date:</strong> <span>{selectedCOA.analysisDate || '-'}</span></div>
-                            <div className="flex justify-between border-b border-dotted pb-1"><strong>Expiry Date:</strong> <span>{selectedCOA.expiryDate}</span></div>
-                            <div className="flex justify-between border-b border-dotted pb-1"><strong>Issue Date:</strong> <span>{selectedCOA.issueDate}</span></div>
+                            <div className="flex justify-between border-b border-dotted pb-1"><strong>Manufacturing Date:</strong> <span>{toDateStr(selectedCOA.manufacturingDate)}</span></div>
+                            <div className="flex justify-between border-b border-dotted pb-1"><strong>Analysis Date:</strong> <span>{toDateStr(selectedCOA.analysisDate) || '-'}</span></div>
+                            <div className="flex justify-between border-b border-dotted pb-1"><strong>Expiry Date:</strong> <span>{toDateStr(selectedCOA.expiryDate)}</span></div>
+                            <div className="flex justify-between border-b border-dotted pb-1"><strong>Issue Date:</strong> <span>{toDateStr(selectedCOA.issueDate)}</span></div>
                         </div>
 
                         <h3 className="font-bold mb-2 underline uppercase">Analytical Results:</h3>
