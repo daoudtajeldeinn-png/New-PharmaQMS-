@@ -65,7 +65,7 @@ PharmaQMS Enterprise is an Electron + React + TypeScript desktop application wit
 | GAP-09 | No formal IQ/OQ/PQ execution | High | Execute validation protocol PQMS-VAL-002; retain evidence | ⏳ OPEN |
 | GAP-10 | No documented retention schedules | Medium | PQMS-RET-001 retention policy created; covers all record classes, audit trail, archival procedure | ✅ CLOSED |
 | GAP-11 | No disaster-recovery runbook | Medium | PQMS-DR-001 runbook created; covers backup, restore, RTO/RPO, quarterly test schedule | ✅ CLOSED |
-| GAP-12 | Change control not linked to SCM | Medium | Adopt issue/approval workflow mapping commits to change IDs | ⏳ OPEN |
+| GAP-12 | Change control not linked to SCM | Medium | PQMS-CHG-001 procedure created; commit convention, GitHub Issues, traceability matrix defined | ✅ CLOSED |
 | GAP-13 | Hardcoded Supabase credentials in source code | Critical | Removed fallback credentials; app fails fast on missing env vars | ✅ CLOSED |
 | GAP-14 | .env files tracked in version control | Critical | Untracked via `git rm --cached`; .gitignore updated; .env.example added | ✅ CLOSED |
 | GAP-15 | RBAC checked username string instead of role | High | Fixed `useRoleAccess` to check `user.role`; universal password backdoor removed | ✅ CLOSED |
