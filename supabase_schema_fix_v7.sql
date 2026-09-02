@@ -14,3 +14,13 @@ ALTER TABLE "chemicalReagents"
 ADD COLUMN IF NOT EXISTS "deletedAt" timestamptz,
 ADD COLUMN IF NOT EXISTS "deletedBy" text,
 ADD COLUMN IF NOT EXISTS "isDeleted" boolean DEFAULT false;
+
+-- Fix v7.2: Rename equipment columns to camelCase to match app expectations
+-- Error resolved: 400 on equipment sync due to column name mismatch
+ALTER TABLE equipment RENAME COLUMN assettag TO "assetTag";
+ALTER TABLE equipment RENAME COLUMN calibrationschedule TO "calibrationSchedule";
+ALTER TABLE equipment RENAME COLUMN maintenanceschedule TO "maintenanceSchedule";
+ALTER TABLE equipment RENAME COLUMN purchasedate TO "purchaseDate";
+ALTER TABLE equipment RENAME COLUMN qualificationstatus TO "qualificationStatus";
+ALTER TABLE equipment RENAME COLUMN serialnumber TO "serialNumber";
+ALTER TABLE equipment RENAME COLUMN warrantyexpiry TO "warrantyExpiry";
