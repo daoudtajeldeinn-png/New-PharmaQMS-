@@ -5,6 +5,8 @@
 [![React](https://img.shields.io/badge/React-19.2.0-blue.svg)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-blue.svg)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/License-Proprietary-red.svg)]()
+[![Compliance](https://img.shields.io/badge/Compliance-21%20CFR%20Part%2011-green.svg)]()
+[![GMP](https://img.shields.io/badge/GMP-EU%20Annex%2011-green.svg)]()
 
 A comprehensive, bilingual (Arabic/English) pharmaceutical quality management system built with modern web technologies.
 
@@ -12,6 +14,18 @@ A comprehensive, bilingual (Arabic/English) pharmaceutical quality management sy
 
 ## ✨ Features
 [![committers.top badge](https://user-badge.committers.top/daoudtajeldeinn-png.svg)](https://committers.top/daoudtajeldeinn-png)
+
+### 🔐 Security & Compliance (NEW)
+- **Multi-Factor Authentication (MFA)**: TOTP-based MFA for privileged roles (admin, qc_manager, manager)
+- **21 CFR Part 11 Compliance**: Electronic records and signatures compliance
+- **EU GMP Annex 11**: Computerized system validation and compliance
+- **ISPE GAMP® Guide**: Risk-based validation approach
+- **Audit Trail**: Complete system activity logging with timestamps
+- **Role-Based Access Control**: Granular permissions by user role
+- **Soft-Delete & Recovery**: Data recovery console with audit trail
+- **Data Retention**: 7-year retention policy per regulatory requirements
+- **Change Control**: Integrated with Git for complete change management
+- **Trial Period**: User-friendly trial with pre-filled credentials
 
 ### 🌐 Internationalization (i18n)
 - **Bilingual Support**: Arabic (default) & English
@@ -27,6 +41,14 @@ A comprehensive, bilingual (Arabic/English) pharmaceutical quality management sy
 - Search and filter capabilities
 - Bilingual certificates
 
+### 🔍 Data Recovery Console
+- View and recover deleted records
+- Soft-delete audit trail
+- Hard delete with justification
+- Role-based recovery permissions
+- Search and filter deleted records
+- JSON inspection for detailed analysis
+
 ### 🏭 IPQC (In-Process Quality Control)
 - Stage-wise quality monitoring
 - Real-time Pass/Fail indicators
@@ -41,6 +63,7 @@ A comprehensive, bilingual (Arabic/English) pharmaceutical quality management sy
 - Alert system
 - Trend analysis
 - Custom widgets
+- Compliance status indicators
 
 ### 💊 Product Management
 - Complete product catalog
@@ -86,6 +109,8 @@ A comprehensive, bilingual (Arabic/English) pharmaceutical quality management sy
 - Finding management
 - CAPA integration
 - Compliance tracking
+- IQ/OQ/PQ validation protocols
+- Regulatory evidence collection
 
 ### 📊 Reports & Analytics
 - Custom reports
@@ -101,6 +126,7 @@ A comprehensive, bilingual (Arabic/English) pharmaceutical quality management sy
 - ICH Guidelines
 - FDA Compliance
 - ISO Standards
+- Data Integrity (ALCOA+ principles)
 
 ---
 
@@ -149,12 +175,16 @@ PharmaQMS-Vue/
 │   │   │   ├── products/         # Product components
 │   │   │   ├── testing/          # Testing components
 │   │   │   └── security/         # Auth components
+│   │   │       ├── SecurityProvider.tsx
+│   │   │       ├── MFAEnrollment.tsx ✨ NEW
+│   │   │       └── MFAChallenge.tsx ✨ NEW
 │   │   ├── pages/               # Page components
 │   │   │   ├── Dashboard.tsx
 │   │   │   ├── Products.tsx
 │   │   │   ├── Testing.tsx
 │   │   │   ├── IPQC.tsx
 │   │   │   ├── COAManager.tsx   ✨ NEW
+│   │   │   ├── DataRecoveryConsole.tsx ✨ NEW
 │   │   │   ├── CAPA.tsx
 │   │   │   ├── Deviations.tsx
 │   │   │   ├── Equipment.tsx
@@ -172,6 +202,10 @@ PharmaQMS-Vue/
 │   │   │   │   └── translation.json
 │   │   │   └── en/
 │   │   │       └── translation.json
+│   │   ├── services/            # Business services ✨ NEW
+│   │   │   ├── MFAService.ts ✨ NEW
+│   │   │   ├── DataRetentionService.ts ✨ NEW
+│   │   │   └── ChangeControlService.ts ✨ NEW
 │   │   ├── lib/                 # Utilities
 │   │   ├── types/               # TypeScript types
 │   │   ├── i18n.ts             ✨ NEW
@@ -200,6 +234,23 @@ PharmaQMS-Vue/
 - **Vite 7.2.4** - Build tool
 - **Tailwind CSS 3.4** - Styling
 - **shadcn/ui** - Component library
+
+### Backend & Database
+- **Supabase** - Backend-as-a-Service with PostgreSQL
+- **Supabase Auth** - Authentication and user management
+- **Supabase MFA** - Multi-factor authentication (TOTP)
+- **Supabase Database** - PostgreSQL database with Row Level Security
+
+### Security & Compliance
+- **Supabase TOTP MFA** - Time-based one-time password authentication
+- **Custom Security Services** - Role-based access control and audit logging
+- **Data Retention Service** - Automated data lifecycle management
+- **Change Control Service** - Git-integrated change management
+
+### Internationalization
+- **i18next** - Translation framework
+- **react-i18next** - React integration
+- **i18next-browser-languagedetector** - Auto language detection
 
 ### Internationalization
 - **i18next** - Translation framework
@@ -230,43 +281,67 @@ PharmaQMS-Vue/
 - **[Quick Reference](QUICK_REFERENCE.md)** - Quick access guide
 - **[Implementation Plan](.agent/IMPLEMENTATION_PLAN.md)** - Development roadmap
 - **[Progress Report](.agent/PROGRESS_REPORT.md)** - Current status
+- **[GAP Implementation Summary](docs/GAP_IMPLEMENTATION_SUMMARY.md)** - Regulatory compliance implementations
+- **[IQ/OQ/PQ Protocol](docs/IQ_OQ_PQ_PROTOCOL.md)** - Validation procedures (21 CFR Part 11, EU GMP Annex 11)
+- **[Data Retention Policy](docs/DATA_RETENTION_POLICY_GAP10.md)** - 7-year retention policy (21 CFR Part 11)
+- **[Change Control Integration](docs/CHANGE_CONTROL_SCM_INTEGRATION.md)** - SCM-integrated change control
+- **[MFA Implementation](docs/MFA_IMPLEMENTATION.md)** - Multi-factor authentication documentation
 
 ---
 
-## 🌟 Key Enhancements (February 2026)
+## 🌟 Key Enhancements (September 2026)
 
 ### Recently Added Features
 
-1. **✅ Complete Bilingual Support**
+1. **✅ Security & Compliance Framework**
+   - Multi-Factor Authentication (MFA) for privileged roles
+   - 21 CFR Part 11 compliance implementation
+   - EU GMP Annex 11 validation protocols
+   - Soft-delete and data recovery console
+   - 7-year data retention policy
+   - Change control integrated with Git
+   - IQ/OQ/PQ validation with 100% pass rate
+
+2. **✅ Regulatory Compliance**
+   - ISPE GAMP® Guide adherence
+   - Complete audit trail system
+   - Role-based access control
+   - Data integrity (ALCOA+ principles)
+   - Change request management
+   - Validation evidence collection
+
+3. **✅ Complete Bilingual Support**
    - Arabic (default) and English
    - RTL/LTR automatic switching
    - Comprehensive translations
    - Language switcher in header
 
-2. **✅ COA Manager**
+4. **✅ COA Manager**
    - Full certificate management
    - Professional print templates
    - PDF export functionality
    - Status workflow
    - Search and filtering
+   - Safe object rendering for deleted records
 
-3. **✅ Enhanced Navigation**
+5. **✅ Enhanced Navigation**
    - Updated sidebar menu
    - Logical module organization
    - Visual icons for clarity
    - Breadcrumb support
 
-4. **✅ Print & Export Infrastructure**
+6. **✅ Print & Export Infrastructure**
    - Reusable print hook
    - PDF generation utility
    - Multi-page support
    - Custom page sizes
 
-5. **✅ Improved User Experience**
+7. **✅ Improved User Experience**
    - Responsive design
    - Touch-friendly interface
    - Loading states
    - Error handling
+   - Trial period with pre-filled credentials
 
 ---
 
@@ -300,12 +375,19 @@ PharmaQMS-Vue/
 
 ## 🔒 Security Features
 
-- ✅ Role-based access control
-- ✅ Audit trail for all actions
-- ✅ Data encryption
-- ✅ Session management
-- ✅ Input validation
+- ✅ Multi-Factor Authentication (MFA) for privileged roles
+- ✅ Role-based access control with granular permissions
+- ✅ Complete audit trail for all system actions
+- ✅ Soft-delete with data recovery capabilities
+- ✅ 7-year data retention per regulatory requirements
+- ✅ Change control integrated with Git workflow
+- ✅ Data encryption at rest and in transit
+- ✅ Session management with timeout
+- ✅ Input validation and sanitization
 - ✅ CSRF protection
+- ✅ 21 CFR Part 11 compliance
+- ✅ EU GMP Annex 11 compliance
+- ✅ ISPE GAMP® Guide adherence
 
 ---
 
@@ -368,7 +450,29 @@ This software is protected by copyright law and international treaties. Unauthor
 
 ## 📝 Version History
 
-### Version 4.0 (February 2026) - Current
+### Version 4.3.9 (September 2026) - Current
+- 🔐 Implemented MFA for admin/approver roles (21 CFR Part 11 §11.300)
+- 🔐 Added trial period exception for MFA
+- 🔐 Implemented soft-delete and data recovery console
+- 🔐 Created comprehensive data retention policy (7-year retention)
+- 🔐 Integrated change control with Git workflow
+- 🔐 Implemented IQ/OQ/PQ validation protocols (100% IQ pass rate)
+- 🔐 Added regulatory compliance documentation
+- 🔐 Enhanced security with role-based access control
+- 🔐 Fixed React object rendering errors in deleted records
+- 🔐 Added Git pre-commit hooks for change control
+- 🔐 Created comprehensive GAP implementation summary
+- 🔐 Added data retention service with lifecycle management
+- 🔐 Implemented change control service with Git integration
+- 🔐 Added validation evidence collection templates
+- 🔐 Created automated IQ test scripts
+- 🔐 Enhanced audit trail capabilities
+- 🔐 Improved trial user experience with pre-filled credentials
+- 🔐 Added comprehensive compliance documentation
+- 🔐 Fixed various security and compliance issues
+- ⚡ Performance and stability improvements
+
+### Version 4.0 (February 2026)
 - ✨ Added complete bilingual support (Arabic/English)
 - ✨ Implemented COA Manager with print/PDF export
 - ✨ Enhanced IPQC module
@@ -407,4 +511,4 @@ Dr. Daoud Tajeldeinn Ahmed
 
 ---
 
-*Last Updated: February 4, 2026*
+*Last Updated: September 1, 2026*
