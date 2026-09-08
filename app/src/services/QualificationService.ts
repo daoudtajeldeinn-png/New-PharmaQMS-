@@ -140,12 +140,20 @@ export class QualificationService {
   /**
    * Save or update a qualification record (Dexie + Supabase + Audit Trail)
    */
+  /** Validate UUID format — Supabase uuid columns reject short IDs */
+  private static isValidUUID(s: string): boolean {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(s);
+  }
+
   public static async saveQualification(
     qualification: EquipmentQualification,
     user?: { id: string; name: string; role: string }
   ): Promise<EquipmentQualification> {
     const isNew = !qualification.id;
-    const id = qualification.id || crypto.randomUUID();
+    // Always ensure a proper UUID so Supabase uuid columns accept it
+    const id = (qualification.id && this.isValidUUID(qualification.id))
+      ? qualification.id
+      : crypto.randomUUID();
     const now = new Date().toISOString();
 
     const record: EquipmentQualification = {
@@ -192,30 +200,37 @@ export class QualificationService {
         if (error) console.warn('QualificationService: Supabase upsert error:', error.message);
       });
 
-    // 3. Log Audit Trail
+    // 3. Log Audit Trail (non-blocking: audit failure must not prevent qualification save)
     if (user) {
       const desc = `Equipment Qualification: ${record.phase} for Equipment ${record.equipment_id} - Result: ${record.result}`;
-      if (isNew) {
-        await AuditLogService.logCreate(
-          user.id,
-          user.name,
-          user.role,
-          'equipmentQualifications',
-          record.id,
-          desc,
-          record
-        );
-      } else {
-        await AuditLogService.logUpdate(
-          user.id,
-          user.name,
-          user.role,
-          'equipmentQualifications',
-          record.id,
-          desc,
-          null,
-          record
-        );
+      try {
+        if (isNew) {
+          await AuditLogService.logCreate(
+            user.id,
+            user.name,
+            user.role,
+            'equipmentQualifications',
+            record.id,
+            desc,
+            record
+          );
+        } else {
+          await AuditLogService.logUpdate(
+            user.id,
+            user.name,
+            user.role,
+            'equipmentQualifications',
+            record.id,
+            desc,
+            null,
+            record
+          );
+        }
+      } catch (auditErr: any) {
+        // Log but do not re-throw — qualification record is already saved locally.
+        // This will self-resolve once supabase_schema_fix_v9.sql is applied
+        // (which opens the user_activity_logs INSERT policy to the anon role).
+        console.warn('QualificationService: Audit trail write skipped (non-blocking):', auditErr?.message || auditErr);
       }
     }
 

@@ -85,7 +85,23 @@ function serializeForSupabase(item: Record<string, unknown>, tableName?: string)
         delete cleanItem.batchNumber;
     }
 
+    // equipmentQualifications: strip camelCase alias fields — Supabase table only has snake_case columns
+    if (tableName === 'equipmentQualifications') {
+        const allowedColumns = [
+            'id', 'equipment_id', 'phase', 'protocol_number',
+            'qualification_date', 'performed_by', 'approved_by',
+            'result', 'next_requalification_date', 'notes',
+            'is_deleted', 'created_at', 'updated_at'
+        ];
+        for (const k of Object.keys(cleanItem)) {
+            if (!allowedColumns.includes(k)) {
+                delete cleanItem[k];
+            }
+        }
+    }
+
     // Fix activities 400 error (reserved words or missing columns in Supabase)
+
     if (tableName === 'activities') {
         const allowedColumns = ['id', 'type', 'description', 'user', 'user_id', 'timestamp', 'related_id'];
         for (const k of Object.keys(cleanItem)) {
