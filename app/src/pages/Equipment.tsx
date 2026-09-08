@@ -328,10 +328,14 @@ export function EquipmentPage() {
     setIsPhaseModalOpen(true);
   };
 
-  const handleSavePhaseDirectly = async () => {
+  const handleSavePhaseRecord = async (withSignature: boolean = true) => {
     if (!selectedEquipmentForQual) return;
     if (!canModify) {
       toast.error('Only authorized administrators can modify qualification records.');
+      return;
+    }
+    if (!phaseFormData.protocol_number.trim()) {
+      toast.error('Protocol Number is required.');
       return;
     }
 
@@ -344,18 +348,33 @@ export function EquipmentPage() {
       protocolNumber: phaseFormData.protocol_number,
       qualification_date: phaseFormData.qualification_date,
       qualificationDate: phaseFormData.qualification_date,
-      performed_by: phaseFormData.performed_by,
-      performedBy: phaseFormData.performed_by,
-      approved_by: phaseFormData.approved_by || user?.name || '',
-      approvedBy: phaseFormData.approved_by || user?.name || '',
+      performed_by: phaseFormData.performed_by || user?.name || '',
+      performedBy: phaseFormData.performed_by || user?.name || '',
+      approved_by: phaseFormData.approved_by || (withSignature ? '' : user?.name || 'System Administrator'),
+      approvedBy: phaseFormData.approved_by || (withSignature ? '' : user?.name || 'System Administrator'),
       result: phaseFormData.result,
       next_requalification_date: phaseFormData.next_requalification_date,
       nextRequalificationDate: phaseFormData.next_requalification_date,
       notes: phaseFormData.notes,
     };
 
-    setPendingSignedPhase(payload);
-    setIsSignatureModalOpen(true);
+    if (withSignature) {
+      setPendingSignedPhase(payload);
+      setIsSignatureModalOpen(true);
+    } else {
+      try {
+        await QualificationService.saveQualification(payload, {
+          id: user?.id || 'sys-admin',
+          name: user?.name || 'System Administrator',
+          role: user?.role || 'qa_admin',
+        });
+        await loadAllQualifications();
+        toast.success(`${editingPhase} qualification record saved successfully.`);
+        setIsPhaseModalOpen(false);
+      } catch (err: any) {
+        toast.error(`Failed to save qualification: ${err.message}`);
+      }
+    }
   };
 
   const handleSignatureConfirm = async (signatureData: {
@@ -1339,7 +1358,7 @@ export function EquipmentPage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 border-t pt-3 mt-1">
+          <div className="flex justify-between items-center gap-2 border-t pt-3 mt-1">
             <Button
               variant="outline"
               size="sm"
@@ -1347,13 +1366,23 @@ export function EquipmentPage() {
             >
               Cancel
             </Button>
-            <Button
-              size="sm"
-              onClick={handleSavePhaseDirectly}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white"
-            >
-              Sign & Approve Record (Part 11)
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => handleSavePhaseRecord(false)}
+                className="text-slate-700 bg-slate-100 hover:bg-slate-200 font-medium"
+              >
+                Save Record
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => handleSavePhaseRecord(true)}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
+              >
+                Sign & Approve (Part 11)
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
