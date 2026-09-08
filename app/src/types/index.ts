@@ -302,7 +302,40 @@ export interface Equipment {
   documents: EquipmentDocument[];
 }
 
+export type QualificationPhase = 'DQ' | 'IQ' | 'OQ' | 'PQ';
+export type QualificationResult = 'Pass' | 'Fail' | 'Pending';
+export type OverallQualificationStatus =
+  | 'Fully Qualified'
+  | 'Partially Qualified'
+  | 'Qualification Failed'
+  | 'Not Qualified'
+  | 'Requalification Required';
+
+export interface EquipmentQualification {
+  id: string;
+  equipment_id?: string;
+  equipmentId?: string;
+  phase: QualificationPhase;
+  protocol_number?: string;
+  protocolNumber?: string;
+  qualification_date?: string | Date;
+  qualificationDate?: string | Date;
+  performed_by?: string;
+  performedBy?: string;
+  approved_by?: string;
+  approvedBy?: string;
+  result: QualificationResult;
+  next_requalification_date?: string | Date;
+  nextRequalificationDate?: string | Date;
+  notes?: string;
+  is_deleted?: boolean;
+  created_at?: string | Date;
+  updated_at?: string | Date;
+}
+
 export interface QualificationStatus {
+  dq?: boolean; // Design Qualification
+  dqDate?: Date;
   iq: boolean; // Installation Qualification
   iqDate?: Date;
   oq: boolean; // Operational Qualification

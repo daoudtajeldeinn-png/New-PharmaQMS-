@@ -28,7 +28,8 @@ export const CLOUD_TABLES = [
     'materialMovements',
     'reconciliationRecords',
     'activities',
-    'pharmacopeiaMonographs'
+    'pharmacopeiaMonographs',
+    'equipmentQualifications'
 ] as const;
 
 function getRecordTimestamp(item: Record<string, unknown>): number {

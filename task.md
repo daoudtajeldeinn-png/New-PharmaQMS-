@@ -14,11 +14,18 @@
 - `[x]` PDF upload feature for auto-tests (TestMethodPdfUploader.tsx)
 - `[x]` BMR search bar — filter by batch number, product name, status
 
+- `[x]` COA Foundry targeted console verification (QA step — run app, check console for errors on COA save/load)
+- `[x]` Reports.tsx advanced features propagation (712-line version → top-level app)
+- `[x]` Laboratory.tsx Reagent Registration form propagation (617-line version → top-level app)
+- `[x]` Final electron build: `cd app && npm run electron:build`
+- `[x]` User Roles & Permission Enforcement (IT Admin and QA Admin exclusive write/delete access)
+- `[x]` Deletion Propagation & Sync Isolation (soft delete tombstones & Data Recovery Console)
+- `[x]` Desktop Client Restrictions (laboratory test results isolated to Electron desktop environment)
+- `[x]` Finished Product COA Parameter Ordering (standard pharmacopeial order enforced)
+- `[x]` Equipment Qualification Module (EU GMP Annex 15 & 21 CFR 211.68 — DQ/IQ/OQ/PQ lifecycle, alerts, Part 11 e-signatures, and PDF certificate export)
+
 ## Pending ⏳
-- `[ ]` COA Foundry targeted console verification (QA step — run app, check console for errors on COA save/load)
-- `[ ]` Reports.tsx advanced features propagation (712-line version → top-level app)
-- `[ ]` Laboratory.tsx Reagent Registration form propagation (617-line version → top-level app)
-- `[ ]` Final electron build: `cd app && npm run electron:build`
+*None — All tasks completed and verified.*
 
 ## Unification Status
 - **Canonical source:** `New-PharmaQMS-/app/src/` (Vercel deployed)
