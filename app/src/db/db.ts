@@ -24,6 +24,7 @@ import type {
     RawMaterial,
     MaterialMovement,
     ReconciliationRecord,
+    EquipmentQualification,
 } from '@/types';
 import { type MasterFormula } from '@/data/mfrData';
 import { type BatchRecord } from '@/data/bmrData';
@@ -54,6 +55,7 @@ export class PharmaDB extends Dexie {
     materialMovements!: Table<MaterialMovement, string>;
     reconciliationRecords!: Table<ReconciliationRecord, string>;
     activities!: Table<Activity, string>;
+    equipmentQualifications!: Table<EquipmentQualification, string>;
     // Key-value store for singletons like stats
     keyValueStore!: Table<{ key: string; value: unknown }, string>;
 
@@ -91,6 +93,11 @@ export class PharmaDB extends Dexie {
             // v7 tables
             materialMovements: 'id, materialId, batchId, type, timestamp',
             reconciliationRecords: 'id, batchId, productId, percentageYield',
+        });
+
+        // v9 schema for Equipment Qualification Module (EU GMP Annex 15, 21 CFR 211.68)
+        this.version(9).stores({
+            equipmentQualifications: 'id, equipment_id, equipmentId, phase, result, qualification_date, next_requalification_date',
         });
 
     }

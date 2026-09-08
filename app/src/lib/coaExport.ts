@@ -1,4 +1,6 @@
 import type { RawMaterial } from '@/types/materials';
+import type { Equipment, EquipmentQualification } from '@/types';
+import { QualificationService } from '@/services/QualificationService';
 
 interface CompanySettings {
   name: string;
@@ -365,3 +367,233 @@ export async function generateAnalyticalWorksheet(material: RawMaterial): Promis
 
   doc.save(`Analytical-Worksheet-${material.batchNumber}.pdf`);
 }
+
+export async function generateQualificationCertificate(
+  equipment: Equipment,
+  qualifications: EquipmentQualification[]
+): Promise<void> {
+  const { jsPDF } = await import('jspdf');
+  const company = loadCompanySettings();
+  const overallStatus = QualificationService.calculateOverallStatus(qualifications);
+  const alerts = QualificationService.getRequalificationAlerts(qualifications);
+
+  const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+
+  // Outer Border
+  doc.setLineWidth(0.5);
+  doc.rect(5, 5, 200, 287);
+
+  // Header
+  doc.setFont('times', 'bold');
+  doc.setFontSize(20);
+  doc.text(company.name.toUpperCase(), 105, 18, { align: 'center' });
+
+  doc.setFont('times', 'italic');
+  doc.setFontSize(9);
+  doc.text(company.address, 105, 24, { align: 'center' });
+
+  doc.setFont('times', 'bold');
+  doc.setFontSize(11);
+  doc.text('QUALITY ASSURANCE & VALIDATION DEPARTMENT', 105, 31, { align: 'center' });
+
+  // Double Divider Line
+  doc.setLineWidth(0.8);
+  doc.line(15, 34, 195, 34);
+  doc.line(15, 35.5, 195, 35.5);
+  doc.setLineWidth(0.3);
+
+  // Certificate Title
+  doc.setFontSize(15);
+  doc.text('EQUIPMENT QUALIFICATION CERTIFICATE', 105, 43, { align: 'center' });
+  doc.setFontSize(9);
+  doc.setFont('times', 'normal');
+  doc.text('Regulatory Standard: EU GMP Annex 15 §10-§11 | 21 CFR 211.68', 105, 48, { align: 'center' });
+
+  // Equipment Details Box
+  doc.rect(15, 53, 180, 42);
+  doc.line(105, 53, 105, 95);
+  [60, 67, 74, 81, 88].forEach(y => doc.line(15, y, 195, y));
+
+  const leftLabel = 18;
+  const leftVal = 55;
+  const rightLabel = 108;
+  const rightVal = 145;
+
+  const infoRows = [
+    ['Equipment Name:', equipment.name || '-', 'Asset Tag:', equipment.assetTag || '-'],
+    ['Model Number:', equipment.model || '-', 'Serial Number:', equipment.serialNumber || '-'],
+    ['Manufacturer:', equipment.manufacturer || '-', 'Department:', equipment.department || '-'],
+    ['Location / Room:', equipment.location || '-', 'Current Status:', equipment.status || '-'],
+    ['Certificate Date:', new Date().toISOString().split('T')[0], 'Overall Status:', overallStatus.toUpperCase()],
+  ];
+
+  doc.setFont('times', 'bold');
+  doc.setFontSize(9);
+
+  infoRows.forEach((row, i) => {
+    const y = 58 + i * 7;
+    doc.setFont('times', 'bold');
+    doc.text(row[0], leftLabel, y);
+    doc.setFont('times', 'normal');
+    doc.text(String(row[1]).substring(0, 26), leftVal, y);
+
+    doc.setFont('times', 'bold');
+    doc.text(row[2], rightLabel, y);
+
+    if (i === 4) {
+      if (overallStatus === 'Fully Qualified') doc.setTextColor(0, 130, 0);
+      else if (overallStatus === 'Qualification Failed') doc.setTextColor(190, 0, 0);
+      else doc.setTextColor(180, 110, 0);
+      doc.setFont('times', 'bold');
+      doc.text(String(row[3]), rightVal, y);
+      doc.setTextColor(0, 0, 0);
+      doc.setFont('times', 'normal');
+    } else {
+      doc.setFont('times', 'normal');
+      doc.text(String(row[3]).substring(0, 26), rightVal, y);
+    }
+  });
+
+  // Phases Table Header
+  let y = 105;
+  doc.setFont('times', 'bold');
+  doc.setFontSize(11);
+  doc.text('QUALIFICATION PHASES SUMMARY (DQ / IQ / OQ / PQ)', 15, y);
+
+  y += 4;
+  doc.setFillColor(235, 238, 242);
+  doc.rect(15, y, 180, 8, 'F');
+  doc.rect(15, y, 180, 8);
+  doc.setFontSize(9);
+  doc.text('Phase', 18, y + 5.5);
+  doc.text('Protocol #', 38, y + 5.5);
+  doc.text('Qual. Date', 75, y + 5.5);
+  doc.text('Performed By', 105, y + 5.5);
+  doc.text('Approved By', 135, y + 5.5);
+  doc.text('Result', 165, y + 5.5);
+
+  const phaseNames: Record<string, string> = {
+    DQ: 'DQ - Design Qual.',
+    IQ: 'IQ - Installation Qual.',
+    OQ: 'OQ - Operational Qual.',
+    PQ: 'PQ - Performance Qual.',
+  };
+
+  const allPhases = ['DQ', 'IQ', 'OQ', 'PQ'] as const;
+
+  allPhases.forEach(phase => {
+    y += 8;
+    const q = qualifications.find(item => item.phase === phase && !item.is_deleted);
+    doc.rect(15, y, 180, 8);
+    doc.setFont('times', 'bold');
+    doc.text(phaseNames[phase], 18, y + 5.5);
+    doc.setFont('times', 'normal');
+
+    if (q) {
+      doc.text(String(q.protocol_number || q.protocolNumber || '-').substring(0, 18), 38, y + 5.5);
+      const qDate = q.qualification_date || q.qualificationDate;
+      doc.text(qDate ? String(qDate).split('T')[0] : '-', 75, y + 5.5);
+      doc.text(String(q.performed_by || q.performedBy || '-').substring(0, 15), 105, y + 5.5);
+      doc.text(String(q.approved_by || q.approvedBy || '-').substring(0, 15), 135, y + 5.5);
+
+      if (q.result === 'Pass') {
+        doc.setTextColor(0, 120, 0);
+        doc.setFont('times', 'bold');
+        doc.text('PASS', 165, y + 5.5);
+      } else if (q.result === 'Fail') {
+        doc.setTextColor(190, 0, 0);
+        doc.setFont('times', 'bold');
+        doc.text('FAIL', 165, y + 5.5);
+      } else {
+        doc.setTextColor(150, 100, 0);
+        doc.text('PENDING', 165, y + 5.5);
+      }
+      doc.setTextColor(0, 0, 0);
+      doc.setFont('times', 'normal');
+    } else {
+      doc.setTextColor(120, 120, 120);
+      doc.text('Not Initiated', 38, y + 5.5);
+      doc.text('-', 75, y + 5.5);
+      doc.text('-', 105, y + 5.5);
+      doc.text('-', 135, y + 5.5);
+      doc.text('PENDING', 165, y + 5.5);
+      doc.setTextColor(0, 0, 0);
+    }
+  });
+
+  // Requalification Schedule Box
+  y += 16;
+  doc.setFillColor(248, 249, 250);
+  doc.rect(15, y, 180, 24, 'F');
+  doc.rect(15, y, 180, 24);
+
+  doc.setFont('times', 'bold');
+  doc.setFontSize(10);
+  doc.text('REQUALIFICATION ASSESSMENT & EXPIRY', 19, y + 6);
+  doc.setFontSize(9);
+  doc.setFont('times', 'normal');
+
+  const nextDateStr = alerts.nextDate ? alerts.nextDate.toISOString().split('T')[0] : 'Not Scheduled';
+  doc.text(`Next Requalification Due Date: ${nextDateStr}`, 19, y + 13);
+
+  if (alerts.isOverdue) {
+    doc.setTextColor(190, 0, 0);
+    doc.setFont('times', 'bold');
+    doc.text(`ALERT: Requalification is OVERDUE by ${Math.abs(alerts.daysRemaining || 0)} day(s)!`, 19, y + 19);
+    doc.setTextColor(0, 0, 0);
+  } else if (alerts.isDueSoon) {
+    doc.setTextColor(180, 110, 0);
+    doc.setFont('times', 'bold');
+    doc.text(`NOTICE: Requalification due in ${alerts.daysRemaining} day(s). Initiate protocol renewal.`, 19, y + 19);
+    doc.setTextColor(0, 0, 0);
+  } else {
+    doc.text('Status: Equipment operating within valid qualification lifecycle parameters.', 19, y + 19);
+  }
+
+  // Regulatory Statement
+  y += 32;
+  doc.setFont('times', 'italic');
+  doc.setFontSize(8.5);
+  doc.text(
+    'This certificate confirms that the equipment stated above has been evaluated in accordance with approved',
+    15,
+    y
+  );
+  doc.text(
+    'validation protocols and meets the established acceptance criteria pursuant to EU GMP Annex 15 and 21 CFR Part 11.',
+    15,
+    y + 4.5
+  );
+
+  // Signatures
+  y += 22;
+  doc.setFont('times', 'bold');
+  doc.setFontSize(9);
+  doc.line(15, y, 65, y);
+  doc.text('Validation Engineer', 15, y + 4);
+  doc.setFont('times', 'normal');
+  doc.text('Date: ________________', 15, y + 8);
+
+  doc.line(75, y, 125, y);
+  doc.setFont('times', 'bold');
+  doc.text('Head of Engineering', 75, y + 4);
+  doc.setFont('times', 'normal');
+  doc.text('Date: ________________', 75, y + 8);
+
+  doc.line(135, y, 185, y);
+  doc.setFont('times', 'bold');
+  doc.text('Quality Assurance Manager', 135, y + 4);
+  doc.setFont('times', 'normal');
+  doc.text('Date: ________________', 135, y + 8);
+
+  // Bottom Notice
+  doc.setFontSize(8);
+  doc.setFont('times', 'italic');
+  doc.text('Computer Generated Document — Verified via PharmaQMS Validation Engine', 105, 280, {
+    align: 'center',
+  });
+
+  const filename = `Qualification-Certificate-${(equipment.assetTag || equipment.name || 'EQ').replace(/\s+/g, '_')}.pdf`;
+  doc.save(filename);
+}
+

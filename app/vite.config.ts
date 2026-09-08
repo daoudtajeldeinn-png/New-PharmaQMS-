@@ -12,18 +12,7 @@ export default defineConfig({
     sourcemap: false,
     minify: false,
     chunkSizeWarningLimit: 1000, // kB
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          const m = id.match(/node_modules\/(?:@[^\/]+\/[^\/]+|[^\/]+)/)
-          if (m) {
-            const pkg = m[0].replace(/^node_modules\//, '')
-            const name = pkg.replace('@', '').replace('/', '-')
-            return `vendor-${name}`
-          }
-        }
-      }
-    }
+    rollupOptions: {}
   },
   plugins: [
     react(),
@@ -56,7 +45,7 @@ export default defineConfig({
       workbox: {
         cleanupOutdatedCaches: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,json,webmanifest}'],
-        maximumFileSizeToCacheInBytes: 5000000,
+        maximumFileSizeToCacheInBytes: 15000000,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

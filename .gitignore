@@ -9,3 +9,14 @@ dist-electron-github-backup/
 .env
 .env.local
 .env*.local
+
+# Grocery System Exclusions
+grocery_system/
+app/src/db/groceryDb.ts
+app/src/hooks/groceryStoreReducer.ts
+app/src/pages/DailySales.tsx
+app/src/pages/GroceryInventory.tsx
+app/src/pages/GroceryMain.tsx
+app/src/pages/InventoryReports.tsx
+app/src/types/grocery.ts
+

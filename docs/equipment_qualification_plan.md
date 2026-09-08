@@ -165,12 +165,12 @@ ALTER TABLE "equipmentQualifications" ENABLE ROW LEVEL SECURITY;
 
 ---
 
-## 8. Next Session Checklist
+## 8. Implementation Checklist
 
-- [ ] Create `supabase_schema_fix_v8.sql` with `equipmentQualifications` table
-- [ ] Add `EquipmentQualification` type to `types/index.ts`
-- [ ] Create `QualificationService.ts`
-- [ ] Update `Equipment.tsx` with qualification tab
-- [ ] Add qualification certificate to `coaExport.ts`
-- [ ] Add to CloudSync tables
-- [ ] Test and release as v4.4.0
+- [x] Create `supabase_schema_fix_v8.sql` with `equipmentQualifications` table
+- [x] Add `EquipmentQualification` type to `types/index.ts`
+- [x] Create `QualificationService.ts`
+- [x] Update `Equipment.tsx` with qualification tab & lifecycle manager
+- [x] Add qualification certificate to `coaExport.ts`
+- [x] Add to CloudSync tables
+- [x] Test and release as v4.4.0
