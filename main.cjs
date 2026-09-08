@@ -3,12 +3,10 @@ const path = require('path');
 const fs = require('fs');
 const { execSync } = require('child_process');
 const { autoUpdater } = require('electron-updater');
-autoUpdater.autoDownload = false;
-autoUpdater.autoInstallOnAppQuit = false;
-
+autoUpdater.autoDownload = true;
+autoUpdater.autoInstallOnAppQuit = true;
 // Determine if we are in development
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
-
 // ── Global crash guard ────────────────────────────────────────────────────────
 // Prevent any unhandled error from silently closing the app.
 process.on('uncaughtException', (err) => {
@@ -21,7 +19,6 @@ process.on('unhandledRejection', (reason) => {
   console.error('Unhandled Rejection:', reason);
 });
 // ─────────────────────────────────────────────────────────────────────────────
-
 // Load environment variables only in development
 if (isDev) {
   try {
@@ -30,7 +27,6 @@ if (isDev) {
     console.warn('dotenv not found, skipping environment file loading');
   }
 }
-
 function getMachineId() {
   try {
     let output = execSync('wmic csproduct get uuid').toString();
@@ -44,10 +40,8 @@ function getMachineId() {
     return 'UNKNOWN-DEVICE';
   }
 }
-
 const MACHINE_ID = getMachineId();
 let mainWindow;
-
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -62,12 +56,10 @@ function createWindow() {
     icon: path.join(__dirname, isDev ? 'public/icons/icon-512x512.png' : 'dist/favicon.ico'),
     autoHideMenuBar: false,
   });
-
   // DevTools: open only in development builds
   if (isDev) {
     mainWindow.webContents.openDevTools();
   }
-
   const template = [
     {
       label: 'Edit',
@@ -85,10 +77,8 @@ function createWindow() {
         ]
       }
   ];
-
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
-
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173');
   } else {
@@ -98,7 +88,6 @@ function createWindow() {
     
     console.log(`Initial App Path: ${appPath}`);
     console.log(`Searching for index at: ${indexPath}`);
-
     if (fs.existsSync(indexPath)) {
         mainWindow.loadFile(indexPath).catch(err => {
             dialog.showErrorBox('Load Error', `Failed to load index.html: ${err.message}`);
@@ -116,28 +105,24 @@ function createWindow() {
     }
   }
 }
-
 app.whenReady().then(() => {
   createWindow();
   
   // Check for updates automatically
   if (!isDev) {
-    // autoUpdater disabled  no GitHub releases configured yet
-  // autoUpdater.checkForUpdatesAndNotify();
+    autoUpdater.checkForUpdatesAndNotify().catch(err => console.warn("Auto-update check failed:", err));
   }
 });
-
 // IPC Listeners for manual update control
 ipcMain.on('check-for-update', () => {
   if (!isDev) {
-//     autoUpdater.checkForUpdates();
+    autoUpdater.checkForUpdates().catch(err => console.warn("Manual update check failed:", err));
   } else {
     mainWindow.webContents.send('update-not-available');
   }
 });
-
 ipcMain.on('quit-and-install', () => {
-//   autoUpdater.quitAndInstall(false, true);
+  autoUpdater.quitAndInstall(false, true);
 });
 // 
 autoUpdater.on('update-available', () => {
@@ -168,7 +153,7 @@ autoUpdater.on('update-downloaded', () => {
     buttons: ['Restart Now', 'Later']
   }).then((result) => {
     if (result.response === 0) {
-//       autoUpdater.quitAndInstall(false, true);
+  autoUpdater.quitAndInstall(false, true);
     }
   });
 });
@@ -179,13 +164,11 @@ autoUpdater.on('error', (err) => {
     mainWindow.webContents.send('update-error', err.message);
   }
 });
-
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
 });
-
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
