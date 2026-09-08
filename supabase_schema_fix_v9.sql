@@ -59,3 +59,35 @@ CREATE POLICY "Admins can view all logs"
     FOR SELECT
     TO anon, authenticated
     USING (true);
+
+-- -----------------------------------------------------------------------
+-- FIX 3: equipmentQualifications — open RLS to anon + authenticated
+-- The original v8 policies only granted access to "authenticated" role.
+-- The app connects with the anon key, so INSERT/SELECT/UPDATE/DELETE
+-- were silently blocked (code 42501).
+-- -----------------------------------------------------------------------
+
+DROP POLICY IF EXISTS "Allow authenticated read equipmentQualifications"   ON "equipmentQualifications";
+DROP POLICY IF EXISTS "Allow authenticated insert equipmentQualifications"  ON "equipmentQualifications";
+DROP POLICY IF EXISTS "Allow authenticated update equipmentQualifications"  ON "equipmentQualifications";
+DROP POLICY IF EXISTS "Allow authenticated delete equipmentQualifications"  ON "equipmentQualifications";
+
+CREATE POLICY "Allow anon+auth read equipmentQualifications"
+    ON "equipmentQualifications" FOR SELECT
+    TO anon, authenticated
+    USING (true);
+
+CREATE POLICY "Allow anon+auth insert equipmentQualifications"
+    ON "equipmentQualifications" FOR INSERT
+    TO anon, authenticated
+    WITH CHECK (true);
+
+CREATE POLICY "Allow anon+auth update equipmentQualifications"
+    ON "equipmentQualifications" FOR UPDATE
+    TO anon, authenticated
+    USING (true);
+
+CREATE POLICY "Allow anon+auth delete equipmentQualifications"
+    ON "equipmentQualifications" FOR DELETE
+    TO anon, authenticated
+    USING (true);
