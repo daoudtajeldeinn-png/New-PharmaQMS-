@@ -1,4 +1,4 @@
-# Tasks — PharmaQMS Unified Professional Build
+﻿# Tasks — PharmaQMS Unified Professional Build
 
 ## Completed ✅
 - `[x]` MaterialInventory updates (productionDate)
@@ -13,7 +13,6 @@
 - `[x]` db.ts COA Dexie schema — coaRecords has expiryDate, analysisNo, analysisDate (version 8)
 - `[x]` PDF upload feature for auto-tests (TestMethodPdfUploader.tsx)
 - `[x]` BMR search bar — filter by batch number, product name, status
-
 - `[x]` COA Foundry targeted console verification (QA step — run app, check console for errors on COA save/load)
 - `[x]` Reports.tsx advanced features propagation (712-line version → top-level app)
 - `[x]` Laboratory.tsx Reagent Registration form propagation (617-line version → top-level app)
@@ -23,20 +22,12 @@
 - `[x]` Desktop Client Restrictions (laboratory test results isolated to Electron desktop environment)
 - `[x]` Finished Product COA Parameter Ordering (standard pharmacopeial order enforced)
 - `[x]` Equipment Qualification Module (EU GMP Annex 15 & 21 CFR 211.68 — DQ/IQ/OQ/PQ lifecycle, alerts, Part 11 e-signatures, and PDF certificate export)
+- `[x]` Supabase Database Migration v10 (RLS enabled across all tables, full anon/authenticated access)
+- `[x]` Desktop Auto-Updater Integration in main.cjs (automatic download and installation v4.3.12)
 
 ## Pending ⏳
 *None — All tasks completed and verified.*
 
-## Unification Status
-- **Canonical source:** `New-PharmaQMS-/app/src/` (Vercel deployed)
-- **Files to propagate to SCI-, Pharmaceutical-QMS, pharmaqualify-pro:**
-  - `app/src/pages/BMRManager.tsx` (1206 lines — search bar + company settings)
-  - `app/src/pages/MFRManager.tsx` (513 lines — company settings)
-  - `app/src/pages/Reports.tsx` (712 lines — from PharmaQMS-Copy)
-  - `app/src/pages/Laboratory.tsx` (617 lines — reagent registration form)
-  - `app/src/lib/coaExport.ts` (337 lines — company settings + Analytical Worksheet)
-  - `app/src/hooks/storeReducer.ts` (637 lines — DELETE_CHEMICAL_REAGENT action)
-  - `app/src/hooks/useStore.tsx` (219 lines)
-  - `app/src/services/CloudSyncService.ts` (291 lines — most complete)
-  - `app/src/db/db.ts` (99 lines — version 8 consolidated schema)
-  - `app/src/data/bmrData.ts` (97 lines — analysisDate + lineClearance types)
+## Repository Consolidation Status
+- **Canonical Repository:** `https://github.com/daoudtajeldeinn-png/New-PharmaQMS-` (Vercel & Desktop Release v4.3.12)
+- **Status:** All features, bug fixes, and data models have been consolidated into `New-PharmaQMS-`. Legacy sister repositories (`SCI-`, `Pharmaceutical-QMS`, `pharmaqualify-pro`) have been retired.
