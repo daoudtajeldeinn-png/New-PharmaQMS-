@@ -20,3 +20,10 @@ app/src/pages/GroceryMain.tsx
 app/src/pages/InventoryReports.tsx
 app/src/types/grocery.ts
 
+# Sensitive License & Key Generation Tools
+key-generator*.html
+license_generator.cjs
+MasterKeyGen.js
+GENERATE_NEW_KEY.bat
+
+
