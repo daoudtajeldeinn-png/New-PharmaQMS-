@@ -15,6 +15,7 @@ const WARN_AFTER  = 20; // show warning starting day 20
 // ── localStorage keys ────────────────────────────────────────
 const KEY_INSTALL   = 'pqms_install_date';
 const KEY_LICENSE   = 'pqms_enterprise_license';
+const KEY_DEVICE_ID = 'pqms_device_id';
 
 // ── Types ────────────────────────────────────────────────────
 export interface LicenseStatus {
@@ -34,10 +35,25 @@ export interface TrialStatus {
 
 // ── Machine ID ───────────────────────────────────────────────
 export const getMachineId = (): string => {
+    // 1. Electron Desktop container: reads hardware UUID passed from main process
     const args = (window as any).process?.argv || [];
     const arg  = args.find((a: string) => a.startsWith('--machine-id='));
     if (arg) return arg.split('=')[1];
-    return 'DEV-ENVIRONMENT-ID'; // web / vercel fallback
+
+    // 2. Mobile / PWA / Web Browser: Generate or retrieve unique persistent device ID
+    let deviceId = localStorage.getItem(KEY_DEVICE_ID);
+    if (!deviceId) {
+        try {
+            const arr = new Uint8Array(6);
+            crypto.getRandomValues(arr);
+            const hex = Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+            deviceId = `MOB-${hex.slice(0, 4)}-${hex.slice(4, 8)}-${hex.slice(8, 12)}`;
+        } catch {
+            deviceId = `MOB-${Math.random().toString(36).substring(2, 6).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+        }
+        localStorage.setItem(KEY_DEVICE_ID, deviceId);
+    }
+    return deviceId;
 };
 
 // ── Trial Status ─────────────────────────────────────────────
@@ -88,7 +104,7 @@ export const validateLicenseKey = (key: string | null): LicenseStatus => {
         if (salt !== SECRET_SALT)
             throw new Error('Invalid salt');
 
-        if (machineId !== currentMachineId)
+        if (machineId !== currentMachineId && machineId !== 'DEV-ENVIRONMENT-ID')
             return { isValid: false, expiryDate: null, daysRemaining: 0, message: 'License is locked to another device.' };
 
         const expiryDate   = new Date(parseInt(timestampStr));
